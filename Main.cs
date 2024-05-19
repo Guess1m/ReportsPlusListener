@@ -25,16 +25,57 @@ namespace ReportsPlus
 
         public override void Initialize()
         {
-            calloutIds.Clear();
-            if (!Directory.Exists(DataPath))
-                Directory.CreateDirectory(DataPath);
-
-            currentIDDoc = new XDocument(new XElement("IDs"));
-            LoadCurrentIDDocument();
-            LoadCalloutDocument();
-
             LSPD_First_Response.Mod.API.Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
-            Game.LogTrivial("ReportsPlusListener Plugin initialized.");
+            Game.LogTrivial("ReportsPlus Listener Plugin initialized.");
+        }
+
+        private void OnOnDutyStateChangedHandler(bool onDuty)
+        {
+            CurrentlyOnDuty = onDuty;
+            if (onDuty)
+            {
+                bool pluginsInstalled = CheckPlugins();
+                if (!pluginsInstalled)
+                {
+                    // Check for required plugins
+                    Game.DisplayNotification("~r~ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
+                    Game.LogTrivial("ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
+                    return; // Exit initialization if plugins are missing
+                }
+
+                calloutIds.Clear();
+                if (!Directory.Exists(DataPath))
+                    Directory.CreateDirectory(DataPath);
+
+                currentIDDoc = new XDocument(new XElement("IDs"));
+                LoadCurrentIDDocument();
+                LoadCalloutDocument();
+
+                GameFiber.StartNew(Interval);
+                SetupEventHandlers();
+                AddCalloutEventWithCI();
+                UpdateWorldPeds();
+                UpdateWorldCars();
+                Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully.");
+                Game.LogTrivial("ReportsPlus Listener Loaded Successfully.");
+            }
+        }
+
+        private bool CheckPlugins()
+        {
+            bool hasCalloutInterface = IsPluginInstalled("CalloutInterface");
+            bool hasStopThePed = IsPluginInstalled("StopThePed");
+
+            return hasCalloutInterface && hasStopThePed;
+        }
+
+        private bool IsPluginInstalled(string pluginName)
+        {
+            var plugins = LSPD_First_Response.Mod.API.Functions.GetAllUserPlugins();
+            bool isInstalled = plugins.Any(x => x.GetName().Name.Equals(pluginName));
+            Game.LogTrivial($"Plugin '{pluginName}' is installed: {isInstalled}");
+
+            return isInstalled;
         }
 
         public override void Finally()
@@ -70,19 +111,6 @@ namespace ReportsPlus
             }
         }
 
-        private void OnOnDutyStateChangedHandler(bool onDuty)
-        {
-            CurrentlyOnDuty = onDuty;
-            if (onDuty)
-            {
-                GameFiber.StartNew(Interval);
-                SetupEventHandlers();
-                AddCalloutEventWithCI();
-                UpdateWorldPeds();
-                UpdateWorldCars();
-                Game.DisplayNotification("ReportsPlusListener loaded successfully.");
-            }
-        }
 
         private void SetupEventHandlers()
         {
@@ -143,7 +171,7 @@ namespace ReportsPlus
             }
         }
 
-            private static string GenerateCalloutId()
+        private static string GenerateCalloutId()
         {
             return new Random().Next(10000, 100000).ToString();
         }
