@@ -235,7 +235,6 @@ namespace ReportsPlus
         // Refreshers
         internal static void UpdateCalloutData(string calloutId, string key, string value)
         {
-            Game.LogTrivial("ReportsPlus: Update callout data");
 
             // Load the XML file if not already loaded or if it might have changed
             calloutDoc = XDocument.Load(Path.Combine(FileDataFolder, "callout.xml"));
@@ -272,7 +271,6 @@ namespace ReportsPlus
         }
         private static void UpdateCurrentID(Ped ped)
         {
-            Game.LogTrivial("ReportsPlus: Update currentID.data");
 
             if (!ped.Exists())
                 return;
@@ -292,11 +290,10 @@ namespace ReportsPlus
 
             currentIDDoc.Root.Add(newEntry);
             currentIDDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
-            Game.LogTrivial("ReportsPlus: Updated currentID.data");
+            Game.LogTrivial("ReportsPlus: Updated currentID data file");
         }
         private static void RefreshVehs()
         {
-            Game.LogTrivial("ReportsPlus: Update worldCars.data");
             if (!LocalPlayer.Exists())
             {
                 Game.LogTrivial("ReportsPlus: Failed to update worldCars.data; Invalid LocalPlayer");
@@ -314,14 +311,13 @@ namespace ReportsPlus
                 }
             }
             File.WriteAllText($"{FileDataFolder}/worldCars.data", string.Join(",", carsList));
-            Game.LogTrivial("ReportsPlus: Updated worldCars.data");
+            Game.LogTrivial("ReportsPlus: Updated veh data file");
         }
         private static void RefreshPeds()
         {
-            Game.LogTrivial("ReportsPlus: Update worldPeds.data");
             if (!LocalPlayer.Exists())
             {
-                Game.LogTrivial("ReportsPlus: Failed to update worldPeds.data; Invalid LocalPlayer");
+                Game.LogTrivial("ReportsPlus: Failed to update ped data; Invalid LocalPlayer");
                 return;
             }
             Ped[] allPeds = LocalPlayer.GetNearbyPeds(15);
@@ -338,7 +334,7 @@ namespace ReportsPlus
 
             File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join(",", persList));
 
-            Game.LogTrivial("ReportsPlus: Updated worldPeds.data");
+            Game.LogTrivial("ReportsPlus: Updated ped data file");
         }
 
 
