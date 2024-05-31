@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace ReportsPlus
@@ -50,7 +51,6 @@ namespace ReportsPlus
 
                 currentIDDoc = new XDocument(new XElement("IDs"));
                 LoadCurrentIDDocument();
-                LoadCalloutDocument();
 
                 GameFiber.StartNew(Int);
                 EstablishEvents();
@@ -61,6 +61,7 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlus Listener Loaded Successfully.");
             }
         }
+
 
 
         // Loaders
@@ -125,12 +126,14 @@ namespace ReportsPlus
                 string currentTime = DateTime.Now.ToString("h:mm:ss tt");
                 string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-                // Clear existing callouts before adding new one
-                calloutDoc.Root.Elements("Callout").Remove();
+                // Remove ~ and anything inside it from callout.CalloutMessage
+                string cleanCalloutMessage = Regex.Replace(callout.CalloutMessage, @"~.*?~", "").Trim();
 
+                // Clear existing callouts before adding new one
+                calloutDoc = new XDocument(new XElement("Callouts"));
                 XElement calloutElement = new XElement("Callout",
                     new XElement("Number", calloutId),
-                    new XElement("Type", callout.CalloutMessage),
+                    new XElement("Type", cleanCalloutMessage),
                     new XElement("Description", description),
                     new XElement("Priority", priority),
                     new XElement("Street", street),
