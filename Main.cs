@@ -24,6 +24,7 @@ namespace ReportsPlus
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
         private static Dictionary<LHandle, string> calloutIds = new Dictionary<LHandle, string>();
 
+        // TODO: Delete all the previous config files on startup.
 
         // Startup
         public override void Initialize()
@@ -50,7 +51,7 @@ namespace ReportsPlus
                     Directory.CreateDirectory(FileDataFolder);
 
                 currentIDDoc = new XDocument(new XElement("IDs"));
-                LoadCurrentIDDocument();
+                //LoadCurrentIDDocument();
 
                 GameFiber.StartNew(Int);
                 EstablishEvents();
