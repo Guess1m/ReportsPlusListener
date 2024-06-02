@@ -23,8 +23,235 @@ namespace ReportsPlus
         internal static bool IsOnDuty;
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
         private static Dictionary<LHandle, string> calloutIds = new Dictionary<LHandle, string>();
+        private static readonly List<string> LosSantosAddresses = new List<string>
+{
+    "Abattoir Avenue",
+    "Abe Milton Parkway",
+    "Ace Jones Drive",
+    "Adam's Apple Boulevard",
+    "Aguja Street",
+    "Alta Place",
+    "Alta Street",
+    "Amarillo Vista",
+    "Amarillo Way",
+    "Americano Way",
+    "Atlee Street",
+    "Autopia Parkway",
+    "Banham Canyon Drive",
+    "Barbareno Road",
+    "Bay City Avenue",
+    "Bay City Incline",
+    "Baytree Canyon Road",
+    "Boulevard Del Perro",
+    "Bridge Street",
+    "Brouge Avenue",
+    "Buccaneer Way",
+    "Buen Vino Road",
+    "Caesars Place",
+    "Calais Avenue",
+    "Capital Boulevard",
+    "Carcer Way",
+    "Carson Avenue",
+    "Chum Street",
+    "Chupacabra Street",
+    "Clinton Avenue",
+    "Cockingend Drive",
+    "Conquistador Street",
+    "Cortes Street",
+    "Cougar Avenue",
+    "Covenant Avenue",
+    "Cox Way",
+    "Crusade Road",
+    "Davis Avenue",
+    "Decker Street",
+    "Didion Drive",
+    "Dorset Drive",
+    "Dorset Place",
+    "Dry Dock Street",
+    "Dunstable Drive",
+    "Dunstable Lane",
+    "Dutch London Street",
+    "Eastbourne Way",
+    "East Galileo Avenue",
+    "East Mirror Drive",
+    "Eclipse Boulevard",
+    "Edwood Way",
+    "Elgin Avenue",
+    "El Burro Boulevard",
+    "El Rancho Boulevard",
+    "Equality Way",
+    "Exceptionalists Way",
+    "Fantastic Place",
+    "Fenwell Place",
+    "Forum Drive",
+    "Fudge Lane",
+    "Galileo Road",
+    "Gentry Lane",
+    "Ginger Street",
+    "Glory Way",
+    "Goma Street",
+    "Greenwich Parkway",
+    "Greenwich Place",
+    "Greenwich Way",
+    "Grove Street",
+    "Hanger Way",
+    "Hangman Avenue",
+    "Hardy Way",
+    "Hawick Avenue",
+    "Heritage Way",
+    "Hillcrest Avenue",
+    "Hillcrest Ridge Access Road",
+    "Imagination Court",
+    "Industry Passage",
+    "Ineseno Road",
+    "Integrity Way",
+    "Invention Court",
+    "Innocence Boulevard",
+    "Jamestown Street",
+    "Kimble Hill Drive",
+    "Kortz Drive",
+    "Labor Place",
+    "Laguna Place",
+    "Lake Vinewood Drive",
+    "Las Lagunas Boulevard",
+    "Liberty Street",
+    "Lindsay Circus",
+    "Little Bighorn Avenue",
+    "Low Power Street",
+    "Macdonald Street",
+    "Mad Wayne Thunder Drive",
+    "Magellan Avenue",
+    "Marathon Avenue",
+    "Marlowe Drive",
+    "Melanoma Street",
+    "Meteor Street",
+    "Milton Road",
+    "Mirror Park Boulevard",
+    "Mirror Place",
+    "Morningwood Boulevard",
+    "Mount Haan Drive",
+    "Mount Haan Road",
+    "Mount Vinewood Drive",
+    "Movie Star Way",
+    "Mutiny Road",
+    "New Empire Way",
+    "Nikola Avenue",
+    "Nikola Place",
+    "Normandy Drive",
+    "North Archer Avenue",
+    "North Conker Avenue",
+    "North Sheldon Avenue",
+    "North Rockford Drive",
+    "Occupation Avenue",
+    "Orchardville Avenue",
+    "Palomino Avenue",
+    "Peaceful Street",
+    "Perth Street",
+    "Picture Perfect Drive",
+    "Plaice Place",
+    "Playa Vista",
+    "Popular Street",
+    "Portola Drive",
+    "Power Street",
+    "Prosperity Street",
+    "Prosperity Street Promenade",
+    "Red Desert Avenue",
+    "Richman Street",
+    "Rockford Drive",
+    "Roy Lowenstein Boulevard",
+    "Rub Street",
+    "San Andreas Avenue",
+    "Sandcastle Way",
+    "San Vitus Boulevard",
+    "Senora Road",
+    "Shank Street",
+    "Signal Street",
+    "Sinner Street",
+    "Sinners Passage",
+    "South Arsenal Street",
+    "South Boulevard Del Perro",
+    "South Mo Milton Drive",
+    "South Rockford Drive",
+    "South Shambles Street",
+    "Spanish Avenue",
+    "Steele Way",
+    "Strangeways Drive",
+    "Strawberry Avenue",
+    "Supply Street",
+    "Sustancia Road",
+    "Swiss Street",
+    "Tackle Street",
+    "Tangerine Street",
+    "Tongva Drive",
+    "Tower Way",
+    "Tug Street",
+    "Utopia Gardens",
+    "Vespucci Boulevard",
+    "Vinewood Boulevard",
+    "Vinewood Park Drive",
+    "Vitus Street",
+    "Voodoo Place",
+    "West Eclipse Boulevard",
+    "West Galileo Avenue",
+    "West Mirror Drive",
+    "Whispymound Drive",
+    "Wild Oats Drive",
+    "York Street",
+    "Zancudo Barranca"
+};
+        private static readonly List<string> BlaineCountyAddresses = new List<string>
+{
+    "Algonquin Boulevard",
+    "Alhambra Drive",
+    "Armadillo Avenue",
+    "Baytree Canyon Road",
+    "Calafia Road",
+    "Cascabel Avenue",
+    "Cassidy Trail",
+    "Cat-Claw Avenue",
+    "Chianski Passage",
+    "Cholla Road",
+    "Cholla Springs Avenue",
+    "Duluoz Avenue",
+    "East Joshua Road",
+    "Fort Zancudo Approach Road",
+    "Galileo Road",
+    "Grapeseed Avenue",
+    "Grapeseed Main Street",
+    "Joad Lane",
+    "Joshua Road",
+    "Lesbos Lane",
+    "Lolita Avenue",
+    "Marina Drive",
+    "Meringue Lane",
+    "Mount Haan Road",
+    "Mountain View Drive",
+    "Niland Avenue",
+    "North Calafia Way",
+    "Nowhere Road",
+    "O'Neil Way",
+    "Paleto Boulevard",
+    "Panorama Drive",
+    "Procopio Drive",
+    "Procopio Promenade",
+    "Pyrite Avenue",
+    "Raton Pass",
+    "Route 68 Approach",
+    "Seaview Road",
+    "Senora Way",
+    "Smoke Tree Road",
+    "Union Road",
+    "Zancudo Avenue",
+    "Zancudo Road",
+    "Zancudo Trail"
+};
+
+
+        private static Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
 
         // TODO: Delete all the previous config files on startup.
+
+
 
         // Startup
         public override void Initialize()
@@ -87,6 +314,7 @@ namespace ReportsPlus
                 calloutDoc.Save(filePath);
             }
         }
+
 
 
         // Events
@@ -182,6 +410,7 @@ namespace ReportsPlus
         }
 
 
+
         // Utils
         private static string GenerateCalloutId()
         {
@@ -204,7 +433,10 @@ namespace ReportsPlus
         {
             while (IsOnDuty)
             {
+                Random random = new Random();
                 RefreshPeds();
+                GameFiber.Wait(random.Next(4000, 5000));
+
                 RefreshVehs();
                 GameFiber.Wait(15000);
             }
@@ -234,6 +466,7 @@ namespace ReportsPlus
 
             return isInstalled;
         }
+
 
 
         // Refreshers
@@ -275,20 +508,24 @@ namespace ReportsPlus
         }
         private static void UpdateCurrentID(Ped ped)
         {
-
             if (!ped.Exists())
                 return;
 
             var persona = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped);
-            var existingEntry = currentIDDoc.Descendants("ID").FirstOrDefault(e => e.Element("Name")?.Value == persona.FullName);
-            if (existingEntry != null)
-                return;
+            var fullName = persona.FullName;
+
+            if (!PedAddresses.ContainsKey(fullName))
+            {
+                PedAddresses[fullName] = GetRandomAddress();
+            }
 
             int index = ped.IsInAnyVehicle(false) ? ped.SeatIndex + 2 : 0;
+
             XElement newEntry = new XElement("ID",
-                new XElement("Name", persona.FullName),
+                new XElement("Name", fullName),
                 new XElement("Birthday", $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}"),
                 new XElement("Gender", persona.Gender),
+                new XElement("Address", PedAddresses[fullName]),
                 new XElement("Index", index)
             );
 
@@ -296,6 +533,7 @@ namespace ReportsPlus
             currentIDDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             Game.LogTrivial("ReportsPlus: Updated currentID data file");
         }
+
         private static void RefreshVehs()
         {
             if (!LocalPlayer.Exists())
@@ -325,21 +563,22 @@ namespace ReportsPlus
                 return;
             }
             Ped[] allPeds = LocalPlayer.GetNearbyPeds(15);
-            string[] persList = new string[allPeds.Length];
+            string[] pedsList = new string[allPeds.Length];
 
             for (int i = 0; i < allPeds.Length; i++)
             {
                 Ped ped = allPeds[i];
                 if (ped.Exists())
                 {
-                    persList[Array.IndexOf(allPeds, ped)] = GetPedData(ped);
+                    pedsList[Array.IndexOf(allPeds, ped)] = GetPedData(ped);
                 }
             }
 
-            File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join(",", persList));
+            File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join(",", pedsList));
 
             Game.LogTrivial("ReportsPlus: Updated ped data file");
         }
+
 
 
         // Get Info
@@ -369,7 +608,6 @@ namespace ReportsPlus
             }
             return "";
         }
-
         private static string GetWorldCarData(Vehicle car)
         {
             string driver = car.Driver.Exists() ? LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(car.Driver).FullName : "";
@@ -380,9 +618,26 @@ namespace ReportsPlus
         {
             Persona persona = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped);
             string birthday = $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}";
-            return $"name={persona.FullName}&birthday={birthday}&gender={persona.Gender}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
+            string fullName = persona.FullName;
+            string address;
+
+            if (!PedAddresses.ContainsKey(fullName))
+            {
+                address = GetRandomAddress();
+                PedAddresses.Add(fullName, address);
+            }
+            else
+            {
+                address = PedAddresses[fullName];
+            }
+
+
+            return $"name={persona.FullName}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
 
+
+
+        // Utils
         private int CalculateAge(DateTime birthday)
         {
             DateTime today = DateTime.Today;
@@ -390,6 +645,23 @@ namespace ReportsPlus
             if (birthday > today.AddYears(-age)) age--;
             return age;
         }
+        private static string GetRandomAddress()
+        {
+            Random random = new Random();
+            List<string> chosenList = random.Next(2) == 0 ? LosSantosAddresses : BlaineCountyAddresses;
+            int index = random.Next(chosenList.Count);
+            string addressNumber = random.Next(1000).ToString().PadLeft(3, '0');
+            string address = $"{addressNumber} {chosenList[index]}";
 
+            // Ensure the address is not repeated within the same iteration
+            while (PedAddresses.ContainsValue(address))
+            {
+                index = random.Next(chosenList.Count);
+                addressNumber = random.Next(1000).ToString().PadLeft(3, '0');
+                address = $"{addressNumber} {chosenList[index]}";
+            }
+
+            return address;
+        }
     }
 }
