@@ -278,7 +278,7 @@ namespace ReportsPlus
                     Directory.CreateDirectory(FileDataFolder);
 
                 currentIDDoc = new XDocument(new XElement("IDs"));
-                //LoadCurrentIDDocument();
+                LoadCurrentIDDocument();
 
                 GameFiber.StartNew(Int);
                 EstablishEvents();
@@ -506,6 +506,7 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlus: No callout found with the specified ID");
             }
         }
+
         private static void UpdateCurrentID(Ped ped)
         {
             if (!ped.Exists())
