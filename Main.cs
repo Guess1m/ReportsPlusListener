@@ -249,11 +249,6 @@ namespace ReportsPlus
 
         private static Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
 
-        // TODO: Delete all the previous config files on startup.
-
-
-
-        // Startup
         public override void Initialize()
         {
             LSPD_First_Response.Mod.API.Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
@@ -267,18 +262,14 @@ namespace ReportsPlus
                 bool pluginsInstalled = CheckPlugins();
                 if (!pluginsInstalled)
                 {
-                    // Check for required plugins
                     Game.DisplayNotification("~r~ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
                     Game.LogTrivial("ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
-                    return; // Exit initialization if plugins are missing
+                    return;
                 }
 
                 calloutIds.Clear();
                 if (!Directory.Exists(FileDataFolder))
                     Directory.CreateDirectory(FileDataFolder);
-
-                currentIDDoc = new XDocument(new XElement("IDs"));
-                LoadCurrentIDDocument();
 
                 GameFiber.StartNew(Int);
                 EstablishEvents();
@@ -355,10 +346,8 @@ namespace ReportsPlus
                 string currentTime = DateTime.Now.ToString("h:mm:ss tt");
                 string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-                // Remove ~ and anything inside it from callout.CalloutMessage
                 string cleanCalloutMessage = Regex.Replace(callout.CalloutMessage, @"~.*?~", "").Trim();
 
-                // Clear existing callouts before adding new one
                 calloutDoc = new XDocument(new XElement("Callouts"));
                 XElement calloutElement = new XElement("Callout",
                     new XElement("Number", calloutId),
@@ -473,29 +462,23 @@ namespace ReportsPlus
         internal static void UpdateCalloutData(string calloutId, string key, string value)
         {
 
-            // Load the XML file if not already loaded or if it might have changed
             calloutDoc = XDocument.Load(Path.Combine(FileDataFolder, "callout.xml"));
 
-            // Find the callout with the specified ID
             XElement calloutElement = calloutDoc.Descendants("Callout")
                                                 .FirstOrDefault(c => c.Element("ID")?.Value == calloutId);
 
             if (calloutElement != null)
             {
-                // Find the element to update
                 XElement elementToUpdate = calloutElement.Element(key);
                 if (elementToUpdate != null)
                 {
-                    // Update the element's value
                     elementToUpdate.Value = value;
                     Game.LogTrivial($"ReportsPlus: Updated {key} for callout ID {calloutId} to {value}");
 
-                    // Save the changes back to the XML file
                     calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
                 }
                 else
                 {
-                    // Key does not exist, so add it
                     calloutElement.Add(new XElement(key, value));
                     Game.LogTrivial($"ReportsPlus: Added {key} for callout ID {calloutId} with value {value}");
                     calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
@@ -530,8 +513,10 @@ namespace ReportsPlus
                 new XElement("Index", index)
             );
 
-            currentIDDoc.Root.Add(newEntry);
-            currentIDDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
+            XDocument newDoc = new XDocument(new XElement("IDs"));
+            newDoc.Root.Add(newEntry);
+
+            newDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             Game.LogTrivial("ReportsPlus: Updated currentID data file");
         }
 
@@ -654,7 +639,6 @@ namespace ReportsPlus
             string addressNumber = random.Next(1000).ToString().PadLeft(3, '0');
             string address = $"{addressNumber} {chosenList[index]}";
 
-            // Ensure the address is not repeated within the same iteration
             while (PedAddresses.ContainsValue(address))
             {
                 index = random.Next(chosenList.Count);
