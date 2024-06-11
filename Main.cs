@@ -271,6 +271,8 @@ namespace ReportsPlus
                 if (!Directory.Exists(FileDataFolder))
                     Directory.CreateDirectory(FileDataFolder);
 
+                CreateFiles();
+
                 GameFiber.StartNew(Int);
                 EstablishEvents();
                 CalloutEvent();
@@ -624,6 +626,29 @@ namespace ReportsPlus
 
 
         // Utils
+        private void CreateFiles()
+        {
+            string dataFolder = "ReportsPlus\\data";
+
+            if (!Directory.Exists(dataFolder))
+            {
+                Directory.CreateDirectory(dataFolder);
+            }
+
+            string[] filesToCreate = { "callout.xml", "currentID.xml", "worldCars.data", "worldPeds.data" };
+
+            foreach (var fileName in filesToCreate)
+            {
+                string filePath = Path.Combine(dataFolder, fileName);
+                if (!File.Exists(filePath))
+                {
+                    using (File.Create(filePath))
+                    {
+                        // Create an empty file
+                    }
+                }
+            }
+        }
         private int CalculateAge(DateTime birthday)
         {
             DateTime today = DateTime.Today;
