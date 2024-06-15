@@ -1,20 +1,11 @@
-﻿using LSPD_First_Response.Engine.Scripting;
-using LSPD_First_Response.Engine.Scripting.Entities;
-using LSPD_First_Response.Mod.API;
-using LSPD_First_Response.Mod.Callouts;
-using Rage;
-using StopThePed.API;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-
-namespace ReportsPlus
+﻿namespace ReportsPlus
 {
     public class Main : Plugin
     {
+        /* 
+         * Thank you @HeyPalu, Creator of ExternalPoliceComputer, for the C# implementation and ideas for adding the GTA V integration.
+        */
+
         // Vars
         private static readonly string FileDataFolder = "ReportsPlus\\data";
         private static XDocument currentIDDoc;
