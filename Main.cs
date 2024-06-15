@@ -337,6 +337,7 @@ namespace ReportsPlus
                 string agency = LSPD_First_Response.Mod.API.Functions.GetCurrentAgencyScriptName();
                 string priority = "default";
                 string description = "";
+                string calMessage = "";
                 string name = callout.FriendlyName;
 
                 if (callout.ScriptInfo is CalloutInterfaceAPI.CalloutInterfaceAttribute calloutInterfaceInfo)
@@ -344,6 +345,7 @@ namespace ReportsPlus
                     agency = calloutInterfaceInfo.Agency.Length > 0 ? calloutInterfaceInfo.Agency : agency;
                     priority = calloutInterfaceInfo.Priority.Length > 0 ? calloutInterfaceInfo.Priority : "default";
                     description = calloutInterfaceInfo.Description;
+                    calMessage = callout.CalloutMessage;
                     name = calloutInterfaceInfo.Name;
                 }
 
@@ -359,6 +361,7 @@ namespace ReportsPlus
                     new XElement("Number", calloutId),
                     new XElement("Type", cleanCalloutMessage),
                     new XElement("Description", description),
+                    new XElement("Message", calMessage),
                     new XElement("Priority", priority),
                     new XElement("Street", street),
                     new XElement("Area", zone.RealAreaName),
