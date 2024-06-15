@@ -1,4 +1,17 @@
-﻿namespace ReportsPlus
+﻿using LSPD_First_Response.Engine.Scripting;
+using LSPD_First_Response.Engine.Scripting.Entities;
+using LSPD_First_Response.Mod.API;
+using LSPD_First_Response.Mod.Callouts;
+using Rage;
+using StopThePed.API;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
+
+namespace ReportsPlus
 {
     public class Main : Plugin
     {
