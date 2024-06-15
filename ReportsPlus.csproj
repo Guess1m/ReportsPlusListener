@@ -36,10 +36,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CalloutInterface">
-      <HintPath>..\..\..\OneDrive\Documents\LSPDFR SDK\CalloutInterface.dll</HintPath>
+      <HintPath>F:\SteamLibrary\steamapps\common\Grand Theft Auto V\plugins\LSPDFR\CalloutInterface.dll</HintPath>
     </Reference>
     <Reference Include="CalloutInterfaceAPI">
-      <HintPath>..\..\..\OneDrive\Documents\LSPDFR SDK\CalloutInterfaceAPI.dll</HintPath>
+      <HintPath>..\..\..\Documents\CalloutInterfaceAPI.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
@@ -48,13 +48,13 @@
       <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="LSPD First Response">
-      <HintPath>..\..\..\OneDrive\Documents\LSPDFR SDK\LSPD First Response.dll</HintPath>
+      <HintPath>F:\SteamLibrary\steamapps\common\Grand Theft Auto V\plugins\LSPD First Response.dll</HintPath>
     </Reference>
     <Reference Include="RagePluginHookSDK">
-      <HintPath>..\..\..\OneDrive\Documents\LSPDFR SDK\RagePluginHookSDK.dll</HintPath>
+      <HintPath>F:\SteamLibrary\steamapps\common\Grand Theft Auto V\SDK\RagePluginHookSDK.dll</HintPath>
     </Reference>
     <Reference Include="StopThePed">
-      <HintPath>..\..\..\OneDrive\Documents\LSPDFR SDK\StopThePed.dll</HintPath>
+      <HintPath>F:\SteamLibrary\steamapps\common\Grand Theft Auto V\plugins\LSPDFR\StopThePed.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
