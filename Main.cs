@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -615,6 +617,7 @@ namespace ReportsPlus
             string birthday = $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}";
             string fullName = persona.FullName;
             string address;
+            string licenseNum = GenerateLicenseNumber();
 
             if (!PedAddresses.ContainsKey(fullName))
             {
@@ -627,12 +630,29 @@ namespace ReportsPlus
             }
 
 
-            return $"name={persona.FullName}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
+            return $"name={persona.FullName}&licenseNumber={licenseNum}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
 
 
 
         // Utils
+
+        private static string GenerateLicenseNumber()
+        {
+            StringBuilder licenseNum = new StringBuilder();
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            {
+                byte[] randomNumber = new byte[1];
+                for (int i = 0; i < 10; i++)
+                {
+                    rng.GetBytes(randomNumber);
+                    int digit = randomNumber[0] % 10;
+                    licenseNum.Append(digit);
+                }
+            }
+            return licenseNum.ToString();
+        }
+
         private void CreateFiles()
         {
             string dataFolder = "ReportsPlus\\data";
