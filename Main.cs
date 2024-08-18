@@ -434,11 +434,11 @@ namespace ReportsPlus
             {
                 Random random = new Random();
                 RefreshPeds();
+                GameFiber.Wait(random.Next(3000, 6000));
                 RefreshStreet();
-                GameFiber.Wait(random.Next(4000, 5000));
-
+                GameFiber.Wait(random.Next(3000, 6000));
                 RefreshVehs();
-                GameFiber.Wait(random.Next(7000, 13000));
+                GameFiber.Wait(random.Next(3000, 6000));
             }
         }
         public override void Finally()
