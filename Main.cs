@@ -251,8 +251,6 @@ namespace ReportsPlus
     "Zancudo Road",
     "Zancudo Trail"
 };
-
-
         private static Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
 
         public override void Initialize()
@@ -284,6 +282,7 @@ namespace ReportsPlus
                 CalloutEvent();
                 RefreshPeds();
                 RefreshVehs();
+                RefreshStreet();
                 Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully.");
                 Game.LogTrivial("ReportsPlus Listener Loaded Successfully.");
             }
@@ -435,10 +434,11 @@ namespace ReportsPlus
             {
                 Random random = new Random();
                 RefreshPeds();
+                RefreshStreet();
                 GameFiber.Wait(random.Next(4000, 5000));
 
                 RefreshVehs();
-                GameFiber.Wait(15000);
+                GameFiber.Wait(random.Next(7000, 13000));
             }
         }
         public override void Finally()
@@ -500,7 +500,6 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlus: No callout found with the specified ID");
             }
         }
-
         private static void UpdateCurrentID(Ped ped)
         {
             if (!ped.Exists())
@@ -530,7 +529,6 @@ namespace ReportsPlus
             newDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             Game.LogTrivial("ReportsPlus: Updated currentID data file");
         }
-
         private static void RefreshVehs()
         {
             if (!LocalPlayer.Exists())
@@ -574,6 +572,19 @@ namespace ReportsPlus
             File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join(",", pedsList));
 
             Game.LogTrivial("ReportsPlus: Updated ped data file");
+        }
+        private static void RefreshStreet()
+        {
+            if (!LocalPlayer.Exists())
+            {
+                Game.LogTrivial("ReportsPlus: Failed to update location data; Invalid LocalPlayer");
+                return;
+            }
+            String currentStreet = World.GetStreetName(LocalPlayer.Position);
+
+            File.WriteAllText($"{FileDataFolder}/location.data", currentStreet);
+
+            Game.LogTrivial("ReportsPlus: Updated location data file");
         }
 
 
@@ -636,7 +647,6 @@ namespace ReportsPlus
 
 
         // Utils
-
         private static string GenerateLicenseNumber()
         {
             StringBuilder licenseNum = new StringBuilder();
@@ -652,7 +662,6 @@ namespace ReportsPlus
             }
             return licenseNum.ToString();
         }
-
         private void CreateFiles()
         {
             string dataFolder = "ReportsPlus\\data";
