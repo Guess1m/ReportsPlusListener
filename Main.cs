@@ -17,9 +17,9 @@ namespace ReportsPlus
 {
     public class Main : Plugin
     {
-        /* 
+        /*
          * Thank you @HeyPalu, Creator of ExternalPoliceComputer, for the C# implementation and ideas for adding the GTA V integration.
-        */
+         */
 
         // Vars
         private static readonly string FileDataFolder = "ReportsPlus\\data";
@@ -29,228 +29,231 @@ namespace ReportsPlus
         internal static bool IsOnDuty;
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
         private static Dictionary<LHandle, string> calloutIds = new Dictionary<LHandle, string>();
+
         private static readonly List<string> LosSantosAddresses = new List<string>
-{
-    "Abattoir Avenue",
-    "Abe Milton Parkway",
-    "Ace Jones Drive",
-    "Adam's Apple Boulevard",
-    "Aguja Street",
-    "Alta Place",
-    "Alta Street",
-    "Amarillo Vista",
-    "Amarillo Way",
-    "Americano Way",
-    "Atlee Street",
-    "Autopia Parkway",
-    "Banham Canyon Drive",
-    "Barbareno Road",
-    "Bay City Avenue",
-    "Bay City Incline",
-    "Baytree Canyon Road",
-    "Boulevard Del Perro",
-    "Bridge Street",
-    "Brouge Avenue",
-    "Buccaneer Way",
-    "Buen Vino Road",
-    "Caesars Place",
-    "Calais Avenue",
-    "Capital Boulevard",
-    "Carcer Way",
-    "Carson Avenue",
-    "Chum Street",
-    "Chupacabra Street",
-    "Clinton Avenue",
-    "Cockingend Drive",
-    "Conquistador Street",
-    "Cortes Street",
-    "Cougar Avenue",
-    "Covenant Avenue",
-    "Cox Way",
-    "Crusade Road",
-    "Davis Avenue",
-    "Decker Street",
-    "Didion Drive",
-    "Dorset Drive",
-    "Dorset Place",
-    "Dry Dock Street",
-    "Dunstable Drive",
-    "Dunstable Lane",
-    "Dutch London Street",
-    "Eastbourne Way",
-    "East Galileo Avenue",
-    "East Mirror Drive",
-    "Eclipse Boulevard",
-    "Edwood Way",
-    "Elgin Avenue",
-    "El Burro Boulevard",
-    "El Rancho Boulevard",
-    "Equality Way",
-    "Exceptionalists Way",
-    "Fantastic Place",
-    "Fenwell Place",
-    "Forum Drive",
-    "Fudge Lane",
-    "Galileo Road",
-    "Gentry Lane",
-    "Ginger Street",
-    "Glory Way",
-    "Goma Street",
-    "Greenwich Parkway",
-    "Greenwich Place",
-    "Greenwich Way",
-    "Grove Street",
-    "Hanger Way",
-    "Hangman Avenue",
-    "Hardy Way",
-    "Hawick Avenue",
-    "Heritage Way",
-    "Hillcrest Avenue",
-    "Hillcrest Ridge Access Road",
-    "Imagination Court",
-    "Industry Passage",
-    "Ineseno Road",
-    "Integrity Way",
-    "Invention Court",
-    "Innocence Boulevard",
-    "Jamestown Street",
-    "Kimble Hill Drive",
-    "Kortz Drive",
-    "Labor Place",
-    "Laguna Place",
-    "Lake Vinewood Drive",
-    "Las Lagunas Boulevard",
-    "Liberty Street",
-    "Lindsay Circus",
-    "Little Bighorn Avenue",
-    "Low Power Street",
-    "Macdonald Street",
-    "Mad Wayne Thunder Drive",
-    "Magellan Avenue",
-    "Marathon Avenue",
-    "Marlowe Drive",
-    "Melanoma Street",
-    "Meteor Street",
-    "Milton Road",
-    "Mirror Park Boulevard",
-    "Mirror Place",
-    "Morningwood Boulevard",
-    "Mount Haan Drive",
-    "Mount Haan Road",
-    "Mount Vinewood Drive",
-    "Movie Star Way",
-    "Mutiny Road",
-    "New Empire Way",
-    "Nikola Avenue",
-    "Nikola Place",
-    "Normandy Drive",
-    "North Archer Avenue",
-    "North Conker Avenue",
-    "North Sheldon Avenue",
-    "North Rockford Drive",
-    "Occupation Avenue",
-    "Orchardville Avenue",
-    "Palomino Avenue",
-    "Peaceful Street",
-    "Perth Street",
-    "Picture Perfect Drive",
-    "Plaice Place",
-    "Playa Vista",
-    "Popular Street",
-    "Portola Drive",
-    "Power Street",
-    "Prosperity Street",
-    "Prosperity Street Promenade",
-    "Red Desert Avenue",
-    "Richman Street",
-    "Rockford Drive",
-    "Roy Lowenstein Boulevard",
-    "Rub Street",
-    "San Andreas Avenue",
-    "Sandcastle Way",
-    "San Vitus Boulevard",
-    "Senora Road",
-    "Shank Street",
-    "Signal Street",
-    "Sinner Street",
-    "Sinners Passage",
-    "South Arsenal Street",
-    "South Boulevard Del Perro",
-    "South Mo Milton Drive",
-    "South Rockford Drive",
-    "South Shambles Street",
-    "Spanish Avenue",
-    "Steele Way",
-    "Strangeways Drive",
-    "Strawberry Avenue",
-    "Supply Street",
-    "Sustancia Road",
-    "Swiss Street",
-    "Tackle Street",
-    "Tangerine Street",
-    "Tongva Drive",
-    "Tower Way",
-    "Tug Street",
-    "Utopia Gardens",
-    "Vespucci Boulevard",
-    "Vinewood Boulevard",
-    "Vinewood Park Drive",
-    "Vitus Street",
-    "Voodoo Place",
-    "West Eclipse Boulevard",
-    "West Galileo Avenue",
-    "West Mirror Drive",
-    "Whispymound Drive",
-    "Wild Oats Drive",
-    "York Street",
-    "Zancudo Barranca"
-};
+        {
+            "Abattoir Avenue",
+            "Abe Milton Parkway",
+            "Ace Jones Drive",
+            "Adam's Apple Boulevard",
+            "Aguja Street",
+            "Alta Place",
+            "Alta Street",
+            "Amarillo Vista",
+            "Amarillo Way",
+            "Americano Way",
+            "Atlee Street",
+            "Autopia Parkway",
+            "Banham Canyon Drive",
+            "Barbareno Road",
+            "Bay City Avenue",
+            "Bay City Incline",
+            "Baytree Canyon Road",
+            "Boulevard Del Perro",
+            "Bridge Street",
+            "Brouge Avenue",
+            "Buccaneer Way",
+            "Buen Vino Road",
+            "Caesars Place",
+            "Calais Avenue",
+            "Capital Boulevard",
+            "Carcer Way",
+            "Carson Avenue",
+            "Chum Street",
+            "Chupacabra Street",
+            "Clinton Avenue",
+            "Cockingend Drive",
+            "Conquistador Street",
+            "Cortes Street",
+            "Cougar Avenue",
+            "Covenant Avenue",
+            "Cox Way",
+            "Crusade Road",
+            "Davis Avenue",
+            "Decker Street",
+            "Didion Drive",
+            "Dorset Drive",
+            "Dorset Place",
+            "Dry Dock Street",
+            "Dunstable Drive",
+            "Dunstable Lane",
+            "Dutch London Street",
+            "Eastbourne Way",
+            "East Galileo Avenue",
+            "East Mirror Drive",
+            "Eclipse Boulevard",
+            "Edwood Way",
+            "Elgin Avenue",
+            "El Burro Boulevard",
+            "El Rancho Boulevard",
+            "Equality Way",
+            "Exceptionalists Way",
+            "Fantastic Place",
+            "Fenwell Place",
+            "Forum Drive",
+            "Fudge Lane",
+            "Galileo Road",
+            "Gentry Lane",
+            "Ginger Street",
+            "Glory Way",
+            "Goma Street",
+            "Greenwich Parkway",
+            "Greenwich Place",
+            "Greenwich Way",
+            "Grove Street",
+            "Hanger Way",
+            "Hangman Avenue",
+            "Hardy Way",
+            "Hawick Avenue",
+            "Heritage Way",
+            "Hillcrest Avenue",
+            "Hillcrest Ridge Access Road",
+            "Imagination Court",
+            "Industry Passage",
+            "Ineseno Road",
+            "Integrity Way",
+            "Invention Court",
+            "Innocence Boulevard",
+            "Jamestown Street",
+            "Kimble Hill Drive",
+            "Kortz Drive",
+            "Labor Place",
+            "Laguna Place",
+            "Lake Vinewood Drive",
+            "Las Lagunas Boulevard",
+            "Liberty Street",
+            "Lindsay Circus",
+            "Little Bighorn Avenue",
+            "Low Power Street",
+            "Macdonald Street",
+            "Mad Wayne Thunder Drive",
+            "Magellan Avenue",
+            "Marathon Avenue",
+            "Marlowe Drive",
+            "Melanoma Street",
+            "Meteor Street",
+            "Milton Road",
+            "Mirror Park Boulevard",
+            "Mirror Place",
+            "Morningwood Boulevard",
+            "Mount Haan Drive",
+            "Mount Haan Road",
+            "Mount Vinewood Drive",
+            "Movie Star Way",
+            "Mutiny Road",
+            "New Empire Way",
+            "Nikola Avenue",
+            "Nikola Place",
+            "Normandy Drive",
+            "North Archer Avenue",
+            "North Conker Avenue",
+            "North Sheldon Avenue",
+            "North Rockford Drive",
+            "Occupation Avenue",
+            "Orchardville Avenue",
+            "Palomino Avenue",
+            "Peaceful Street",
+            "Perth Street",
+            "Picture Perfect Drive",
+            "Plaice Place",
+            "Playa Vista",
+            "Popular Street",
+            "Portola Drive",
+            "Power Street",
+            "Prosperity Street",
+            "Prosperity Street Promenade",
+            "Red Desert Avenue",
+            "Richman Street",
+            "Rockford Drive",
+            "Roy Lowenstein Boulevard",
+            "Rub Street",
+            "San Andreas Avenue",
+            "Sandcastle Way",
+            "San Vitus Boulevard",
+            "Senora Road",
+            "Shank Street",
+            "Signal Street",
+            "Sinner Street",
+            "Sinners Passage",
+            "South Arsenal Street",
+            "South Boulevard Del Perro",
+            "South Mo Milton Drive",
+            "South Rockford Drive",
+            "South Shambles Street",
+            "Spanish Avenue",
+            "Steele Way",
+            "Strangeways Drive",
+            "Strawberry Avenue",
+            "Supply Street",
+            "Sustancia Road",
+            "Swiss Street",
+            "Tackle Street",
+            "Tangerine Street",
+            "Tongva Drive",
+            "Tower Way",
+            "Tug Street",
+            "Utopia Gardens",
+            "Vespucci Boulevard",
+            "Vinewood Boulevard",
+            "Vinewood Park Drive",
+            "Vitus Street",
+            "Voodoo Place",
+            "West Eclipse Boulevard",
+            "West Galileo Avenue",
+            "West Mirror Drive",
+            "Whispymound Drive",
+            "Wild Oats Drive",
+            "York Street",
+            "Zancudo Barranca"
+        };
+
         private static readonly List<string> BlaineCountyAddresses = new List<string>
-{
-    "Algonquin Boulevard",
-    "Alhambra Drive",
-    "Armadillo Avenue",
-    "Baytree Canyon Road",
-    "Calafia Road",
-    "Cascabel Avenue",
-    "Cassidy Trail",
-    "Cat-Claw Avenue",
-    "Chianski Passage",
-    "Cholla Road",
-    "Cholla Springs Avenue",
-    "Duluoz Avenue",
-    "East Joshua Road",
-    "Fort Zancudo Approach Road",
-    "Galileo Road",
-    "Grapeseed Avenue",
-    "Grapeseed Main Street",
-    "Joad Lane",
-    "Joshua Road",
-    "Lesbos Lane",
-    "Lolita Avenue",
-    "Marina Drive",
-    "Meringue Lane",
-    "Mount Haan Road",
-    "Mountain View Drive",
-    "Niland Avenue",
-    "North Calafia Way",
-    "Nowhere Road",
-    "O'Neil Way",
-    "Paleto Boulevard",
-    "Panorama Drive",
-    "Procopio Drive",
-    "Procopio Promenade",
-    "Pyrite Avenue",
-    "Raton Pass",
-    "Route 68 Approach",
-    "Seaview Road",
-    "Senora Way",
-    "Smoke Tree Road",
-    "Union Road",
-    "Zancudo Avenue",
-    "Zancudo Road",
-    "Zancudo Trail"
-};
+        {
+            "Algonquin Boulevard",
+            "Alhambra Drive",
+            "Armadillo Avenue",
+            "Baytree Canyon Road",
+            "Calafia Road",
+            "Cascabel Avenue",
+            "Cassidy Trail",
+            "Cat-Claw Avenue",
+            "Chianski Passage",
+            "Cholla Road",
+            "Cholla Springs Avenue",
+            "Duluoz Avenue",
+            "East Joshua Road",
+            "Fort Zancudo Approach Road",
+            "Galileo Road",
+            "Grapeseed Avenue",
+            "Grapeseed Main Street",
+            "Joad Lane",
+            "Joshua Road",
+            "Lesbos Lane",
+            "Lolita Avenue",
+            "Marina Drive",
+            "Meringue Lane",
+            "Mount Haan Road",
+            "Mountain View Drive",
+            "Niland Avenue",
+            "North Calafia Way",
+            "Nowhere Road",
+            "O'Neil Way",
+            "Paleto Boulevard",
+            "Panorama Drive",
+            "Procopio Drive",
+            "Procopio Promenade",
+            "Pyrite Avenue",
+            "Raton Pass",
+            "Route 68 Approach",
+            "Seaview Road",
+            "Senora Way",
+            "Smoke Tree Road",
+            "Union Road",
+            "Zancudo Avenue",
+            "Zancudo Road",
+            "Zancudo Trail"
+        };
+
         private static Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
 
         public override void Initialize()
@@ -258,6 +261,7 @@ namespace ReportsPlus
             LSPD_First_Response.Mod.API.Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
             Game.LogTrivial("ReportsPlus Listener Plugin initialized.");
         }
+
         private void OnOnDutyStateChangedHandler(bool onDuty)
         {
             IsOnDuty = onDuty;
@@ -266,7 +270,8 @@ namespace ReportsPlus
                 bool pluginsInstalled = CheckPlugins();
                 if (!pluginsInstalled)
                 {
-                    Game.DisplayNotification("~r~ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
+                    Game.DisplayNotification(
+                        "~r~ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
                     Game.LogTrivial("ReportsPlus requires CalloutInterface.dll and StopThePed.dll to be installed.");
                     return;
                 }
@@ -289,32 +294,6 @@ namespace ReportsPlus
         }
 
 
-
-        // Loaders
-        private void LoadCurrentIDDocument()
-        {
-            string filePath = Path.Combine(FileDataFolder, "currentID.xml");
-            if (File.Exists(filePath))
-            {
-                currentIDDoc = XDocument.Load(filePath);
-            }
-        }
-        private void LoadCalloutDocument()
-        {
-            string filePath = Path.Combine(FileDataFolder, "callout.xml");
-            if (File.Exists(filePath))
-            {
-                calloutDoc = XDocument.Load(filePath);
-            }
-            else
-            {
-                calloutDoc = new XDocument(new XElement("Callouts"));
-                calloutDoc.Save(filePath);
-            }
-        }
-
-
-
         // Events
         private void EstablishEvents()
         {
@@ -325,6 +304,7 @@ namespace ReportsPlus
             StopThePed.API.Events.askPassengerIdEvent += PassengerLicenseEvent;
             StopThePed.API.Events.stopPedEvent += StopPedEvent;
         }
+
         private static void CalloutEvent()
         {
             LSPD_First_Response.Mod.API.Events.OnCalloutDisplayed += Events_OnCalloutDisplayed;
@@ -376,25 +356,30 @@ namespace ReportsPlus
                 Game.LogTrivial($"ReportsPlus: Callout {calloutId} data updated and displayed.");
             }
         }
+
         private static void AskForIDEvent(Ped ped)
         {
             CreatePedObj(ped);
             UpdateCurrentID(ped);
         }
+
         private static void ArrestPedEvent(Ped ped)
         {
             CreatePedObj(ped);
         }
+
         private static void PatDownPedEvent(Ped ped)
         {
             CreatePedObj(ped);
             UpdateCurrentID(ped);
         }
+
         private static void DriversLicenseEvent(Ped ped)
         {
             CreatePedObj(ped);
             UpdateCurrentID(ped);
         }
+
         private static void PassengerLicenseEvent(Vehicle vehicle)
         {
             Ped[] passengers = vehicle.Passengers;
@@ -403,11 +388,11 @@ namespace ReportsPlus
                 UpdateCurrentID(passengers[i]);
             }
         }
+
         private static void StopPedEvent(Ped ped)
         {
             CreatePedObj(ped);
         }
-
 
 
         // Utils
@@ -415,6 +400,7 @@ namespace ReportsPlus
         {
             return new Random().Next(10000, 100000).ToString();
         }
+
         private static void CreatePedObj(Ped ped)
         {
             if (ped.Exists())
@@ -428,6 +414,7 @@ namespace ReportsPlus
                 File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{addComma}{data}");
             }
         }
+
         private static void Int()
         {
             while (IsOnDuty)
@@ -441,6 +428,7 @@ namespace ReportsPlus
                 GameFiber.Wait(random.Next(3000, 6000));
             }
         }
+
         public override void Finally()
         {
             LSPD_First_Response.Mod.API.Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
@@ -451,6 +439,7 @@ namespace ReportsPlus
             calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
             Game.LogTrivial("ReportsPlusListener cleaned up.");
         }
+
         private bool CheckPlugins()
         {
             bool hasCalloutInterface = IsPluginInstalled("CalloutInterface");
@@ -458,6 +447,7 @@ namespace ReportsPlus
 
             return hasCalloutInterface && hasStopThePed;
         }
+
         private bool IsPluginInstalled(string pluginName)
         {
             var plugins = LSPD_First_Response.Mod.API.Functions.GetAllUserPlugins();
@@ -468,38 +458,7 @@ namespace ReportsPlus
         }
 
 
-
         // Refreshers
-        internal static void UpdateCalloutData(string calloutId, string key, string value)
-        {
-
-            calloutDoc = XDocument.Load(Path.Combine(FileDataFolder, "callout.xml"));
-
-            XElement calloutElement = calloutDoc.Descendants("Callout")
-                                                .FirstOrDefault(c => c.Element("ID")?.Value == calloutId);
-
-            if (calloutElement != null)
-            {
-                XElement elementToUpdate = calloutElement.Element(key);
-                if (elementToUpdate != null)
-                {
-                    elementToUpdate.Value = value;
-                    Game.LogTrivial($"ReportsPlus: Updated {key} for callout ID {calloutId} to {value}");
-
-                    calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
-                }
-                else
-                {
-                    calloutElement.Add(new XElement(key, value));
-                    Game.LogTrivial($"ReportsPlus: Added {key} for callout ID {calloutId} with value {value}");
-                    calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
-                }
-            }
-            else
-            {
-                Game.LogTrivial("ReportsPlus: No callout found with the specified ID");
-            }
-        }
         private static void UpdateCurrentID(Ped ped)
         {
             if (!ped.Exists())
@@ -529,6 +488,7 @@ namespace ReportsPlus
             newDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             Game.LogTrivial("ReportsPlus: Updated currentID data file");
         }
+
         private static void RefreshVehs()
         {
             if (!LocalPlayer.Exists())
@@ -536,6 +496,7 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlus: Failed to update worldCars.data; Invalid LocalPlayer");
                 return;
             }
+
             Vehicle[] allCars = LocalPlayer.GetNearbyVehicles(15);
             string[] carsList = new string[allCars.Length];
 
@@ -547,9 +508,11 @@ namespace ReportsPlus
                     carsList[Array.IndexOf(allCars, car)] = GetWorldCarData(car);
                 }
             }
+
             File.WriteAllText($"{FileDataFolder}/worldCars.data", string.Join(",", carsList));
             Game.LogTrivial("ReportsPlus: Updated veh data file");
         }
+
         private static void RefreshPeds()
         {
             if (!LocalPlayer.Exists())
@@ -557,6 +520,7 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlus: Failed to update ped data; Invalid LocalPlayer");
                 return;
             }
+
             Ped[] allPeds = LocalPlayer.GetNearbyPeds(15);
             string[] pedsList = new string[allPeds.Length];
 
@@ -573,6 +537,7 @@ namespace ReportsPlus
 
             Game.LogTrivial("ReportsPlus: Updated ped data file");
         }
+
         private static void RefreshStreet()
         {
             if (!LocalPlayer.Exists())
@@ -580,13 +545,13 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlus: Failed to update location data; Invalid LocalPlayer");
                 return;
             }
+
             String currentStreet = World.GetStreetName(LocalPlayer.Position);
 
             File.WriteAllText($"{FileDataFolder}/location.data", currentStreet);
 
             Game.LogTrivial("ReportsPlus: Updated location data file");
         }
-
 
 
         // Get Info
@@ -601,8 +566,10 @@ namespace ReportsPlus
                 case STPVehicleStatus.Valid:
                     return "Valid";
             }
+
             return "";
         }
+
         private static string GetInsuranceInfo(Vehicle car)
         {
             switch (StopThePed.API.Functions.getVehicleInsuranceStatus(car))
@@ -614,14 +581,22 @@ namespace ReportsPlus
                 case STPVehicleStatus.Valid:
                     return "Valid";
             }
+
             return "";
         }
+
         private static string GetWorldCarData(Vehicle car)
         {
-            string driver = car.Driver.Exists() ? LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(car.Driver).FullName : "";
-            string color = Rage.Native.NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(car) != -1 ? "" : $"{car.PrimaryColor.R}-{car.PrimaryColor.G}-{car.PrimaryColor.B}";
-            return $"licensePlate={car.LicensePlate}&model={car.Model.Name}&isStolen={car.IsStolen}&isPolice={car.IsPoliceVehicle}&owner={LSPD_First_Response.Mod.API.Functions.GetVehicleOwnerName(car)}&driver={driver}&registration={GetRegistration(car)}&insurance={GetInsuranceInfo(car)}&color={color}";
+            string driver = car.Driver.Exists()
+                ? LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(car.Driver).FullName
+                : "";
+            string color = Rage.Native.NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(car) != -1
+                ? ""
+                : $"{car.PrimaryColor.R}-{car.PrimaryColor.G}-{car.PrimaryColor.B}";
+            return
+                $"licensePlate={car.LicensePlate}&model={car.Model.Name}&isStolen={car.IsStolen}&isPolice={car.IsPoliceVehicle}&owner={LSPD_First_Response.Mod.API.Functions.GetVehicleOwnerName(car)}&driver={driver}&registration={GetRegistration(car)}&insurance={GetInsuranceInfo(car)}&color={color}";
         }
+
         private static string GetPedData(Ped ped)
         {
             Persona persona = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped);
@@ -641,9 +616,9 @@ namespace ReportsPlus
             }
 
 
-            return $"name={persona.FullName}&licenseNumber={licenseNum}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
+            return
+                $"name={persona.FullName}&licenseNumber={licenseNum}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
-
 
 
         // Utils
@@ -660,8 +635,10 @@ namespace ReportsPlus
                     licenseNum.Append(digit);
                 }
             }
+
             return licenseNum.ToString();
         }
+
         private void CreateFiles()
         {
             string dataFolder = "ReportsPlus\\data";
@@ -685,13 +662,7 @@ namespace ReportsPlus
                 }
             }
         }
-        private int CalculateAge(DateTime birthday)
-        {
-            DateTime today = DateTime.Today;
-            int age = today.Year - birthday.Year;
-            if (birthday > today.AddYears(-age)) age--;
-            return age;
-        }
+
         private static string GetRandomAddress()
         {
             Random random = new Random();
