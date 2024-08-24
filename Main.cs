@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus
 {
@@ -618,6 +619,11 @@ namespace ReportsPlus
 
             return
                 $"name={persona.FullName}&licenseNumber={licenseNum}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
+        }
+
+        private static string GetPedCurrentZoneName()
+        {
+            return Functions.GetZoneAtPosition( Game.LocalPlayer.Character.Position).RealAreaName;
         }
 
 
