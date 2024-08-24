@@ -626,6 +626,11 @@ namespace ReportsPlus
             return Functions.GetZoneAtPosition( Game.LocalPlayer.Character.Position).RealAreaName;
         }
 
+        private static string GetPedModel(Ped ped)
+        {
+            return ped.Model.Name;
+        }
+
 
         // Utils
         private static string GenerateLicenseNumber()
