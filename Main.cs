@@ -600,11 +600,12 @@ namespace ReportsPlus
 
         private static string GetPedData(Ped ped)
         {
-            Persona persona = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped);
+            Persona persona = Functions.GetPersonaForPed(ped);
             string birthday = $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}";
             string fullName = persona.FullName;
             string address;
             string licenseNum = GenerateLicenseNumber();
+            string pedModel = GetPedModel(ped);
 
             if (!PedAddresses.ContainsKey(fullName))
             {
@@ -616,14 +617,13 @@ namespace ReportsPlus
                 address = PedAddresses[fullName];
             }
 
-
-            return
-                $"name={persona.FullName}&licenseNumber={licenseNum}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
+            return // A_F_Y_TOURIST_01
+                $"name={persona.FullName}&licenseNumber={licenseNum}&pedModel={pedModel}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
 
         private static string GetPedCurrentZoneName()
         {
-            return Functions.GetZoneAtPosition( Game.LocalPlayer.Character.Position).RealAreaName;
+            return Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).RealAreaName;
         }
 
         private static string GetPedModel(Ped ped)
