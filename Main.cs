@@ -259,7 +259,7 @@ namespace ReportsPlus
 
         public override void Initialize()
         {
-            LSPD_First_Response.Mod.API.Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
+            Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
             Game.LogTrivial("ReportsPlus Listener Plugin initialized.");
         }
 
@@ -606,7 +606,15 @@ namespace ReportsPlus
             string fullName = persona.FullName;
             string address;
             string licenseNum = GenerateLicenseNumber();
+            StringBuilder fullModel = new StringBuilder();
             string pedModel = GetPedModel(ped);
+            int headDrawableIndex = 0;
+            int headDrawableTextureIndex = 0;
+
+            if (ped != null && ped.IsValid())
+            {
+                ped.GetVariation(0, out headDrawableIndex, out headDrawableTextureIndex);
+            }
 
             if (!PedAddresses.ContainsKey(fullName))
             {
@@ -618,8 +626,11 @@ namespace ReportsPlus
                 address = PedAddresses[fullName];
             }
 
-            return // A_F_Y_TOURIST_01
-                $"name={persona.FullName}&licenseNumber={licenseNum}&pedModel={pedModel}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
+            fullModel.Append(pedModel+"__0_"+headDrawableIndex+"_"+headDrawableTextureIndex+"_front");
+            Game.DisplayNotification("Model:~r~"+fullModel); // todo rem
+            Game.LogTrivial("Model:~r~"+fullModel); // todo rem
+            return
+                $"name={persona.FullName}&licenseNumber={licenseNum}&pedModel={fullModel}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
 
         private static string GetPedCurrentZoneName()
