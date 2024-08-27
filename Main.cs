@@ -467,6 +467,16 @@ namespace ReportsPlus
 
             var persona = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped);
             var fullName = persona.FullName;
+            StringBuilder fullModel = new StringBuilder();
+            string pedModel = GetPedModel(ped);
+            int headDrawableIndex = 0;
+            int headDrawableTextureIndex = 0;
+
+            if (ped != null && ped.IsValid())
+            {
+                ped.GetVariation(0, out headDrawableIndex, out headDrawableTextureIndex);
+            }
+            fullModel.Append(pedModel+"__0_"+headDrawableIndex+"_"+headDrawableTextureIndex+"_front");
 
             if (!PedAddresses.ContainsKey(fullName))
             {
@@ -480,6 +490,7 @@ namespace ReportsPlus
                 new XElement("Birthday", $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}"),
                 new XElement("Gender", persona.Gender),
                 new XElement("Address", PedAddresses[fullName]),
+                new XElement("PedModel", fullModel),
                 new XElement("Index", index)
             );
 
@@ -627,8 +638,6 @@ namespace ReportsPlus
             }
 
             fullModel.Append(pedModel+"__0_"+headDrawableIndex+"_"+headDrawableTextureIndex+"_front");
-            Game.DisplayNotification("Model:~r~"+fullModel); // todo rem
-            Game.LogTrivial("Model:~r~"+fullModel); // todo rem
             return
                 $"name={persona.FullName}&licenseNumber={licenseNum}&pedModel={fullModel}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
