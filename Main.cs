@@ -548,8 +548,9 @@ namespace ReportsPlus
             }
 
             String currentStreet = World.GetStreetName(LocalPlayer.Position);
+            String currentZone = GetPedCurrentZoneName();
 
-            File.WriteAllText($"{FileDataFolder}/location.data", currentStreet);
+            File.WriteAllText($"{FileDataFolder}/location.data", currentStreet+", "+currentZone);
 
             Game.LogTrivial("ReportsPlus: Updated location data file");
         }
