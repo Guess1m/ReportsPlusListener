@@ -465,18 +465,9 @@ namespace ReportsPlus
             if (!ped.Exists())
                 return;
 
-            var persona = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped);
+            var persona = Functions.GetPersonaForPed(ped);
             var fullName = persona.FullName;
-            StringBuilder fullModel = new StringBuilder();
             string pedModel = GetPedModel(ped);
-            int headDrawableIndex = 0;
-            int headDrawableTextureIndex = 0;
-
-            if (ped != null && ped.IsValid())
-            {
-                ped.GetVariation(0, out headDrawableIndex, out headDrawableTextureIndex);
-            }
-            fullModel.Append(pedModel+"__0_"+headDrawableIndex+"_"+headDrawableTextureIndex+"_front");
 
             if (!PedAddresses.ContainsKey(fullName))
             {
@@ -490,7 +481,7 @@ namespace ReportsPlus
                 new XElement("Birthday", $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}"),
                 new XElement("Gender", persona.Gender),
                 new XElement("Address", PedAddresses[fullName]),
-                new XElement("PedModel", fullModel),
+                new XElement("PedModel", pedModel),
                 new XElement("Index", index)
             );
 
@@ -617,15 +608,7 @@ namespace ReportsPlus
             string fullName = persona.FullName;
             string address;
             string licenseNum = GenerateLicenseNumber();
-            StringBuilder fullModel = new StringBuilder();
             string pedModel = GetPedModel(ped);
-            int headDrawableIndex = 0;
-            int headDrawableTextureIndex = 0;
-
-            if (ped != null && ped.IsValid())
-            {
-                ped.GetVariation(0, out headDrawableIndex, out headDrawableTextureIndex);
-            }
 
             if (!PedAddresses.ContainsKey(fullName))
             {
@@ -637,19 +620,18 @@ namespace ReportsPlus
                 address = PedAddresses[fullName];
             }
 
-            fullModel.Append(pedModel+"__0_"+headDrawableIndex+"_"+headDrawableTextureIndex+"_front");
             return
-                $"name={persona.FullName}&licenseNumber={licenseNum}&pedModel={fullModel}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
-        }
-
-        private static string GetPedCurrentZoneName()
-        {
-            return Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).RealAreaName;
+                $"name={persona.FullName}&licenseNumber={licenseNum}&pedModel={pedModel}&birthday={birthday}&gender={persona.Gender}&address={address}&isWanted={persona.Wanted}&licenseStatus={persona.ELicenseState}&relationshipGroup={ped.RelationshipGroup.Name}";
         }
 
         private static string GetPedModel(Ped ped)
         {
             return ped.Model.Name;
+        }
+
+        private static string GetPedCurrentZoneName()
+        {
+            return Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).RealAreaName;
         }
 
 
