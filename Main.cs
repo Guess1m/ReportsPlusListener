@@ -1,10 +1,4 @@
-﻿using LSPD_First_Response.Engine.Scripting;
-using LSPD_First_Response.Engine.Scripting.Entities;
-using LSPD_First_Response.Mod.API;
-using LSPD_First_Response.Mod.Callouts;
-using Rage;
-using StopThePed.API;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +6,15 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using CalloutInterfaceAPI;
+using LSPD_First_Response.Engine.Scripting;
+using LSPD_First_Response.Engine.Scripting.Entities;
+using LSPD_First_Response.Mod.API;
+using LSPD_First_Response.Mod.Callouts;
+using Rage;
+using Rage.Native;
+using StopThePed.API;
+using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus
@@ -24,12 +27,12 @@ namespace ReportsPlus
 
         // Vars
         private static readonly string FileDataFolder = "ReportsPlus\\data";
-        private static XDocument currentIDDoc;
-        private static XDocument calloutDoc;
-        private GameFiber dataCollectionFiber;
+        private static XDocument CurrentIDDoc;
+        private static XDocument _calloutDoc;
+        private GameFiber DataCollectionFiber;
         internal static bool IsOnDuty;
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
-        private static Dictionary<LHandle, string> calloutIds = new Dictionary<LHandle, string>();
+        private static readonly Dictionary<LHandle, string> CalloutIds = new Dictionary<LHandle, string>();
 
         private static readonly List<string> LosSantosAddresses = new List<string>
         {
@@ -255,7 +258,7 @@ namespace ReportsPlus
             "Zancudo Trail"
         };
 
-        private static Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
 
         public override void Initialize()
         {
@@ -277,18 +280,25 @@ namespace ReportsPlus
                     return;
                 }
 
-                calloutIds.Clear();
+                CalloutIds.Clear();
                 if (!Directory.Exists(FileDataFolder))
                     Directory.CreateDirectory(FileDataFolder);
 
                 CreateFiles();
 
-                GameFiber.StartNew(Int);
+                GameFiber.StartNew(StartDataCollectionFiber);
                 EstablishEvents();
                 CalloutEvent();
                 RefreshPeds();
                 RefreshVehs();
                 RefreshStreet();
+
+                GameFiber.StartNew(delegate
+                {
+                    GameFiber.Wait(6000);
+                    CreateTrafficStopFiber();
+                });
+
                 Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully.");
                 Game.LogTrivial("ReportsPlus Listener Loaded Successfully.");
             }
@@ -298,7 +308,7 @@ namespace ReportsPlus
         // Events
         private void EstablishEvents()
         {
-            StopThePed.API.Events.askIdEvent += AskForIDEvent;
+            StopThePed.API.Events.askIdEvent += AskForIdEvent;
             StopThePed.API.Events.pedArrestedEvent += ArrestPedEvent;
             StopThePed.API.Events.patDownPedEvent += PatDownPedEvent;
             StopThePed.API.Events.askDriverLicenseEvent += DriversLicenseEvent;
@@ -306,23 +316,127 @@ namespace ReportsPlus
             StopThePed.API.Events.stopPedEvent += StopPedEvent;
         }
 
+        private void CreateTrafficStopFiber()
+        {
+            Game.LogTrivial("ReportsPlus TrafficStopFiber has been started");
+
+            bool isPerformingPullover = false;
+
+            while (true)
+            {
+                GameFiber.Yield();
+                if (Functions.IsPlayerPerformingPullover())
+                {
+                    Game.LogTrivial("Check 1: performing pullover");
+                    if (!isPerformingPullover)
+                    {
+                        Game.LogTrivial("Check 2: not already performing pullover");
+                        GameFiber.StartNew(delegate
+                        {
+                            try
+                            {
+                                //Safety checks
+                                if (!Functions.IsPlayerPerformingPullover())
+                                {
+                                    isPerformingPullover = false;
+                                    return;
+                                }
+
+                                Game.LogTrivial("Check 3: player is performing pullover");
+
+                                if (!Game.LocalPlayer.Character.IsInAnyVehicle(false))
+                                {
+                                    isPerformingPullover = false;
+                                    return;
+                                }
+
+                                Game.LogTrivial("Check 4: Player is in vehicle");
+
+                                Vehicle playerCar = Game.LocalPlayer.Character.CurrentVehicle;
+                                Vehicle stoppedCar = (Vehicle)World.GetClosestEntity(
+                                    playerCar.GetOffsetPosition(Vector3.RelativeFront * 8f), 8f,
+                                    (GetEntitiesFlags.ConsiderGroundVehicles | GetEntitiesFlags.ConsiderBoats |
+                                     GetEntitiesFlags.ExcludeEmptyVehicles |
+                                     GetEntitiesFlags.ExcludeEmergencyVehicles));
+                                if (stoppedCar == null)
+                                {
+                                    Game.DisplayNotification(
+                                        "Unable to detect the pulled over vehicle. Make sure you're behind the vehicle and try again.");
+                                    isPerformingPullover = false;
+                                    return;
+                                }
+
+                                Game.LogTrivial("Check 5: stopped car isn't null");
+
+                                if (!stoppedCar.IsValid() || (stoppedCar == playerCar))
+                                {
+                                    Game.DisplayNotification(
+                                        "Unable to detect the pulled over vehicle. Make sure you're behind the vehicle and try again.");
+                                    isPerformingPullover = false;
+                                    return;
+                                }
+
+                                Game.LogTrivial("Check 6: stopped car is valid and isn't the playerCar");
+
+                                if (stoppedCar.Speed > 0.2f)
+                                {
+                                    Game.DisplayNotification("The vehicle must be stopped before they can mimic you.");
+                                    isPerformingPullover = false;
+                                    return;
+                                }
+
+                                Game.LogTrivial("Check 7: stopped car isn't moving");
+
+                                Ped pulledDriver = stoppedCar.Driver;
+                                if (!pulledDriver.IsPersistent ||
+                                    Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) != pulledDriver)
+                                {
+                                    Game.DisplayNotification(
+                                        "Unable to detect the pulled over vehicle. Make sure you're in front of the vehicle and try again.");
+                                    isPerformingPullover = false;
+                                    return;
+                                }
+
+                                Game.LogTrivial("Check 8: stopped driver is persistent and pulloversuspect matches");
+
+                                Game.LogTrivial("Found pulled over vehicle! Model: " + stoppedCar.Model +
+                                                " Driver name: " + pulledDriver.RelationshipGroup.Name);
+                                Game.DisplayNotification("Found pulled over vehicle! Model: " + stoppedCar.Model +
+                                                         " Driver name: " + pulledDriver.RelationshipGroup.Name);
+                            }
+                            catch (Exception e)
+                            {
+                                Game.LogTrivial(e.ToString());
+                                Game.LogTrivial("Error handled.");
+                            }
+                            finally
+                            {
+                                isPerformingPullover = false;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+
         private static void CalloutEvent()
         {
-            LSPD_First_Response.Mod.API.Events.OnCalloutDisplayed += Events_OnCalloutDisplayed;
+            Events.OnCalloutDisplayed += EventsOnCalloutDisplayed;
 
-            void Events_OnCalloutDisplayed(LHandle handle)
+            void EventsOnCalloutDisplayed(LHandle handle)
             {
                 Game.LogTrivial("ReportsPlus: Displaying Callout");
                 Callout callout = CalloutInterface.API.Functions.GetCalloutFromHandle(handle);
                 string calloutId = GenerateCalloutId();
 
-                string agency = LSPD_First_Response.Mod.API.Functions.GetCurrentAgencyScriptName();
+                string agency = Functions.GetCurrentAgencyScriptName();
                 string priority = "default";
                 string description = "";
                 string calMessage = "";
-                string name = callout.FriendlyName;
+                string name = callout.FriendlyName; //todo find implementation for
 
-                if (callout.ScriptInfo is CalloutInterfaceAPI.CalloutInterfaceAttribute calloutInterfaceInfo)
+                if (callout.ScriptInfo is CalloutInterfaceAttribute calloutInterfaceInfo)
                 {
                     agency = calloutInterfaceInfo.Agency.Length > 0 ? calloutInterfaceInfo.Agency : agency;
                     priority = calloutInterfaceInfo.Priority.Length > 0 ? calloutInterfaceInfo.Priority : "default";
@@ -332,14 +446,14 @@ namespace ReportsPlus
                 }
 
                 string street = World.GetStreetName(World.GetStreetHash(callout.CalloutPosition));
-                WorldZone zone = LSPD_First_Response.Mod.API.Functions.GetZoneAtPosition(callout.CalloutPosition);
+                var zone = Functions.GetZoneAtPosition(callout.CalloutPosition);
                 string currentTime = DateTime.Now.ToString("h:mm:ss tt");
                 string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
 
                 string cleanCalloutMessage = Regex.Replace(callout.CalloutMessage, @"~.*?~", "").Trim();
 
-                calloutDoc = new XDocument(new XElement("Callouts"));
-                XElement calloutElement = new XElement("Callout",
+                _calloutDoc = new XDocument(new XElement("Callouts"));
+                var calloutElement = new XElement("Callout",
                     new XElement("Number", calloutId),
                     new XElement("Type", cleanCalloutMessage),
                     new XElement("Description", description),
@@ -352,16 +466,16 @@ namespace ReportsPlus
                     new XElement("StartDate", currentDate)
                 );
 
-                calloutDoc.Root.Add(calloutElement);
-                calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
+                _calloutDoc.Root?.Add(calloutElement);
+                _calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
                 Game.LogTrivial($"ReportsPlus: Callout {calloutId} data updated and displayed.");
             }
         }
 
-        private static void AskForIDEvent(Ped ped)
+        private static void AskForIdEvent(Ped ped)
         {
             CreatePedObj(ped);
-            UpdateCurrentID(ped);
+            UpdateCurrentId(ped);
         }
 
         private static void ArrestPedEvent(Ped ped)
@@ -372,13 +486,13 @@ namespace ReportsPlus
         private static void PatDownPedEvent(Ped ped)
         {
             CreatePedObj(ped);
-            UpdateCurrentID(ped);
+            UpdateCurrentId(ped);
         }
 
         private static void DriversLicenseEvent(Ped ped)
         {
             CreatePedObj(ped);
-            UpdateCurrentID(ped);
+            UpdateCurrentId(ped);
         }
 
         private static void PassengerLicenseEvent(Vehicle vehicle)
@@ -386,7 +500,7 @@ namespace ReportsPlus
             Ped[] passengers = vehicle.Passengers;
             for (int i = 0; i < passengers.Length; i++)
             {
-                UpdateCurrentID(passengers[i]);
+                UpdateCurrentId(passengers[i]);
             }
         }
 
@@ -408,7 +522,7 @@ namespace ReportsPlus
             {
                 string data = GetPedData(ped);
                 string oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
-                if (oldFile.Contains(LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(ped).FullName)) return;
+                if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
 
                 string addComma = oldFile.Length > 0 ? "," : "";
 
@@ -416,10 +530,11 @@ namespace ReportsPlus
             }
         }
 
-        private static void Int()
+        private static void StartDataCollectionFiber()
         {
             while (IsOnDuty)
             {
+                // todo add interval config
                 Random random = new Random();
                 RefreshPeds();
                 GameFiber.Wait(random.Next(3000, 6000));
@@ -432,12 +547,12 @@ namespace ReportsPlus
 
         public override void Finally()
         {
-            LSPD_First_Response.Mod.API.Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
-            if (dataCollectionFiber != null && dataCollectionFiber.IsAlive)
-                dataCollectionFiber.Abort();
+            Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
+            if (DataCollectionFiber != null && DataCollectionFiber.IsAlive)
+                DataCollectionFiber.Abort();
 
-            currentIDDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
-            calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
+            CurrentIDDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
+            _calloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
             Game.LogTrivial("ReportsPlusListener cleaned up.");
         }
 
@@ -451,7 +566,7 @@ namespace ReportsPlus
 
         private bool IsPluginInstalled(string pluginName)
         {
-            var plugins = LSPD_First_Response.Mod.API.Functions.GetAllUserPlugins();
+            var plugins = Functions.GetAllUserPlugins();
             bool isInstalled = plugins.Any(x => x.GetName().Name.Equals(pluginName));
             Game.LogTrivial($"Plugin '{pluginName}' is installed: {isInstalled}");
 
@@ -460,7 +575,7 @@ namespace ReportsPlus
 
 
         // Refreshers
-        private static void UpdateCurrentID(Ped ped)
+        private static void UpdateCurrentId(Ped ped)
         {
             if (!ped.Exists())
                 return;
@@ -552,7 +667,7 @@ namespace ReportsPlus
             String currentStreet = World.GetStreetName(LocalPlayer.Position);
             String currentZone = GetPedCurrentZoneName();
 
-            File.WriteAllText($"{FileDataFolder}/location.data", currentStreet+", "+currentZone);
+            File.WriteAllText($"{FileDataFolder}/location.data", currentStreet + ", " + currentZone);
 
             Game.LogTrivial("ReportsPlus: Updated location data file");
         }
@@ -592,13 +707,13 @@ namespace ReportsPlus
         private static string GetWorldCarData(Vehicle car)
         {
             string driver = car.Driver.Exists()
-                ? LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(car.Driver).FullName
+                ? Functions.GetPersonaForPed(car.Driver).FullName
                 : "";
-            string color = Rage.Native.NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(car) != -1
+            string color = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(car) != -1
                 ? ""
                 : $"{car.PrimaryColor.R}-{car.PrimaryColor.G}-{car.PrimaryColor.B}";
             return
-                $"licensePlate={car.LicensePlate}&model={car.Model.Name}&isStolen={car.IsStolen}&isPolice={car.IsPoliceVehicle}&owner={LSPD_First_Response.Mod.API.Functions.GetVehicleOwnerName(car)}&driver={driver}&registration={GetRegistration(car)}&insurance={GetInsuranceInfo(car)}&color={color}";
+                $"licensePlate={car.LicensePlate}&model={car.Model.Name}&isStolen={car.IsStolen}&isPolice={car.IsPoliceVehicle}&owner={Functions.GetVehicleOwnerName(car)}&driver={driver}&registration={GetRegistration(car)}&insurance={GetInsuranceInfo(car)}&color={color}";
         }
 
         private static string GetPedData(Ped ped)
