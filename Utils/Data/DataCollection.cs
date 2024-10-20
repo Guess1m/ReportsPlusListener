@@ -13,8 +13,7 @@ namespace ReportsPlus.Utils
         public static GameFiber KeyCollectionFiber;
         public static GameFiber TrafficStopCollectionFiber;
 
-        private static string
-            lastPulledOverPlate = "";
+        private static string _lastPulledOverPlate = "";
 
         public static void KeyPressDetectionFiber()
         {
@@ -87,9 +86,9 @@ namespace ReportsPlus.Utils
                 var pulledDriver = stoppedCar.Driver;
                 var driverName = pulledDriver.Exists() ? Functions.GetPersonaForPed(pulledDriver).FullName : "";
 
-                if (stoppedCar.LicensePlate == lastPulledOverPlate) return;
+                if (stoppedCar.LicensePlate == _lastPulledOverPlate) return;
 
-                lastPulledOverPlate = stoppedCar.LicensePlate;
+                _lastPulledOverPlate = stoppedCar.LicensePlate;
 
                 if (!pulledDriver.IsPersistent ||
                     Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) != pulledDriver)

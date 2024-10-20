@@ -34,6 +34,7 @@ namespace ReportsPlus
         private void OnOnDutyStateChangedHandler(bool onDuty)
         {
             IsOnDuty = onDuty;
+            Game.LogTrivial("ReportsPlusListener: IsOnDuty State Changed: '" + IsOnDuty + "'");
             if (onDuty)
             {
                 Utils.Utils.CalloutIds.Clear();
