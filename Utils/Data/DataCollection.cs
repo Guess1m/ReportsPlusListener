@@ -103,8 +103,7 @@ namespace ReportsPlus.Utils
             }
             catch (Exception e)
             {
-                Game.LogTrivial(e.ToString());
-                Game.LogTrivial("ReportsPlusListener: Error caught.");
+                Game.LogTrivial("ReportsPlusListener ERROR: " + e);
             }
             finally
             {

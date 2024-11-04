@@ -14,7 +14,7 @@ namespace ReportsPlus.Utils
         {
             var plugins = Functions.GetAllUserPlugins();
             var isInstalled = plugins.Any(x => x.GetName().Name.Equals(pluginName));
-            Game.LogTrivial($"Plugin '{pluginName}' is installed: {isInstalled}");
+            Game.LogTrivial($"ReportsPlusListener: Plugin '{pluginName}' is installed: {isInstalled}");
 
             return isInstalled;
         }

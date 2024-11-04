@@ -55,7 +55,7 @@ namespace ReportsPlus
                 RefreshStreet();
 
                 Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully.");
-                Game.LogTrivial("ReportsPlus Listener Loaded Successfully.");
+                Game.LogTrivial("ReportsPlusListener Loaded Successfully.");
             }
         }
 
