@@ -17,8 +17,8 @@ namespace ReportsPlus
         public static XDocument CalloutDoc;
         public static bool HasStopThePed;
         public bool HasCalloutInterface;
-
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
+
         /*
          * Thank you @HeyPalu, Creator of ExternalPoliceComputer, for the C# implementation and ideas for adding the GTA V integration.
          */
@@ -54,7 +54,7 @@ namespace ReportsPlus
                 RefreshVehs();
                 RefreshStreet();
 
-                Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully.");
+                Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully");
                 Game.LogTrivial("ReportsPlusListener Loaded Successfully.");
             }
         }

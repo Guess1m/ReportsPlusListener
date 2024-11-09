@@ -81,7 +81,7 @@ namespace ReportsPlus.Utils
             }
 
             return
-                $"licensePlate={car.LicensePlate}&model={car.Model.Name}&isStolen={car.IsStolen}&isPolice={car.IsPoliceVehicle}&owner={Functions.GetVehicleOwnerName(car)}&driver={driver}&registration={insurance}&insurance={registration}&color={color}";
+                $"licensePlate={car.LicensePlate}&model={car.Model.Name}&isStolen={car.IsStolen}&isPolice={car.IsPoliceVehicle}&owner={Functions.GetVehicleOwnerName(car)}&driver={driver}&registration={registration}&insurance={insurance}&color={color}";
         }
 
         public static string GetRandomAddress()
@@ -154,7 +154,6 @@ namespace ReportsPlus.Utils
 
                 var oldFile = File.ReadAllText($"{FileDataFolder}/trafficStop.data");
                 if (oldFile.Contains(plate)) return;
-
                 var vehicleData =
                     $"licensePlate={plate}&model={model}&isStolen={isStolen}&isPolice={isPolice}&owner={owner}&registration={registeration}&insurance={insurance}&color={color}&street={street}&area={area}";
 
