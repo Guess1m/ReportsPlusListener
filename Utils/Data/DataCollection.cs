@@ -45,9 +45,9 @@ namespace ReportsPlus.Utils
             var delay = random.Next(ConfigUtils.RefreshDelay, ConfigUtils.RefreshDelay + 1500);
             GameFiber.Wait(delay);
             RefreshPeds();
-            GameFiber.Wait(random.Next(500, 800));
+            GameFiber.Wait(random.Next(1200, 2300));
             RefreshStreet();
-            GameFiber.Wait(random.Next(500, 800));
+            GameFiber.Wait(random.Next(1200, 2300));
             RefreshVehs();
         }
 
