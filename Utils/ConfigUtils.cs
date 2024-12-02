@@ -6,7 +6,7 @@ using Rage;
 
 namespace ReportsPlus.Utils
 {
-    public class ConfigUtils
+    public static class ConfigUtils
     {
         public static int RefreshDelay;
 

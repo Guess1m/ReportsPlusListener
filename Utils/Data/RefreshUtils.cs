@@ -4,11 +4,11 @@ using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.GetterUtils;
+using static ReportsPlus.Utils.Data.GetterUtils;
 
-namespace ReportsPlus.Utils
+namespace ReportsPlus.Utils.Data
 {
-    public class RefreshUtils
+    public static class RefreshUtils
     {
         public static void UpdateCurrentId(Ped ped)
         {
@@ -71,11 +71,9 @@ namespace ReportsPlus.Utils
             var allPeds = LocalPlayer.GetNearbyPeds(15);
             var pedsList = new string[allPeds.Length];
 
-            for (var i = 0; i < allPeds.Length; i++)
-            {
-                var ped = allPeds[i];
-                if (ped.Exists()) pedsList[Array.IndexOf(allPeds, ped)] = GetPedData(ped);
-            }
+            foreach (var ped in allPeds)
+                if (ped.Exists())
+                    pedsList[Array.IndexOf(allPeds, ped)] = GetPedData(ped);
 
             File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join(",", pedsList));
 

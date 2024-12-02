@@ -7,7 +7,7 @@ using LSPD_First_Response.Mod.API;
 
 namespace ReportsPlus.Utils
 {
-    public class Utils
+    public static class Utils
     {
         public static readonly List<string> LosSantosAddresses = new List<string>
         {

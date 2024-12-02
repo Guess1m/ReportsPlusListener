@@ -3,8 +3,8 @@ using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using ReportsPlus.Utils;
-using static ReportsPlus.Utils.EventUtils;
-using static ReportsPlus.Utils.RefreshUtils;
+using ReportsPlus.Utils.Data;
+using static ReportsPlus.Utils.Data.EventUtils;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus
@@ -16,7 +16,7 @@ namespace ReportsPlus
         public static XDocument CurrentIdDoc;
         public static XDocument CalloutDoc;
         public static bool HasStopThePed;
-        public bool HasCalloutInterface;
+        private bool _hasCalloutInterface;
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
 
         /*
@@ -35,33 +35,27 @@ namespace ReportsPlus
         {
             IsOnDuty = onDuty;
             Game.LogTrivial("ReportsPlusListener: IsOnDuty State Changed: '" + IsOnDuty + "'");
-            if (onDuty)
-            {
-                Utils.Utils.CalloutIds.Clear();
-                if (!Directory.Exists(FileDataFolder))
-                    Directory.CreateDirectory(FileDataFolder);
+            if (!onDuty) return;
+            Utils.Utils.CalloutIds.Clear();
+            if (!Directory.Exists(FileDataFolder))
+                Directory.CreateDirectory(FileDataFolder);
 
-                ConfigUtils.CreateFiles();
+            ConfigUtils.CreateFiles();
 
-                DataCollection.DataCollectionFiber = GameFiber.StartNew(DataCollection.StartDataCollectionFiber);
-                DataCollection.KeyCollectionFiber = GameFiber.StartNew(DataCollection.KeyPressDetectionFiber);
-                DataCollection.TrafficStopCollectionFiber =
-                    GameFiber.StartNew(DataCollection.TrafficStopDataCollectionFiber);
+            DataCollection.DataCollectionFiber = GameFiber.StartNew(DataCollection.StartDataCollectionFiber);
+            DataCollection.KeyCollectionFiber = GameFiber.StartNew(DataCollection.KeyPressDetectionFiber);
+            DataCollection.TrafficStopCollectionFiber =
+                GameFiber.StartNew(DataCollection.TrafficStopDataCollectionFiber);
 
-                RunPluginChecks();
+            RunPluginChecks();
 
-                RefreshPeds();
-                RefreshVehs();
-                RefreshStreet();
-
-                Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully");
-                Game.LogTrivial("ReportsPlusListener Loaded Successfully.");
-            }
+            Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully");
+            Game.LogTrivial("ReportsPlusListener Loaded Successfully.");
         }
 
         private void RunPluginChecks()
         {
-            HasCalloutInterface = ConfigUtils.IsPluginInstalled("CalloutInterface");
+            _hasCalloutInterface = ConfigUtils.IsPluginInstalled("CalloutInterface");
             HasStopThePed = ConfigUtils.IsPluginInstalled("StopThePed");
             if (HasStopThePed)
             {
@@ -74,7 +68,7 @@ namespace ReportsPlus
                 Game.DisplayNotification("~r~ReportsPlusListener: StopThePed not found. Required for ID Functions.");
             }
 
-            if (HasCalloutInterface)
+            if (_hasCalloutInterface)
             {
                 EstablishCiEvent();
                 Game.LogTrivial("ReportsPlusListener: Found Callout Interface");

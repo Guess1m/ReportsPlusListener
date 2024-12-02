@@ -2,11 +2,11 @@ using System.Xml.Serialization;
 using Rage;
 using static ReportsPlus.Main;
 
-namespace ReportsPlus.Utils
+namespace ReportsPlus.Utils.Animation
 {
-    public class AnimationUtils
+    public static class AnimationUtils
     {
-        internal static bool IsAnimationActive;
+        private static bool _isAnimationActive;
         [XmlAttribute("IntroDict")] public static string StartDict { get; } = "veh@busted_std";
         [XmlAttribute("IntroName")] public static string StartName { get; } = "issue_ticket_cop";
 
@@ -18,38 +18,23 @@ namespace ReportsPlus.Utils
                    !LocalPlayer.IsJumping && !LocalPlayer.IsInWater && !LocalPlayer.IsGettingIntoVehicle;
         }
 
-        internal static void EndAction()
-        {
-            LocalPlayer.Tasks.Clear();
-            GameFiber.Wait(1);
-            IsAnimationActive = false;
-        }
-
         public static void PlayAnimation()
         {
             if (!CheckRequirements())
                 return;
 
-            if (IsAnimationActive)
+            if (_isAnimationActive)
             {
                 Game.LogTrivial("ReportsPlusListener: Stopping current animation.");
                 LocalPlayer.Tasks.Clear();
-                IsAnimationActive = false;
+                _isAnimationActive = false;
             }
             else
             {
                 Game.LogTrivial("ReportsPlusListener: Playing animation: " + StartName);
                 LocalPlayer.Tasks.PlayAnimation(new AnimationDictionary(StartDict), StartName, 5f, AnimationFlags.None);
-                IsAnimationActive = true;
+                _isAnimationActive = true;
             }
         }
-    }
-
-    public enum AnimationStage
-    {
-        Start,
-        Main,
-        End,
-        None
     }
 }

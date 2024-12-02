@@ -1,13 +1,13 @@
 using System;
 using LSPD_First_Response.Mod.API;
 using Rage;
-using static ReportsPlus.Utils.RefreshUtils;
-using static ReportsPlus.Utils.AnimationUtils;
+using static ReportsPlus.Utils.Data.RefreshUtils;
+using static ReportsPlus.Utils.Animation.AnimationUtils;
 using static ReportsPlus.Utils.Utils;
 
-namespace ReportsPlus.Utils
+namespace ReportsPlus.Utils.Data
 {
-    public class DataCollection
+    public static class DataCollection
     {
         public static GameFiber DataCollectionFiber;
         public static GameFiber KeyCollectionFiber;

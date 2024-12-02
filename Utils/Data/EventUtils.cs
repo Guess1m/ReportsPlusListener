@@ -8,12 +8,12 @@ using Rage;
 using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.GetterUtils;
-using static ReportsPlus.Utils.RefreshUtils;
+using static ReportsPlus.Utils.Data.GetterUtils;
+using static ReportsPlus.Utils.Data.RefreshUtils;
 
-namespace ReportsPlus.Utils
+namespace ReportsPlus.Utils.Data
 {
-    public class EventUtils
+    public static class EventUtils
     {
         public static void EstablishEventsStp()
         {

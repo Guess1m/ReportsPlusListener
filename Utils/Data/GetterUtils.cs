@@ -6,15 +6,15 @@ using StopThePed.API;
 using static ReportsPlus.Main;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
-namespace ReportsPlus.Utils
+namespace ReportsPlus.Utils.Data
 {
-    public class GetterUtils
+    public static class GetterUtils
     {
         private static readonly int ExpiredProb = 25;
         private static readonly int NoneProb = 15;
         private static readonly int ValidProb = 60;
 
-        public static string GetRegistration(Vehicle car)
+        private static string GetRegistration(Vehicle car)
         {
             switch (StopThePed.API.Functions.getVehicleRegistrationStatus(car))
             {
@@ -29,7 +29,7 @@ namespace ReportsPlus.Utils
             return "";
         }
 
-        public static string GetInsuranceInfo(Vehicle car)
+        private static string GetInsuranceInfo(Vehicle car)
         {
             switch (StopThePed.API.Functions.getVehicleInsuranceStatus(car))
             {
@@ -44,19 +44,17 @@ namespace ReportsPlus.Utils
             return "";
         }
 
-        public static string GetRandomVehicleStatus(int expiredChance, int noneChance, int validChance)
+        private static string GetRandomVehicleStatus(int expiredChance, int noneChance, int validChance)
         {
             var totalChance = expiredChance + noneChance + validChance;
 
             if (totalChance != 100) throw new ArgumentException("The sum of the chances must equal 100.");
 
-            var randomValue = new Random().Next(1, 101); // Generates a random number between 1 and 100
+            var randomValue = new Random().Next(1, 101);
 
             if (randomValue <= expiredChance) return "Expired";
 
-            if (randomValue <= expiredChance + noneChance) return "None";
-
-            return "Valid";
+            return randomValue <= expiredChance + noneChance ? "None" : "Valid";
         }
 
         public static string GetWorldCarData(Vehicle car)
@@ -137,43 +135,39 @@ namespace ReportsPlus.Utils
 
         public static void CreateTrafficStopObj(Vehicle vehicle)
         {
-            if (vehicle.Exists())
-            {
-                var color = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1
-                    ? ""
-                    : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}";
-                var owner = Functions.GetVehicleOwnerName(vehicle);
-                var plate = vehicle.LicensePlate;
-                var model = vehicle.Model.Name;
-                var isStolen = vehicle.IsStolen;
-                var isPolice = vehicle.IsPoliceVehicle;
-                var registeration = GetRegistration(vehicle);
-                var insurance = GetInsuranceInfo(vehicle);
-                var street = World.GetStreetName(LocalPlayer.Position);
-                var area = GetPedCurrentZoneName();
+            if (!vehicle.Exists()) return;
+            var color = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1
+                ? ""
+                : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}";
+            var owner = Functions.GetVehicleOwnerName(vehicle);
+            var plate = vehicle.LicensePlate;
+            var model = vehicle.Model.Name;
+            var isStolen = vehicle.IsStolen;
+            var isPolice = vehicle.IsPoliceVehicle;
+            var registration = GetRegistration(vehicle);
+            var insurance = GetInsuranceInfo(vehicle);
+            var street = World.GetStreetName(LocalPlayer.Position);
+            var area = GetPedCurrentZoneName();
 
-                var oldFile = File.ReadAllText($"{FileDataFolder}/trafficStop.data");
-                if (oldFile.Contains(plate)) return;
-                var vehicleData =
-                    $"licensePlate={plate}&model={model}&isStolen={isStolen}&isPolice={isPolice}&owner={owner}&registration={registeration}&insurance={insurance}&color={color}&street={street}&area={area}";
+            var oldFile = File.ReadAllText($"{FileDataFolder}/trafficStop.data");
+            if (oldFile.Contains(plate)) return;
+            var vehicleData =
+                $"licensePlate={plate}&model={model}&isStolen={isStolen}&isPolice={isPolice}&owner={owner}&registration={registration}&insurance={insurance}&color={color}&street={street}&area={area}";
 
-                File.WriteAllText($"{FileDataFolder}/trafficStop.data", $"{vehicleData}");
-                Game.LogTrivial("ReportsPlusListener: Traffic stop added.");
-            }
+            File.WriteAllText($"{FileDataFolder}/trafficStop.data", $"{vehicleData}");
+            Game.LogTrivial("ReportsPlusListener: Traffic stop added.");
         }
 
         public static void CreatePedObj(Ped ped)
         {
-            if (ped.Exists())
-            {
-                var data = GetPedData(ped);
-                var oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
-                if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
+            if (!ped.Exists()) return;
+            var data = GetPedData(ped);
+            var oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
+            if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
 
-                var addComma = oldFile.Length > 0 ? "," : "";
+            var addComma = oldFile.Length > 0 ? "," : "";
 
-                File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{addComma}{data}");
-            }
+            File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{addComma}{data}");
         }
     }
 }

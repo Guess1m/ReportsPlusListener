@@ -10,7 +10,7 @@
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>ReportsPlus</RootNamespace>
         <AssemblyName>ReportsPlus</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+        <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <Deterministic>true</Deterministic>
         <NuGetPackageImportStamp>
@@ -36,19 +36,19 @@
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="CalloutInterface">
-            <HintPath>..\..\IdeaProjects\Shared\ReportsPlus\OtherStuff\APIs\CalloutInterface.dll</HintPath>
+            <HintPath>..\..\Documents\APIs\CalloutInterface.dll</HintPath>
         </Reference>
         <Reference Include="CalloutInterfaceAPI">
-            <HintPath>..\..\IdeaProjects\Shared\ReportsPlus\OtherStuff\APIs\CalloutInterfaceAPI.dll</HintPath>
+            <HintPath>..\..\Documents\APIs\CalloutInterfaceAPI.dll</HintPath>
         </Reference>
         <Reference Include="LSPD First Response">
-            <HintPath>..\..\IdeaProjects\Shared\ReportsPlus\OtherStuff\APIs\LSPD First Response.dll</HintPath>
+            <HintPath>..\..\Documents\APIs\LSPD First Response.dll</HintPath>
         </Reference>
         <Reference Include="RagePluginHook">
-            <HintPath>..\..\IdeaProjects\Shared\ReportsPlus\OtherStuff\APIs\RagePluginHookSDK.dll</HintPath>
+            <HintPath>..\..\Documents\APIs\RagePluginHookSDK.dll</HintPath>
         </Reference>
         <Reference Include="StopThePed">
-            <HintPath>..\..\IdeaProjects\Shared\ReportsPlus\OtherStuff\APIs\StopThePed.dll</HintPath>
+            <HintPath>..\..\Documents\APIs\StopThePed.dll</HintPath>
         </Reference>
         <Reference Include="System.Windows.Forms"/>
         <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
