@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
 using Rage;
@@ -11,6 +12,7 @@ namespace ReportsPlus
 {
     public class Main : Plugin
     {
+        private static String Version = "v1.3-alpha"; //TODO: Update Version
         public static readonly string FileDataFolder = "ReportsPlus\\data";
         internal static bool IsOnDuty;
         public static XDocument CurrentIdDoc;
@@ -26,7 +28,7 @@ namespace ReportsPlus
         public override void Initialize()
         {
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
-            Game.LogTrivial("ReportsPlusListener Plugin initialized.");
+            Game.LogTrivial("ReportsPlusListener Plugin initialized. Version: "+Version);
 
             ConfigUtils.LoadSettings();
         }
@@ -42,15 +44,15 @@ namespace ReportsPlus
 
             ConfigUtils.CreateFiles();
 
+            DataCollection.CombinedDataCollectionFiber =
+                GameFiber.StartNew(DataCollection.StartCombinedDataCollectionFiber);
+
             DataCollection.DataCollectionFiber = GameFiber.StartNew(DataCollection.StartDataCollectionFiber);
-            DataCollection.KeyCollectionFiber = GameFiber.StartNew(DataCollection.KeyPressDetectionFiber);
-            DataCollection.TrafficStopCollectionFiber =
-                GameFiber.StartNew(DataCollection.TrafficStopDataCollectionFiber);
 
             RunPluginChecks();
 
-            Game.DisplayNotification("~g~ReportsPlus Listener Loaded Successfully");
-            Game.LogTrivial("ReportsPlusListener Loaded Successfully.");
+            Game.DisplayNotification("~g~ReportsPlusListener: "+Version+", Loaded Successfully");
+            Game.LogTrivial("ReportsPlusListener: "+Version+", Loaded Successfully");
         }
 
         private void RunPluginChecks()
@@ -84,14 +86,13 @@ namespace ReportsPlus
         public override void Finally()
         {
             Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
-            if (DataCollection.DataCollectionFiber != null && DataCollection.DataCollectionFiber.IsAlive)
+            if (DataCollection.CombinedDataCollectionFiber != null &&
+                DataCollection.CombinedDataCollectionFiber.IsAlive)
+                DataCollection.CombinedDataCollectionFiber.Abort();
+
+            if (DataCollection.DataCollectionFiber != null &&
+                DataCollection.DataCollectionFiber.IsAlive)
                 DataCollection.DataCollectionFiber.Abort();
-
-            if (DataCollection.KeyCollectionFiber != null && DataCollection.KeyCollectionFiber.IsAlive)
-                DataCollection.KeyCollectionFiber.Abort();
-
-            if (DataCollection.TrafficStopCollectionFiber != null && DataCollection.TrafficStopCollectionFiber.IsAlive)
-                DataCollection.TrafficStopCollectionFiber.Abort();
 
             CurrentIdDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));

@@ -9,28 +9,18 @@ namespace ReportsPlus.Utils.Data
 {
     public static class DataCollection
     {
+        public static GameFiber CombinedDataCollectionFiber;
         public static GameFiber DataCollectionFiber;
-        public static GameFiber KeyCollectionFiber;
-        public static GameFiber TrafficStopCollectionFiber;
-
+        public static Vehicle currentStoppedVehicle;
         private static string _lastPulledOverPlate = "";
 
-        public static void KeyPressDetectionFiber()
+        public static void StartCombinedDataCollectionFiber()
         {
             while (Main.IsOnDuty)
             {
-                if (Game.IsKeyDown(AnimationBind) && CheckRequirements()) PlayAnimation();
+                if (Game.IsKeyDown(AnimationBind)) PlayAnimation();
 
-                GameFiber.Yield();
-            }
-        }
-
-        public static void TrafficStopDataCollectionFiber()
-        {
-            while (Main.IsOnDuty)
-            {
                 CheckForTrafficStop();
-                GameFiber.Yield();
             }
         }
 
@@ -100,6 +90,8 @@ namespace ReportsPlus.Utils.Data
                 Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName +
                                 " Plate: " + stoppedCar.LicensePlate);
                 GetterUtils.CreateTrafficStopObj(stoppedCar);
+
+                currentStoppedVehicle = stoppedCar;
             }
             catch (Exception e)
             {
