@@ -1,3 +1,4 @@
+using System;
 using System.Xml.Serialization;
 using LSPD_First_Response.Mod.API;
 using Rage;
@@ -64,47 +65,70 @@ namespace ReportsPlus.Utils.Animation
                 return;
             }
 
-            if (!IsPlayerWithinDistanceOfVeh(nearbyVeh, 2.5f))
+            if (!DataCollection.citationSignalFound)
+            {
+                Game.LogTrivial("ReportsPlusListener: Citation signal not found.");
+                return;
+            }
+
+            if (!IsPlayerWithinDistanceOfVeh(nearbyVeh, 3f))
             {
                 Game.LogTrivial(
-                    $"ReportsPlusListener: Player is not within 2 units of the vehicle. Distance: {nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                    $"ReportsPlusListener: Player is not within 3 units of the vehicle. Distance: {nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} units.");
                 return;
             }
 
             if (_animationFiber == null || !_animationFiber.IsAlive)
             {
-                _animationFiber = new GameFiber(() =>
-                {
-                    while (true)
-                    {
-                        GameFiber.Yield();
-                        if (!_isAnimationActive) continue;
-
-                        Game.LogTrivial("ReportsPlusListener: Playing animation: " + StartName);
-                        LocalPlayer.Tasks.PlayAnimation(new AnimationDictionary(StartDict), StartName, 5f,
-                            AnimationFlags.None);
-
-                        var startTime = Game.GameTime;
-                        while (Game.GameTime - startTime < 10000 && _isAnimationActive) GameFiber.Yield();
-
-                        if (!_isAnimationActive) continue;
-                        Game.LogTrivial("ReportsPlusListener: Animation finished after 10 seconds.");
-
-                        if (Functions.IsPlayerPerformingPullover())
-                        {
-                            Functions.ForceEndCurrentPullover();
-                            Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
-                            Game.DisplayNotification("~g~Handed Citation!");
-                            //TODO: finish implementation
-                        }
-
-                        _isAnimationActive = false;
-                    }
-                });
+                _animationFiber = new GameFiber(AnimationFiber);
                 _animationFiber.Start();
             }
 
             _isAnimationActive = true;
+        }
+
+        private static void AnimationFiber()
+        {
+            while (true)
+            {
+                GameFiber.Yield();
+                if (!_isAnimationActive) continue;
+
+                Game.LogTrivial("ReportsPlusListener: Playing animation: " + StartName);
+                LocalPlayer.Tasks.PlayAnimation(new AnimationDictionary(StartDict), StartName, 5f, AnimationFlags.None);
+                Game.DisplaySubtitle("Handing Citation..");
+
+                var startTime = Game.GameTime;
+                while (Game.GameTime - startTime < 10000 && _isAnimationActive) GameFiber.Yield();
+
+                if (!_isAnimationActive) continue;
+                Game.LogTrivial("ReportsPlusListener: Animation finished after 10 seconds.");
+
+                if (Functions.IsPlayerPerformingPullover())
+                {
+                    Game.DisplaySubtitle("~g~Handed Citation, Return to Vehicle.");
+                    Game.LogTrivial("ReportsPlusListener: Handed Citation");
+
+                    var random = new Random();
+                    var randomNumber = random.Next(1000, 2001);
+                    GameFiber.Wait(randomNumber);
+
+                    try
+                    {
+                        Functions.ForceEndCurrentPullover();
+                    }
+                    catch (Exception e)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: EndTrafficStop failed: " + e.Message);
+                    }
+
+                    Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
+                }
+
+                _isAnimationActive = false;
+                DataCollection.citationSignalFound = false;
+                Game.LogTrivial("ReportsPlusListener: citationSignalFound & _isAnimationActive set false");
+            }
         }
     }
 }

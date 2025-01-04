@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using static ReportsPlus.Utils.Data.RefreshUtils;
@@ -11,7 +12,9 @@ namespace ReportsPlus.Utils.Data
     {
         public static GameFiber CombinedDataCollectionFiber;
         public static GameFiber DataCollectionFiber;
+        public static GameFiber SignalFileCheckFiber;
         public static Vehicle currentStoppedVehicle;
+        public static bool citationSignalFound;
         private static string _lastPulledOverPlate = "";
 
         public static void StartCombinedDataCollectionFiber()
@@ -89,6 +92,7 @@ namespace ReportsPlus.Utils.Data
 
                 Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName +
                                 " Plate: " + stoppedCar.LicensePlate);
+
                 GetterUtils.CreateTrafficStopObj(stoppedCar);
 
                 currentStoppedVehicle = stoppedCar;
@@ -100,6 +104,26 @@ namespace ReportsPlus.Utils.Data
             finally
             {
                 IsPerformingPullover = false;
+            }
+        }
+
+        public static void StartSignalFileCheckFiber()
+        {
+            while (Main.IsOnDuty)
+            {
+                GameFiber.Wait(5000);
+                if (citationSignalFound) continue;
+                var filePath = Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
+
+                if (!File.Exists(filePath)) continue;
+                Game.LogTrivial("ReportsPlusListener: Citation Signal file found");
+
+                citationSignalFound = true;
+                GameFiber.Wait(1000);
+                Game.DisplaySubtitle("~w~ReportsPlus: Give Citation Keybind: ~y~" + AnimationBind);
+
+                File.Delete(filePath);
+                Game.LogTrivial("ReportsPlusListener: Signal file removed.");
             }
         }
 

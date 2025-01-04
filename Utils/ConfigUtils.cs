@@ -24,6 +24,20 @@ namespace ReportsPlus.Utils
             Game.LogTrivial("ReportsPlusListener: Loading Settings..");
             var iniFile = new InitializationFile("plugins/LSPDFR/ReportsPlus.ini");
             iniFile.Create();
+
+            if (!iniFile.DoesKeyExist("Settings", "DataRefreshInterval"))
+            {
+                Game.LogTrivial(
+                    "ReportsPlusListener {CONFIG}: DataRefreshInterval Config setting didn't exist, creating");
+                iniFile.Write("Settings", "DataRefreshInterval", 5000);
+            }
+
+            if (!iniFile.DoesKeyExist("Keybinds", "GiveTicket"))
+            {
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: GiveTicket Config setting didn't exist, creating");
+                iniFile.Write("Keybinds", "GiveTicket", Keys.U);
+            }
+
             RefreshDelay = iniFile.ReadInt32("Settings", "DataRefreshInterval", 5000);
             Utils.AnimationBind = iniFile.ReadEnum("Keybinds", "GiveTicket", Keys.U);
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
 using Rage;
@@ -12,7 +11,8 @@ namespace ReportsPlus
 {
     public class Main : Plugin
     {
-        private static String Version = "v1.3-alpha"; //TODO: Update Version
+        //UPDATE: Update Version
+        private static readonly string Version = "v1.3-alpha";
         public static readonly string FileDataFolder = "ReportsPlus\\data";
         internal static bool IsOnDuty;
         public static XDocument CurrentIdDoc;
@@ -28,7 +28,7 @@ namespace ReportsPlus
         public override void Initialize()
         {
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
-            Game.LogTrivial("ReportsPlusListener Plugin initialized. Version: "+Version);
+            Game.LogTrivial("ReportsPlusListener Plugin initialized. Version: " + Version);
 
             ConfigUtils.LoadSettings();
         }
@@ -49,10 +49,14 @@ namespace ReportsPlus
 
             DataCollection.DataCollectionFiber = GameFiber.StartNew(DataCollection.StartDataCollectionFiber);
 
+            DataCollection.SignalFileCheckFiber = GameFiber.StartNew(DataCollection.StartSignalFileCheckFiber);
+
             RunPluginChecks();
 
-            Game.DisplayNotification("~g~ReportsPlusListener: "+Version+", Loaded Successfully");
-            Game.LogTrivial("ReportsPlusListener: "+Version+", Loaded Successfully");
+            Game.DisplayNotification("~g~ReportsPlus-" + Version + " Loaded!" +
+                                     "\n~b~Citation Keybind: ~y~" + Utils.Utils.AnimationBind);
+            Game.LogTrivial("ReportsPlusListener: " + Version + ", Loaded Successfully Animation Keybind: " +
+                            Utils.Utils.AnimationBind);
         }
 
         private void RunPluginChecks()
