@@ -29,7 +29,7 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: DataRefreshInterval Config setting didn't exist, creating");
-                iniFile.Write("Settings", "DataRefreshInterval", 5000);
+                iniFile.Write("Settings", "DataRefreshInterval", 13000);
             }
 
             if (!iniFile.DoesKeyExist("Keybinds", "GiveTicket"))
@@ -38,7 +38,7 @@ namespace ReportsPlus.Utils
                 iniFile.Write("Keybinds", "GiveTicket", Keys.U);
             }
 
-            RefreshDelay = iniFile.ReadInt32("Settings", "DataRefreshInterval", 5000);
+            RefreshDelay = iniFile.ReadInt32("Settings", "DataRefreshInterval", 13000);
             Utils.AnimationBind = iniFile.ReadEnum("Keybinds", "GiveTicket", Keys.U);
 
             Game.LogTrivial("ReportsPlusListener {CONFIG}: GiveTicket Keybind- '" + Utils.AnimationBind + "'");

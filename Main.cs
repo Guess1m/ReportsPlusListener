@@ -11,7 +11,9 @@ namespace ReportsPlus
 {
     public class Main : Plugin
     {
-        //UPDATE: Update Version
+        /*
+         UPDATE: Update Version
+         */
         private static readonly string Version = "v1.3-alpha";
         public static readonly string FileDataFolder = "ReportsPlus\\data";
         internal static bool IsOnDuty;
@@ -43,6 +45,12 @@ namespace ReportsPlus
                 Directory.CreateDirectory(FileDataFolder);
 
             ConfigUtils.CreateFiles();
+
+            if (File.Exists(DataCollection.CitationSignalFilePath))
+            {
+                Game.LogTrivial("ReportsPlusListener: Found old citationSignalFile, Deleting");
+                File.Delete(DataCollection.CitationSignalFilePath);
+            }
 
             DataCollection.CombinedDataCollectionFiber =
                 GameFiber.StartNew(DataCollection.StartCombinedDataCollectionFiber);
@@ -97,6 +105,10 @@ namespace ReportsPlus
             if (DataCollection.DataCollectionFiber != null &&
                 DataCollection.DataCollectionFiber.IsAlive)
                 DataCollection.DataCollectionFiber.Abort();
+
+            if (DataCollection.SignalFileCheckFiber != null &&
+                DataCollection.SignalFileCheckFiber.IsAlive)
+                DataCollection.SignalFileCheckFiber.Abort();
 
             CurrentIdDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));

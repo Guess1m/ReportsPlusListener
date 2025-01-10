@@ -16,6 +16,7 @@ namespace ReportsPlus.Utils.Data
         public static Vehicle currentStoppedVehicle;
         public static bool citationSignalFound;
         private static string _lastPulledOverPlate = "";
+        public static readonly String CitationSignalFilePath = Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
 
         public static void StartCombinedDataCollectionFiber()
         {
@@ -113,16 +114,15 @@ namespace ReportsPlus.Utils.Data
             {
                 GameFiber.Wait(5000);
                 if (citationSignalFound) continue;
-                var filePath = Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
 
-                if (!File.Exists(filePath)) continue;
+                if (!File.Exists(CitationSignalFilePath)) continue;
                 Game.LogTrivial("ReportsPlusListener: Citation Signal file found");
 
                 citationSignalFound = true;
                 GameFiber.Wait(1000);
                 Game.DisplaySubtitle("~w~ReportsPlus: Give Citation Keybind: ~y~" + AnimationBind);
 
-                File.Delete(filePath);
+                File.Delete(CitationSignalFilePath);
                 Game.LogTrivial("ReportsPlusListener: Signal file removed.");
             }
         }

@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using System.Xml.Serialization;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using Rage.Native;
 using ReportsPlus.Utils.Data;
 using static ReportsPlus.Main;
 
@@ -87,6 +89,7 @@ namespace ReportsPlus.Utils.Animation
             _isAnimationActive = true;
         }
 
+        // Thank You, Lenny <3
         private static void AnimationFiber()
         {
             while (true)
@@ -95,14 +98,14 @@ namespace ReportsPlus.Utils.Animation
                 if (!_isAnimationActive) continue;
 
                 Game.LogTrivial("ReportsPlusListener: Playing animation: " + StartName);
-                LocalPlayer.Tasks.PlayAnimation(new AnimationDictionary(StartDict), StartName, 5f, AnimationFlags.None);
                 Game.DisplaySubtitle("Handing Citation..");
-
-                var startTime = Game.GameTime;
-                while (Game.GameTime - startTime < 10000 && _isAnimationActive) GameFiber.Yield();
+                LocalPlayer.Tasks.PlayAnimation(StartDict, StartName, 0.7f, AnimationFlags.None);
+                GameFiber.Wait(1600);
+                NativeFunction.Natives.x28004F88151E03E0(Game.LocalPlayer.Character, StartName,
+                    StartDict, 0.5f);
+                Game.LogTrivial("ReportsPlusListener: Animation finished");
 
                 if (!_isAnimationActive) continue;
-                Game.LogTrivial("ReportsPlusListener: Animation finished after 10 seconds.");
 
                 if (Functions.IsPlayerPerformingPullover())
                 {
@@ -127,6 +130,11 @@ namespace ReportsPlus.Utils.Animation
 
                 _isAnimationActive = false;
                 DataCollection.citationSignalFound = false;
+                if (File.Exists(DataCollection.CitationSignalFilePath))
+                {
+                    Game.LogTrivial("ReportsPlusListener: Deleting citation signal file.");
+                    File.Delete(DataCollection.CitationSignalFilePath);
+                }
                 Game.LogTrivial("ReportsPlusListener: citationSignalFound & _isAnimationActive set false");
             }
         }
