@@ -135,6 +135,7 @@ namespace ReportsPlus.Utils.Animation
                     Game.LogTrivial("ReportsPlusListener: Deleting citation signal file.");
                     File.Delete(DataCollection.CitationSignalFilePath);
                 }
+
                 Game.LogTrivial("ReportsPlusListener: citationSignalFound & _isAnimationActive set false");
             }
         }

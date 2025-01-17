@@ -4,25 +4,99 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using CalloutInterfaceAPI;
 using LSPD_First_Response.Mod.API;
+using PolicingRedefined.API;
 using Rage;
 using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 using static ReportsPlus.Main;
 using static ReportsPlus.Utils.Data.GetterUtils;
-using static ReportsPlus.Utils.Data.RefreshUtils;
+using static ReportsPlus.Utils.Data.UpdateUtils;
 
 namespace ReportsPlus.Utils.Data
 {
     public static class EventUtils
     {
+        public static void EstablishEventsBaseGame()
+        {
+            Events.OnPedPresentedId += BASE_AskIDEvent;
+            Events.OnPedArrested += BASE_ArrestPedEvent;
+            Events.OnPedFrisked += BASE_PatDownPedEvent;
+            Events.OnPedStopped += BASE_StopPedEvent;
+        }
+
         public static void EstablishEventsStp()
         {
-            StopThePed.API.Events.askIdEvent += AskForIdEvent;
-            StopThePed.API.Events.pedArrestedEvent += ArrestPedEvent;
-            StopThePed.API.Events.patDownPedEvent += PatDownPedEvent;
-            StopThePed.API.Events.askDriverLicenseEvent += DriversLicenseEvent;
-            StopThePed.API.Events.askPassengerIdEvent += PassengerLicenseEvent;
-            StopThePed.API.Events.stopPedEvent += StopPedEvent;
+            StopThePed.API.Events.askIdEvent += STP_AskIDEvent;
+            StopThePed.API.Events.pedArrestedEvent += STP_ArrestPedEvent;
+            StopThePed.API.Events.patDownPedEvent += STP_PatDownPedEvent;
+            StopThePed.API.Events.askDriverLicenseEvent += STP_HandLicenseEvent;
+            StopThePed.API.Events.askPassengerIdEvent += STP_PassengerHandLicenseEvent;
+            StopThePed.API.Events.stopPedEvent += STP_StopPedEvent;
+        }
+
+        public static void EstablishEventsPr()
+        {
+            EventsAPI.OnIdentificationGiven += PR_OnIdentificationGiven;
+            EventsAPI.OnPedArrested += PR_OnPedArrested;
+            EventsAPI.OnPedPatDown += PR_OnPedPatDown;
+            EventsAPI.OnDriverIdentificationGiven += PR_OnDriverIdentificationGiven;
+            EventsAPI.OnOccupantIdentificationGiven += PR_OnOccupantIdentificationGiven;
+            EventsAPI.OnPedStopped += PR_OnPedStopped;
+        }
+
+        private static void BASE_StopPedEvent(Ped ped)
+        {
+            CreatePedObj(ped);
+        }
+
+        private static void BASE_PatDownPedEvent(Ped suspect, Ped friskingofficer)
+        {
+            CreatePedObj(suspect);
+            UpdateCurrentId(suspect);
+        }
+
+        private static void BASE_ArrestPedEvent(Ped suspect, Ped arrestingofficer)
+        {
+            CreatePedObj(suspect);
+        }
+
+        private static void BASE_AskIDEvent(Ped ped, LHandle pullover, LHandle pedinteraction)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
+        }
+
+        private static void PR_OnPedStopped(Ped ped)
+        {
+            CreatePedObj(ped);
+        }
+
+        private static void PR_OnOccupantIdentificationGiven(Ped ped)
+        {
+            UpdateCurrentId(ped);
+        }
+
+        private static void PR_OnDriverIdentificationGiven(Ped ped)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
+        }
+
+        private static void PR_OnPedPatDown(Ped ped)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
+        }
+
+        private static void PR_OnPedArrested(Ped ped, Ped officer, bool frontcuffs)
+        {
+            CreatePedObj(ped);
+        }
+
+        private static void PR_OnIdentificationGiven(Ped ped)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
         }
 
         public static void EstablishCiEvent()
@@ -33,7 +107,7 @@ namespace ReportsPlus.Utils.Data
             {
                 Game.LogTrivial("ReportsPlusListener: Displaying Callout");
                 var callout = CalloutInterface.API.Functions.GetCalloutFromHandle(handle);
-                var calloutId = Utils.GenerateCalloutId();
+                var calloutId = MathUtils.GenerateCalloutId();
 
                 var agency = Functions.GetCurrentAgencyScriptName();
                 var priority = "default";
@@ -78,38 +152,39 @@ namespace ReportsPlus.Utils.Data
             }
         }
 
-        public static void AskForIdEvent(Ped ped)
-        {
-            CreatePedObj(ped);
-            UpdateCurrentId(ped);
-        }
-
-        public static void ArrestPedEvent(Ped ped)
+        private static void STP_StopPedEvent(Ped ped)
         {
             CreatePedObj(ped);
         }
 
-        public static void PatDownPedEvent(Ped ped)
-        {
-            CreatePedObj(ped);
-            UpdateCurrentId(ped);
-        }
-
-        public static void DriversLicenseEvent(Ped ped)
-        {
-            CreatePedObj(ped);
-            UpdateCurrentId(ped);
-        }
-
-        public static void PassengerLicenseEvent(Vehicle vehicle)
+        private static void STP_PassengerHandLicenseEvent(Vehicle vehicle)
         {
             var passengers = vehicle.Passengers;
-            for (var i = 0; i < passengers.Length; i++) UpdateCurrentId(passengers[i]);
+            foreach (var t in passengers)
+                UpdateCurrentId(t);
         }
 
-        public static void StopPedEvent(Ped ped)
+        private static void STP_AskIDEvent(Ped ped)
         {
             CreatePedObj(ped);
+            UpdateCurrentId(ped);
+        }
+
+        private static void STP_PatDownPedEvent(Ped ped)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
+        }
+
+        private static void STP_ArrestPedEvent(Ped ped)
+        {
+            CreatePedObj(ped);
+        }
+
+        private static void STP_HandLicenseEvent(Ped ped)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
         }
     }
 }

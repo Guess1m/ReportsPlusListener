@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
 using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
 
@@ -235,32 +232,12 @@ namespace ReportsPlus.Utils
 
         public static readonly Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
 
+        public static readonly Dictionary<string, string> PedLicenseNumbers = new Dictionary<string, string>();
+
         public static readonly Dictionary<LHandle, string> CalloutIds = new Dictionary<LHandle, string>();
 
         public static bool IsPerformingPullover = false;
 
         public static Keys AnimationBind;
-
-        public static string GenerateLicenseNumber()
-        {
-            var licenseNum = new StringBuilder();
-            using (var rng = new RNGCryptoServiceProvider())
-            {
-                var randomNumber = new byte[1];
-                for (var i = 0; i < 10; i++)
-                {
-                    rng.GetBytes(randomNumber);
-                    var digit = randomNumber[0] % 10;
-                    licenseNum.Append(digit);
-                }
-            }
-
-            return licenseNum.ToString();
-        }
-
-        public static string GenerateCalloutId()
-        {
-            return new Random().Next(10000, 100000).ToString();
-        }
     }
 }

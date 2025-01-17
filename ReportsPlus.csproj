@@ -41,8 +41,14 @@
         <Reference Include="CalloutInterfaceAPI">
             <HintPath>..\..\Documents\APIs\CalloutInterfaceAPI.dll</HintPath>
         </Reference>
+        <Reference Include="CommonDataFramework">
+            <HintPath>..\..\Documents\APIs\PR\CommonDataFramework.dll</HintPath>
+        </Reference>
         <Reference Include="LSPD First Response">
             <HintPath>..\..\Documents\APIs\LSPD First Response.dll</HintPath>
+        </Reference>
+        <Reference Include="PolicingRedefined">
+            <HintPath>..\..\Documents\APIs\PR\PolicingRedefined.dll</HintPath>
         </Reference>
         <Reference Include="RagePluginHook">
             <HintPath>..\..\Documents\APIs\RagePluginHookSDK.dll</HintPath>
@@ -86,7 +92,9 @@
         <Compile Include="Utils\Data\DataCollection.cs"/>
         <Compile Include="Utils\Data\EventUtils.cs"/>
         <Compile Include="Utils\Data\GetterUtils.cs"/>
-        <Compile Include="Utils\Data\RefreshUtils.cs"/>
+        <Compile Include="Utils\Data\GetValueMethods.cs"/>
+        <Compile Include="Utils\Data\MathUtils.cs"/>
+        <Compile Include="Utils\Data\UpdateUtils.cs"/>
         <Compile Include="Utils\Utils.cs"/>
     </ItemGroup>
     <ItemGroup>

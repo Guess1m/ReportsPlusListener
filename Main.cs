@@ -14,13 +14,19 @@ namespace ReportsPlus
         /*
          UPDATE: Update Version
          */
-        private static readonly string Version = "v1.3-alpha";
+        private static readonly string Version = "v1.4.0-alpha";
         public static readonly string FileDataFolder = "ReportsPlus\\data";
+
         internal static bool IsOnDuty;
+
         public static XDocument CurrentIdDoc;
         public static XDocument CalloutDoc;
+
         public static bool HasStopThePed;
-        private bool _hasCalloutInterface;
+        public static bool HasPolicingRedefined;
+        private static bool _hasCalloutInterface;
+        public static bool HasCommonDataFramework;
+
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
 
         /*
@@ -71,16 +77,8 @@ namespace ReportsPlus
         {
             _hasCalloutInterface = ConfigUtils.IsPluginInstalled("CalloutInterface");
             HasStopThePed = ConfigUtils.IsPluginInstalled("StopThePed");
-            if (HasStopThePed)
-            {
-                EstablishEventsStp();
-                Game.LogTrivial("ReportsPlusListener: Found StopThePed");
-            }
-            else
-            {
-                Game.LogTrivial("ReportsPlusListener: StopThePed not found. Required for ID Functions.");
-                Game.DisplayNotification("~r~ReportsPlusListener: StopThePed not found. Required for ID Functions.");
-            }
+            HasPolicingRedefined = ConfigUtils.IsPluginInstalled("PolicingRedefined");
+            HasCommonDataFramework = ConfigUtils.IsPluginInstalled("CommonDataFramework");
 
             if (_hasCalloutInterface)
             {
@@ -92,6 +90,29 @@ namespace ReportsPlus
                 Game.LogTrivial("ReportsPlusListener: CalloutInterface not found. Required for Callout Functions.");
                 Game.DisplayNotification(
                     "~r~ReportsPlusListener: CalloutInterface not found. Required for Callout Functions.");
+            }
+
+            if (HasPolicingRedefined && HasCommonDataFramework)
+            {
+                EstablishEventsPr();
+                Game.LogTrivial("ReportsPlusListener: Found Policing Redefined and Common Data Framework");
+                HasStopThePed = false;
+            }
+            else
+            {
+                Game.LogTrivial("ReportsPlusListener: Policing Redefined/CDF not found, checking for STP");
+                if (HasStopThePed)
+                {
+                    EstablishEventsStp();
+                    Game.LogTrivial("ReportsPlusListener: Found StopThePed");
+                }
+                else
+                {
+                    Game.LogTrivial("ReportsPlusListener: StopThePed/PR not found.\nUsing base game functions.");
+                    EstablishEventsBaseGame();
+                    Game.DisplayNotification(
+                        "~r~ReportsPlusListener: StopThePed/PR not found.");
+                }
             }
         }
 
