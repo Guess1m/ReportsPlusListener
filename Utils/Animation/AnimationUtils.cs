@@ -20,19 +20,32 @@ namespace ReportsPlus.Utils.Animation
         private static bool CheckRequirements()
         {
             return LocalPlayer.Exists() && LocalPlayer.IsAlive &&
-                   LocalPlayer.IsValid() && Functions.IsPlayerPerformingPullover() && LocalPlayer.IsOnFoot &&
+                   LocalPlayer.IsValid() && LocalPlayer.IsOnFoot &&
                    !LocalPlayer.IsRagdoll &&
                    !LocalPlayer.IsReloading && !LocalPlayer.IsFalling && !LocalPlayer.IsInAir &&
                    !LocalPlayer.IsJumping && !LocalPlayer.IsInWater && !LocalPlayer.IsGettingIntoVehicle;
         }
 
-        private static bool IsPlayerWithinDistanceOfVeh(Vehicle targetVeh, float maxDistance)
+        private static bool IsPlayerWithinDistanceOfPed(Ped targetPed, float maxDistance)
         {
-            if (targetVeh == null || !targetVeh.Exists())
+            if (targetPed == null || !targetPed.Exists())
                 return false;
 
             var playerPosition = Game.LocalPlayer.Character.Position;
-            var vehPos = targetVeh.Position;
+            var vehPos = targetPed.Position;
+
+            var distance = Vector3.Distance(playerPosition, vehPos);
+
+            return distance <= maxDistance;
+        }
+
+        private static bool IsPlayerWithinDistanceOfVeh(Vehicle targetVehicle, float maxDistance)
+        {
+            if (targetVehicle == null || !targetVehicle.Exists())
+                return false;
+
+            var playerPosition = Game.LocalPlayer.Character.Position;
+            var vehPos = targetVehicle.Position;
 
             var distance = Vector3.Distance(playerPosition, vehPos);
 
@@ -47,38 +60,84 @@ namespace ReportsPlus.Utils.Animation
                 return;
             }
 
-            var nearbyVeh = LocalPlayer.GetNearbyVehicles(1)[0];
-
-            if (nearbyVeh == null || !nearbyVeh.Exists())
+            if (!DataCollection.CitationSignalFound)
             {
-                Game.LogTrivial("ReportsPlusListener: No nearby vehicle found or vehicle does not exist.");
+                Game.LogTrivial("ReportsPlusListener: CitationSignal Not Found.");
                 return;
             }
 
-            if (DataCollection.currentStoppedVehicle == null)
-            {
-                Game.LogTrivial("ReportsPlusListener: currentStoppedVehicle is null.");
-                return;
-            }
+            if (DataCollection.CitationSignalType != null)
+                switch (DataCollection.CitationSignalType)
+                {
+                    case "2":
+                        var nearbyPed = LocalPlayer.GetNearbyPeds(1)[0];
+                        if (nearbyPed == null || !nearbyPed.Exists())
+                        {
+                            Game.LogTrivial("ReportsPlusListener: No nearby ped found or ped does not exist.");
+                            return;
+                        }
 
-            if (nearbyVeh != DataCollection.currentStoppedVehicle)
-            {
-                Game.LogTrivial("ReportsPlusListener: Nearby vehicle does not match the current stopped vehicle.");
-                return;
-            }
+                        if (!IsPlayerWithinDistanceOfPed(nearbyPed, 2.2f))
+                        {
+                            Game.LogTrivial(
+                                $"ReportsPlusListener: Player is not within 2.2 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                            Game.DisplaySubtitle(
+                                $"~r~Move Closer to The Ped, Distance: ~y~{nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." +
+                                "\n~w~Press ~y~" +
+                                Utils.DiscardBind + " ~w~To Discard Citation");
+                            return;
+                        }
 
-            if (!DataCollection.citationSignalFound)
-            {
-                Game.LogTrivial("ReportsPlusListener: Citation signal not found.");
-                return;
-            }
+                        var pedName = Functions.GetPersonaForPed(nearbyPed).FullName.ToLower();
+                        if (!pedName.Equals(DataCollection.CitationSignalName.ToLower()))
+                        {
+                            Game.LogTrivial("ReportsPlusListener: ped name: " + pedName +
+                                            " is invalid. Citation for: " +
+                                            DataCollection.CitationSignalName.ToLower());
+                            Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" +
+                                                 DataCollection.CitationSignalName + "\n~w~Press ~y~" +
+                                                 Utils.DiscardBind + " ~w~To Discard Citation");
+                            return;
+                        }
 
-            if (!IsPlayerWithinDistanceOfVeh(nearbyVeh, 3f))
-            {
-                Game.LogTrivial(
-                    $"ReportsPlusListener: Player is not within 3 units of the vehicle. Distance: {nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} units.");
-                return;
-            }
+                        break;
+                    case "3":
+                        var nearbyVeh = LocalPlayer.GetNearbyVehicles(1)[0];
+                        if (nearbyVeh == null || !nearbyVeh.Exists())
+                        {
+                            Game.LogTrivial("ReportsPlusListener: No nearby veh found or ped does not exist.");
+                            return;
+                        }
+
+                        if (!IsPlayerWithinDistanceOfVeh(nearbyVeh, 2f))
+                        {
+                            Game.LogTrivial(
+                                $"ReportsPlusListener: Player is not within 2 units of the veh: [{DataCollection.CitationSignalPlate}]. Distance: {nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                            Game.DisplaySubtitle(
+                                $"~w~Move Closer to The Vehicle, Distance: ~y~{nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} ~w~units." +
+                                "\n~w~Press ~y~" +
+                                Utils.DiscardBind + " ~w~To Discard Citation");
+                            return;
+                        }
+
+                        var vehiclePlate = nearbyVeh.LicensePlate.ToLower();
+                        if (!vehiclePlate.Equals(DataCollection.CitationSignalPlate.ToLower()))
+                        {
+                            Game.LogTrivial("ReportsPlusListener: vehicle plate: " + vehiclePlate +
+                                            " is invalid. Citation for: " +
+                                            DataCollection.CitationSignalPlate.ToLower());
+
+                            Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" +
+                                                 DataCollection.CitationSignalPlate + "\n~w~Press ~y~" +
+                                                 Utils.DiscardBind + " ~w~To Discard Citation");
+                            return;
+                        }
+
+                        break;
+                    default:
+                        Game.LogTrivial("ReportsPlusListener: non-printed so returning");
+                        return;
+                }
 
             if (_animationFiber == null || !_animationFiber.IsAlive)
             {
@@ -89,6 +148,45 @@ namespace ReportsPlus.Utils.Animation
             _isAnimationActive = true;
         }
 
+        public static void RunDiscardCitation()
+        {
+            if (!CheckRequirements()) return;
+
+            if (!DataCollection.CitationSignalFound) return;
+
+            if (DataCollection.CitationSignalType == null) return;
+
+            Game.LogTrivial("ReportsPlusListener: DiscardCitation Running");
+
+            switch (DataCollection.CitationSignalType)
+            {
+                case "2":
+                    Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                        "~r~Citation Discarded",
+                        "~y~Citation for: ~b~" + DataCollection.CitationSignalName + " ~y~Has Been Discarded");
+                    break;
+                case "3":
+                    Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                        "~r~Citation Discarded",
+                        "~y~Citation for: ~b~" + DataCollection.CitationSignalPlate + " ~y~Has Been Discarded");
+                    break;
+            }
+
+            DiscardCitation();
+        }
+
+        private static void DiscardCitation()
+        {
+            DataCollection.CitationSignalFound = false;
+            if (File.Exists(DataCollection.CitationSignalFilePath)) File.Delete(DataCollection.CitationSignalFilePath);
+
+            DataCollection.CitationSignalName = null;
+            DataCollection.CitationSignalType = null;
+            DataCollection.CitationSignalPlate = null;
+
+            Game.LogTrivial("ReportsPlusListener: Deleted CitationSignal File / Clearing Data");
+        }
+
         // Thank You, Lenny <3
         private static void AnimationFiber()
         {
@@ -97,46 +195,48 @@ namespace ReportsPlus.Utils.Animation
                 GameFiber.Yield();
                 if (!_isAnimationActive) continue;
 
-                Game.LogTrivial("ReportsPlusListener: Playing animation: " + StartName);
-                Game.DisplaySubtitle("Handing Citation..");
+                Game.LogTrivial("ReportsPlusListener: Playing Animation: " + StartName);
                 LocalPlayer.Tasks.PlayAnimation(StartDict, StartName, 0.7f, AnimationFlags.None);
                 GameFiber.Wait(1600);
                 NativeFunction.Natives.x28004F88151E03E0(Game.LocalPlayer.Character, StartName,
                     StartDict, 0.5f);
-                Game.LogTrivial("ReportsPlusListener: Animation finished");
-
-                if (!_isAnimationActive) continue;
-
-                if (Functions.IsPlayerPerformingPullover())
-                {
-                    Game.DisplaySubtitle("~g~Handed Citation, Return to Vehicle.");
-                    Game.LogTrivial("ReportsPlusListener: Handed Citation");
-
-                    var random = new Random();
-                    var randomNumber = random.Next(1000, 2001);
-                    GameFiber.Wait(randomNumber);
-
-                    try
-                    {
-                        Functions.ForceEndCurrentPullover();
-                    }
-                    catch (Exception e)
-                    {
-                        Game.LogTrivial("ReportsPlusListener: EndTrafficStop failed: " + e.Message);
-                    }
-
-                    Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
-                }
-
+                Game.LogTrivial("ReportsPlusListener: Animation Finished");
                 _isAnimationActive = false;
-                DataCollection.citationSignalFound = false;
-                if (File.Exists(DataCollection.CitationSignalFilePath))
+
+                if (DataCollection.CitationSignalType != null)
+                    switch (DataCollection.CitationSignalType)
+                    {
+                        case "2":
+                            Game.DisplaySubtitle("~g~Handed Citation to ~w~" + DataCollection.CitationSignalName);
+                            Game.LogTrivial("ReportsPlusListener: Handed Citation to " +
+                                            DataCollection.CitationSignalName);
+                            break;
+                        case "3":
+                            Game.DisplaySubtitle("~g~Placed Citation on ~w~" + DataCollection.CitationSignalPlate);
+                            Game.LogTrivial("ReportsPlusListener: Placed Parking Citation on " +
+                                            DataCollection.CitationSignalPlate);
+                            break;
+                    }
+
+                DiscardCitation();
+
+                if (!Functions.IsPlayerPerformingPullover()) continue;
+                Game.DisplaySubtitle("~g~Handed Citation, Return to Vehicle.");
+                Game.LogTrivial("ReportsPlusListener: Handed Citation, Ending Traffic Stop");
+
+                var randomNumber = MathUtils.Rand.Next(1000, 2001);
+                GameFiber.Wait(randomNumber);
+
+                try
                 {
-                    Game.LogTrivial("ReportsPlusListener: Deleting citation signal file.");
-                    File.Delete(DataCollection.CitationSignalFilePath);
+                    Functions.ForceEndCurrentPullover();
+                }
+                catch (Exception e)
+                {
+                    Game.LogTrivial("ReportsPlusListener: EndTrafficStop Failed: " + e.Message);
                 }
 
-                Game.LogTrivial("ReportsPlusListener: citationSignalFound & _isAnimationActive set false");
+                Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
             }
         }
     }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
+using Rage;
 
 namespace ReportsPlus.Utils
 {
@@ -239,5 +240,21 @@ namespace ReportsPlus.Utils
         public static bool IsPerformingPullover = false;
 
         public static Keys AnimationBind;
+        public static Keys DiscardBind;
+
+        internal static string FindPedModel(Ped ped)
+        {
+            try
+            {
+                if (ped == null || !ped.IsValid()) return "";
+                ped.GetVariation(0, out var drawable, out var texture);
+                return $"[{ped.Model.Name.ToLower()}][{drawable}][{texture}]";
+            }
+            catch
+            {
+                Game.LogTrivial("ReportsPlusListener: Error fetching model for ped");
+                return "";
+            }
+        }
     }
 }

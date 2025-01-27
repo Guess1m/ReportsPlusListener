@@ -36,7 +36,7 @@ namespace ReportsPlus
         public override void Initialize()
         {
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
-            Game.LogTrivial("ReportsPlusListener Plugin initialized. Version: " + Version);
+            Game.LogTrivial("ReportsPlusListener Plugin Initialized. Version: " + Version);
 
             ConfigUtils.LoadSettings();
         }
@@ -47,6 +47,8 @@ namespace ReportsPlus
             Game.LogTrivial("ReportsPlusListener: IsOnDuty State Changed: '" + IsOnDuty + "'");
             if (!onDuty) return;
             Utils.Utils.CalloutIds.Clear();
+            Utils.Utils.PedAddresses.Clear();
+            Utils.Utils.PedLicenseNumbers.Clear();
             if (!Directory.Exists(FileDataFolder))
                 Directory.CreateDirectory(FileDataFolder);
 
@@ -54,23 +56,28 @@ namespace ReportsPlus
 
             if (File.Exists(DataCollection.CitationSignalFilePath))
             {
-                Game.LogTrivial("ReportsPlusListener: Found old citationSignalFile, Deleting");
+                Game.LogTrivial("ReportsPlusListener: Found Old CitationSignalFile, Deleting");
                 File.Delete(DataCollection.CitationSignalFilePath);
             }
 
-            DataCollection.CombinedDataCollectionFiber =
-                GameFiber.StartNew(DataCollection.StartCombinedDataCollectionFiber);
-
-            DataCollection.DataCollectionFiber = GameFiber.StartNew(DataCollection.StartDataCollectionFiber);
-
-            DataCollection.SignalFileCheckFiber = GameFiber.StartNew(DataCollection.StartSignalFileCheckFiber);
-
             RunPluginChecks();
 
-            Game.DisplayNotification("~g~ReportsPlus-" + Version + " Loaded!" +
-                                     "\n~b~Citation Keybind: ~y~" + Utils.Utils.AnimationBind);
-            Game.LogTrivial("ReportsPlusListener: " + Version + ", Loaded Successfully Animation Keybind: " +
-                            Utils.Utils.AnimationBind);
+            GameFiber.StartNew(() =>
+            {
+                DataCollection.TrafficStopCollectionFiber =
+                    GameFiber.StartNew(DataCollection.TrafficStopCollection, "CombinedDataCollection");
+
+                DataCollection.WorldDataCollectionFiber =
+                    GameFiber.StartNew(DataCollection.WorldDataCollection, "DataCollection");
+
+                DataCollection.SignalFileCheckFiber =
+                    GameFiber.StartNew(DataCollection.SignalFileCheck, "SignalFileCheck");
+
+                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlusListener",
+                    "~g~Version: " + Version + " Loaded!", "~w~Citation Keybind: ~y~" + Utils.Utils.AnimationBind);
+                Game.LogTrivial("ReportsPlusListener: " + Version + ", Loaded Successfully Animation Keybind: " +
+                                Utils.Utils.AnimationBind);
+            }, "ReportsPlusListener");
         }
 
         private void RunPluginChecks()
@@ -88,8 +95,9 @@ namespace ReportsPlus
             else
             {
                 Game.LogTrivial("ReportsPlusListener: CalloutInterface not found. Required for Callout Functions.");
-                Game.DisplayNotification(
-                    "~r~ReportsPlusListener: CalloutInterface not found. Required for Callout Functions.");
+
+                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlusListener",
+                    "~r~CalloutInterface Not Found", "Required for Callout Functions");
             }
 
             if (HasPolicingRedefined && HasCommonDataFramework)
@@ -108,10 +116,11 @@ namespace ReportsPlus
                 }
                 else
                 {
-                    Game.LogTrivial("ReportsPlusListener: StopThePed/PR not found.\nUsing base game functions.");
+                    Game.LogTrivial("ReportsPlusListener: StopThePed/PR not found. Using base game functions.");
                     EstablishEventsBaseGame();
-                    Game.DisplayNotification(
-                        "~r~ReportsPlusListener: StopThePed/PR not found.");
+
+                    Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlusListener",
+                        "~r~StopThePed/PR Not Found", "Using Base LSPDFR Functions");
                 }
             }
         }
@@ -119,13 +128,13 @@ namespace ReportsPlus
         public override void Finally()
         {
             Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
-            if (DataCollection.CombinedDataCollectionFiber != null &&
-                DataCollection.CombinedDataCollectionFiber.IsAlive)
-                DataCollection.CombinedDataCollectionFiber.Abort();
+            if (DataCollection.TrafficStopCollectionFiber != null &&
+                DataCollection.TrafficStopCollectionFiber.IsAlive)
+                DataCollection.TrafficStopCollectionFiber.Abort();
 
-            if (DataCollection.DataCollectionFiber != null &&
-                DataCollection.DataCollectionFiber.IsAlive)
-                DataCollection.DataCollectionFiber.Abort();
+            if (DataCollection.WorldDataCollectionFiber != null &&
+                DataCollection.WorldDataCollectionFiber.IsAlive)
+                DataCollection.WorldDataCollectionFiber.Abort();
 
             if (DataCollection.SignalFileCheckFiber != null &&
                 DataCollection.SignalFileCheckFiber.IsAlive)
@@ -133,7 +142,7 @@ namespace ReportsPlus
 
             CurrentIdDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
-            Game.LogTrivial("ReportsPlusListener: cleaned up.");
+            Game.LogTrivial("ReportsPlusListener: Cleaned Up.");
         }
     }
 }

@@ -3,6 +3,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using CalloutInterfaceAPI;
+using CommonDataFramework.Modules.PedDatabase;
+using LSPD_First_Response.Engine.Scripting.Entities;
 using LSPD_First_Response.Mod.API;
 using PolicingRedefined.API;
 using Rage;
@@ -42,6 +44,10 @@ namespace ReportsPlus.Utils.Data
             EventsAPI.OnDriverIdentificationGiven += PR_OnDriverIdentificationGiven;
             EventsAPI.OnOccupantIdentificationGiven += PR_OnOccupantIdentificationGiven;
             EventsAPI.OnPedStopped += PR_OnPedStopped;
+
+            EventsAPI.OnDeadPedSearched += PR_OnDeadPedPatDown;
+            EventsAPI.OnPedRanThroughDispatch += PR_OnPedCheck;
+            EventsAPI.OnVehicleRanThroughDispatch += PR_OnVehicleCheck;
         }
 
         private static void BASE_StopPedEvent(Ped ped)
@@ -99,6 +105,31 @@ namespace ReportsPlus.Utils.Data
             UpdateCurrentId(ped);
         }
 
+        private static void PR_OnDeadPedPatDown(Ped ped)
+        {
+            CreatePedObj(ped);
+            UpdateCurrentId(ped);
+        }
+
+        private static void PR_OnVehicleCheck(Vehicle vehicle, bool isVinCheck)
+        {
+            File.WriteAllText($"{FileDataFolder}/lookup.data", vehicle.LicensePlate);
+
+            Game.LogTrivial("ReportsPlusListener: Updated Lookup File (vehicle); "+vehicle.LicensePlate);
+
+        }
+
+        private static void PR_OnPedCheck(Ped ped)
+        {
+            CreatePedObj(ped);
+
+            var fullName = Functions.GetPersonaForPed(ped).FullName;
+
+            File.WriteAllText($"{FileDataFolder}/lookup.data", fullName);
+
+            Game.LogTrivial("ReportsPlusListener: Updated Lookup File (ped); "+fullName);
+        }
+
         public static void EstablishCiEvent()
         {
             Events.OnCalloutDisplayed += EventsOnCalloutDisplayed;
@@ -148,7 +179,7 @@ namespace ReportsPlus.Utils.Data
 
                 CalloutDoc.Root?.Add(calloutElement);
                 CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
-                Game.LogTrivial($"ReportsPlusListener: Callout {calloutId} data updated and displayed.");
+                Game.LogTrivial($"ReportsPlusListener: Callout {calloutId} DataFile Updated");
             }
         }
 

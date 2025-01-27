@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
 
@@ -15,74 +16,31 @@ namespace ReportsPlus.Utils.Data
         public const int RevokedProb = 5;
         public const int ValidProb = 65;
 
-        public static HashSet<string> GetPermitTypeBasedOnChances(int chanceConcealed, int chanceOpen, int chanceBoth)
-        {
-            var totalChance = chanceConcealed + chanceOpen + chanceBoth;
+        private static readonly ThreadLocal<Random> RandThreadLocal = new ThreadLocal<Random>(() => new Random());
 
-            if (totalChance != 100)
+        public static Random Rand => RandThreadLocal.Value;
+
+        public static string GenerateModelForPed(string gender)
+        {
+            var maleModels = new List<string>
             {
-                chanceConcealed = 33;
-                chanceOpen = 33;
-                chanceBoth = 34;
-            }
-
-            var random = new Random();
-            var roll = random.Next(1, 101);
-
-            var result = new HashSet<string>();
-
-            if (roll <= chanceConcealed)
-                result.Add("concealed");
-            else if (roll <= chanceConcealed + chanceOpen)
-                result.Add("open");
-            else if (roll <= chanceConcealed + chanceOpen + chanceBoth) result.Add("both");
-
-            return result;
-        }
-
-        public static string GetRandomWeaponPermitType()
-        {
-            var random = new Random();
-
-            const int ccwPermitProbability = 30;
-
-            var randomValue = random.Next(0, 100);
-
-            return randomValue < ccwPermitProbability ? "CcwPermit" : "FflPermit";
-        }
-
-        public static bool CalculateTrueFalseProbability(string percentage)
-        {
-            if (!int.TryParse(percentage, out var percentage1) || percentage1 < 0 || percentage1 > 100)
-                percentage1 = 50;
-
-            var random = new Random();
-            return random.Next(100) < percentage1;
-        }
-
-        public static string CalculateLicenseStatus(int chanceValid, int chanceExpired, int chanceSuspended)
-        {
-            var totalChance = chanceValid + chanceSuspended + chanceExpired;
-
-            if (totalChance != 100)
+                "[ig_zimbor][0][0]", "[mp_m_weed_01][0][0]", "[s_m_m_bouncer_01][0][0]", "[s_m_m_postal_02][0][0]",
+                "[s_m_y_waretech_01][0][0]", "[a_m_m_eastsa_01][0][0]"
+            };
+            var femaleModels = new List<string>
             {
-                chanceValid = 55;
-                chanceExpired = 22;
-                chanceSuspended = 23;
-            }
+                "[a_f_m_bevhills_02][0][0]", "[a_f_y_femaleagent][0][0]", "[a_f_y_soucent_02][0][0]",
+                "[csb_mrs_r][0][0]", "[mp_f_counterfeit_01][0][0]", "[mp_f_cardesign_01][0][0]"
+            };
 
-            var random = new Random();
-            var roll = random.Next(1, 101);
-
-            if (roll <= chanceValid) return "valid";
-
-            return roll <= chanceValid + chanceSuspended ? "suspended" : "expired";
+            return gender.ToLower().Equals("male")
+                ? maleModels[Rand.Next(maleModels.Count)]
+                : femaleModels[Rand.Next(femaleModels.Count)];
         }
 
         public static bool CheckProbability(int probability)
         {
-            var random = new Random();
-            return random.Next(0, 100) < probability;
+            return Rand.Next(0, 100) < probability;
         }
 
         public static string GenerateLicenseNumber()
@@ -104,18 +62,17 @@ namespace ReportsPlus.Utils.Data
 
         public static string GenerateCalloutId()
         {
-            return new Random().Next(10000, 100000).ToString();
+            return Rand.Next(10000, 100000).ToString();
         }
 
         public static string GenerateVin()
         {
-            var random = new Random();
             var vinBuilder = new StringBuilder();
             var characters = "ABCDEFGHJKLMNPRSTUVWXYZ0123456789";
 
             for (var i = 0; i < 17; i++)
             {
-                var nextChar = characters[random.Next(characters.Length)];
+                var nextChar = characters[Rand.Next(characters.Length)];
                 vinBuilder.Append(nextChar);
             }
 
@@ -124,16 +81,15 @@ namespace ReportsPlus.Utils.Data
 
         public static string GetRandomAddress()
         {
-            var random = new Random();
-            var chosenList = random.Next(2) == 0 ? Utils.LosSantosAddresses : Utils.BlaineCountyAddresses;
-            var index = random.Next(chosenList.Count);
-            var addressNumber = random.Next(1000).ToString().PadLeft(3, '0');
+            var chosenList = Rand.Next(2) == 0 ? Utils.LosSantosAddresses : Utils.BlaineCountyAddresses;
+            var index = Rand.Next(chosenList.Count);
+            var addressNumber = Rand.Next(1000).ToString().PadLeft(3, '0');
             var address = $"{addressNumber} {chosenList[index]}";
 
             while (Utils.PedAddresses.ContainsValue(address))
             {
-                index = random.Next(chosenList.Count);
-                addressNumber = random.Next(1000).ToString().PadLeft(3, '0');
+                index = Rand.Next(chosenList.Count);
+                addressNumber = Rand.Next(1000).ToString().PadLeft(3, '0');
                 address = $"{addressNumber} {chosenList[index]}";
             }
 
@@ -147,8 +103,7 @@ namespace ReportsPlus.Utils.Data
 
             long minDaysAhead = 0;
             var maxDaysAhead = maxYears * 365L + maxYears / 4;
-            var random = new Random();
-            long randomDaysAhead = random.Next((int)minDaysAhead, (int)maxDaysAhead + 1);
+            long randomDaysAhead = Rand.Next((int)minDaysAhead, (int)maxDaysAhead + 1);
 
             var expirationDate = currentDate.AddDays(randomDaysAhead);
 
@@ -162,8 +117,7 @@ namespace ReportsPlus.Utils.Data
 
             long minDaysAgo = 1;
             var maxDaysAgo = maxYearsAgo * 365L + maxYearsAgo / 4;
-            var random = new Random();
-            long randomDaysAgo = random.Next((int)minDaysAgo, (int)maxDaysAgo + 1);
+            long randomDaysAgo = Rand.Next((int)minDaysAgo, (int)maxDaysAgo + 1);
 
             var expirationDate = currentDate.AddDays(-randomDaysAgo);
 
@@ -177,7 +131,7 @@ namespace ReportsPlus.Utils.Data
 
             if (totalChance != 100) throw new ArgumentException("The sum of the chances must equal 100.");
 
-            var randomValue = new Random().Next(1, 101);
+            var randomValue = Rand.Next(1, 101);
 
             if (randomValue <= expiredChance) return "Expired";
             if (randomValue <= expiredChance + noneChance) return "None";

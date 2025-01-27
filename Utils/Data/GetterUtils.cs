@@ -32,6 +32,7 @@ namespace ReportsPlus.Utils.Data
             var ownerAddress = MathUtils.GetRandomAddress();
             var owner = Functions.GetVehicleOwnerName(car);
             var vin = MathUtils.GenerateVin();
+            var gender = MathUtils.Rand.Next(2) == 1 ? "Male" : "Female";
             var regexp = "";
             var insexp = "";
 
@@ -73,6 +74,7 @@ namespace ReportsPlus.Utils.Data
                 vin = GetVinPr(car);
                 regexp = GetRegExpPr(car);
                 insexp = GetInsExpPr(car);
+                gender = GetOwnerGenderPr(car);
             }
             else if (HasStopThePed)
             {
@@ -80,20 +82,18 @@ namespace ReportsPlus.Utils.Data
                 registration = GetRegistrationStp(car);
             }
 
+            var ownerModel = MathUtils.GenerateModelForPed(gender);
+
             return
-                $"licenseplate={car.LicensePlate}&model={car.Model.Name}&regexp={regexp}&insexp={insexp}&vin={vin}&isstolen={stolen}&ispolice={car.IsPoliceVehicle}&owner={owner}&owneraddress={ownerAddress}&driver={driver}&registration={registration}&insurance={insurance}&color={color}";
+                $"licenseplate={car.LicensePlate}&model={car.Model.Name}&regexp={regexp}&insexp={insexp}&vin={vin}&isstolen={stolen}&ispolice={car.IsPoliceVehicle}&owner={owner}&ownermodel={ownerModel}&ownergender={gender}&owneraddress={ownerAddress}&driver={driver}&registration={registration}&insurance={insurance}&color={color}";
         }
 
         public static string GetPedDataPr(Ped ped)
         {
             if (ped == null) return null;
+
             var pedData = ped.GetPedData();
             if (pedData == null) return null;
-            var relationshipGroup = ped.RelationshipGroup.Name.ToLower();
-            if (relationshipGroup.Equals("wild_animal") || relationshipGroup.Equals("cat") ||
-                relationshipGroup.Equals("dog") || relationshipGroup.Equals("deer") ||
-                relationshipGroup.Equals("cougar") || relationshipGroup.Equals("domestic_animal"))
-                return null;
 
             var address = MathUtils.GetPedAddress(ped);
             string licenseNum;
@@ -101,48 +101,40 @@ namespace ReportsPlus.Utils.Data
             if (!Utils.PedLicenseNumbers.ContainsKey(pedData.FullName))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
-                Utils.PedLicenseNumbers.Add(pedData.FullName, licenseNum);
+                Utils.PedLicenseNumbers[pedData.FullName] = licenseNum;
             }
             else
             {
                 licenseNum = Utils.PedLicenseNumbers[pedData.FullName];
             }
 
-            if (!Utils.PedAddresses.ContainsKey(pedData.FullName))
-                Utils.PedAddresses.Add(pedData.FullName, address);
-            else
-                address = Utils.PedAddresses[pedData.FullName];
-
             return
                 $"name={pedData.FullName}" +
                 $"&licensenumber={licenseNum}" +
-                $"&pedmodel={GetPedModel(ped)}" +
+                $"&pedmodel={Utils.FindPedModel(ped)}" +
                 $"&birthday={pedData.Birthday.Month}/{pedData.Birthday.Day}/{pedData.Birthday.Year}" +
-                $"&gender={pedData.Gender.ToString()}" +
+                $"&gender={pedData.Gender.ToString() ?? ""}" +
                 $"&address={address}" +
                 $"&iswanted={pedData.Wanted.ToString()}" +
-                $"&licensestatus={pedData.DriversLicenseState.ToString()}" +
-                $"&licenseexpiration={ped.GetPedData().DriversLicenseExpiration?.ToString("MM-dd-yyyy") ?? ""}" +
-                $"&weaponpermittype={pedData.WeaponPermit.PermitType.ToString()}" +
-                $"&weaponpermitstatus={pedData.WeaponPermit.Status.ToString()}" +
-                $"&weaponpermitexpiration={ped.GetPedData().WeaponPermit.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" +
-                $"&fishpermitstatus={pedData.FishingPermit.Status.ToString()}" +
+                $"&licensestatus={pedData.DriversLicenseState.ToString() ?? ""}" +
+                $"&licenseexpiration={pedData.DriversLicenseExpiration?.ToString("MM-dd-yyyy") ?? ""}" +
+                $"&weaponpermittype={pedData.WeaponPermit?.PermitType.ToString() ?? ""}" +
+                $"&weaponpermitstatus={pedData.WeaponPermit?.Status.ToString() ?? ""}" +
+                $"&weaponpermitexpiration={pedData.WeaponPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" +
+                $"&fishpermitstatus={pedData.FishingPermit?.Status.ToString() ?? ""}" +
                 $"&timesstopped={pedData.TimesStopped.ToString()}" +
-                $"&fishpermitexpiration={ped.GetPedData().FishingPermit.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" +
-                $"&huntpermitstatus={pedData.HuntingPermit.Status.ToString()}" +
-                $"&huntpermitexpiration={ped.GetPedData().HuntingPermit.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" +
+                $"&fishpermitexpiration={pedData.FishingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" +
+                $"&huntpermitstatus={pedData.HuntingPermit?.Status.ToString() ?? ""}" +
+                $"&huntpermitexpiration={pedData.HuntingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" +
                 $"&isonparole={pedData.IsOnParole.ToString()}" +
                 $"&isonprobation={pedData.IsOnProbation.ToString()}";
         }
 
         public static string GetPedData(Ped ped)
         {
-            if (ped == null) return null;
-            var relationshipGroup = ped.RelationshipGroup.Name.ToLower();
-            if (relationshipGroup.Equals("wild_animal") || relationshipGroup.Equals("cat") ||
-                relationshipGroup.Equals("dog") || relationshipGroup.Equals("deer") ||
-                relationshipGroup.Equals("cougar") || relationshipGroup.Equals("domestic_animal"))
+            if (ped == null)
                 return null;
+
             var persona = Functions.GetPersonaForPed(ped);
             if (persona == null) return null;
 
@@ -190,7 +182,7 @@ namespace ReportsPlus.Utils.Data
             return
                 $"name={persona.FullName}" +
                 $"&licensenumber={licenseNum}" +
-                $"&pedmodel={GetPedModel(ped)}" +
+                $"&pedmodel={Utils.FindPedModel(ped)}" +
                 $"&birthday={persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}" +
                 $"&gender={persona.Gender.ToString()}" +
                 $"&address={address}" +
@@ -200,11 +192,6 @@ namespace ReportsPlus.Utils.Data
                 $"&timesstopped={persona.TimesStopped.ToString()}" +
                 $"&isonparole={MathUtils.CheckProbability(30).ToString()}" +
                 $"&isonprobation={MathUtils.CheckProbability(25).ToString()}";
-        }
-
-        public static string GetPedModel(Ped ped)
-        {
-            return ped.Model.Name;
         }
 
         public static void CreateTrafficStopObj(Vehicle vehicle)
@@ -244,7 +231,7 @@ namespace ReportsPlus.Utils.Data
                 $"licenseplate={plate}&model={model}&isstolen={isStolen}&ispolice={isPolice}&owner={owner}&registration={registration}&insurance={insurance}&color={color}&street={street}&area={area}";
 
             File.WriteAllText($"{FileDataFolder}/trafficStop.data", $"{vehicleData}");
-            Game.LogTrivial("ReportsPlusListener: Traffic stop added.");
+            Game.LogTrivial("ReportsPlusListener: TrafficStop DataFile Created");
         }
 
         public static void CreatePedObj(Ped ped)
@@ -253,13 +240,9 @@ namespace ReportsPlus.Utils.Data
 
             string data;
             if (HasPolicingRedefined && HasCommonDataFramework)
-            {
                 data = GetPedDataPr(ped);
-            }
             else
-            {
                 data = GetPedData(ped);
-            }
 
             if (data == null) return;
 

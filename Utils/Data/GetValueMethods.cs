@@ -30,6 +30,11 @@ namespace ReportsPlus.Utils.Data
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.FullName;
         }
 
+        public static string GetOwnerGenderPr(Vehicle car)
+        {
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.Gender.ToString();
+        }
+
         public static string GetOwnerAddressPr(Vehicle car)
         {
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.Address.ToString();

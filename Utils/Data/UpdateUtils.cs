@@ -17,7 +17,7 @@ namespace ReportsPlus.Utils.Data
 
             var persona = Functions.GetPersonaForPed(ped);
             var fullName = persona.FullName;
-            var pedModel = GetPedModel(ped);
+            var pedModel = Utils.FindPedModel(ped);
             var gender = persona.Gender.ToString();
 
             if (!Utils.PedLicenseNumbers.ContainsKey(fullName))
@@ -47,7 +47,7 @@ namespace ReportsPlus.Utils.Data
             newDoc.Root?.Add(newEntry);
 
             newDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
-            Game.LogTrivial("ReportsPlusListener: Updated currentID data file");
+            Game.LogTrivial("ReportsPlusListener: Updated CurrentID DataFile");
         }
 
         public static void RefreshVehs()
@@ -66,7 +66,7 @@ namespace ReportsPlus.Utils.Data
                     carsList[Array.IndexOf(allCars, car)] = GetWorldCarData(car);
 
             File.WriteAllText($"{FileDataFolder}/worldCars.data", string.Join("|", carsList));
-            Game.LogTrivial("ReportsPlusListener: Updated veh data file");
+            Game.LogTrivial("ReportsPlusListener: Updated Vehicle Data");
         }
 
         public static void RefreshPeds()
@@ -87,13 +87,9 @@ namespace ReportsPlus.Utils.Data
 
                     string pedData;
                     if (HasPolicingRedefined && HasCommonDataFramework)
-                    {
                         pedData = GetPedDataPr(ped);
-                    }
                     else
-                    {
                         pedData = GetPedData(ped);
-                    }
 
                     if (pedData == null) continue;
 
@@ -102,14 +98,14 @@ namespace ReportsPlus.Utils.Data
 
             File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join("|", pedsList));
 
-            Game.LogTrivial("ReportsPlusListener: Updated ped data file");
+            Game.LogTrivial("ReportsPlusListener: Updated Pedestrian Data");
         }
 
-        public static void RefreshStreet()
+        public static void RefreshGameData()
         {
             if (!LocalPlayer.Exists())
             {
-                Game.LogTrivial("ReportsPlusListener: Failed to update location data; Invalid LocalPlayer");
+                Game.LogTrivial("ReportsPlusListener: Failed to update GameData; Invalid LocalPlayer");
                 return;
             }
 
@@ -119,10 +115,15 @@ namespace ReportsPlus.Utils.Data
                 MathUtils.ParseCountyString(Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).County
                     .ToString());
 
-            File.WriteAllText($"{FileDataFolder}/location.data",
-                currentStreet + ", " + currentZone + ", " + currentCounty);
+            var fullLocation = currentStreet + ", " + currentZone + ", " + currentCounty;
 
-            Game.LogTrivial("ReportsPlusListener: Updated location data file");
+            var timeString = World.DateTime.ToShortTimeString();
+
+            var gameData = $"location={fullLocation}|time={timeString}";
+
+            File.WriteAllText($"{FileDataFolder}/gameData.data", gameData);
+
+            Game.LogTrivial("ReportsPlusListener: Updated GameData File");
         }
     }
 }
