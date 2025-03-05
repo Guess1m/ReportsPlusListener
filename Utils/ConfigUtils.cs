@@ -41,12 +41,12 @@ namespace ReportsPlus.Utils
             if (!iniFile.DoesKeyExist("Keybinds", "DiscardCitation"))
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: DiscardCitation Config setting didn't exist, creating");
-                iniFile.Write("Keybinds", "DiscardCitation", Keys.Back);
+                iniFile.Write("Keybinds", "DiscardCitation", Keys.H);
             }
 
             RefreshDelay = iniFile.ReadInt32("Settings", "DataRefreshInterval", 13000);
             Utils.AnimationBind = iniFile.ReadEnum("Keybinds", "GiveTicket", Keys.U);
-            Utils.DiscardBind = iniFile.ReadEnum("Keybinds", "DiscardCitation", Keys.Back);
+            Utils.DiscardBind = iniFile.ReadEnum("Keybinds", "DiscardCitation", Keys.H);
 
             Game.LogTrivial("ReportsPlusListener {CONFIG}: GiveTicket Keybind- '" + Utils.AnimationBind + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: Discard Citation Keybind- '" + Utils.DiscardBind + "'");

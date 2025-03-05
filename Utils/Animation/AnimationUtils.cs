@@ -77,10 +77,10 @@ namespace ReportsPlus.Utils.Animation
                             return;
                         }
 
-                        if (!IsPlayerWithinDistanceOfPed(nearbyPed, 2.2f))
+                        if (!IsPlayerWithinDistanceOfPed(nearbyPed, 2.7f))
                         {
                             Game.LogTrivial(
-                                $"ReportsPlusListener: Player is not within 2.2 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                                $"ReportsPlusListener: Player is not within 2.7 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
                             Game.DisplaySubtitle(
                                 $"~r~Move Closer to The Ped, Distance: ~y~{nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." +
                                 "\n~w~Press ~y~" +
@@ -187,12 +187,12 @@ namespace ReportsPlus.Utils.Animation
             Game.LogTrivial("ReportsPlusListener: Deleted CitationSignal File / Clearing Data");
         }
 
-        // Thank You, Lenny <3
         private static void AnimationFiber()
         {
             while (true)
             {
                 GameFiber.Yield();
+                GameFiber.Wait(100);
                 if (!_isAnimationActive) continue;
 
                 Game.LogTrivial("ReportsPlusListener: Playing Animation: " + StartName);
@@ -224,20 +224,33 @@ namespace ReportsPlus.Utils.Animation
                 Game.DisplaySubtitle("~g~Handed Citation, Return to Vehicle.");
                 Game.LogTrivial("ReportsPlusListener: Handed Citation, Ending Traffic Stop");
 
-                var randomNumber = MathUtils.Rand.Next(1000, 2001);
-                GameFiber.Wait(randomNumber);
-
-                try
+                Game.LogTrivial("ReportsPlusListener: Enter Vehicle Fiber Started");
+                while (true)
                 {
-                    Functions.ForceEndCurrentPullover();
-                }
-                catch (Exception e)
-                {
-                    Game.LogTrivial("ReportsPlusListener: EndTrafficStop Failed: " + e.Message);
-                }
+                    if (!LocalPlayer.IsGettingIntoVehicle)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: Player not getting into vehicle, waiting one second");
+                        GameFiber.Wait(1000);
+                        continue;
+                    }
+                    var randomNumber = MathUtils.Rand.Next(4000, 7001);
+                    Game.LogTrivial($"ReportsPlusListener: Player getting into vehicle, sleeping {randomNumber}ms");
+                    GameFiber.Wait(randomNumber);
+                    try
+                    {
+                        Functions.ForceEndCurrentPullover();
+                    }
+                    catch (Exception e)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: EndTrafficStop Failed: " + e.Message);
+                    }
 
-                Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
+                    Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
+                    break;
+                }
             }
         }
+
+        //TODO: add animation for ped receiving ticket
     }
 }

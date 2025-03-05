@@ -117,7 +117,14 @@ namespace ReportsPlus.Utils.Data
 
             var fullLocation = currentStreet + ", " + currentZone + ", " + currentCounty;
 
-            var timeString = World.DateTime.ToShortTimeString();
+            string timeString;
+            try
+            {
+                timeString = World.DateTime.ToShortTimeString();
+            } catch (Exception)
+            {
+                timeString = "Unknown";
+            }
 
             var gameData = $"location={fullLocation}|time={timeString}";
 

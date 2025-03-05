@@ -3,8 +3,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using CalloutInterfaceAPI;
-using CommonDataFramework.Modules.PedDatabase;
-using LSPD_First_Response.Engine.Scripting.Entities;
 using LSPD_First_Response.Mod.API;
 using PolicingRedefined.API;
 using Rage;
@@ -115,8 +113,7 @@ namespace ReportsPlus.Utils.Data
         {
             File.WriteAllText($"{FileDataFolder}/lookup.data", vehicle.LicensePlate);
 
-            Game.LogTrivial("ReportsPlusListener: Updated Lookup File (vehicle); "+vehicle.LicensePlate);
-
+            Game.LogTrivial("ReportsPlusListener: Updated Lookup File (vehicle); " + vehicle.LicensePlate);
         }
 
         private static void PR_OnPedCheck(Ped ped)
@@ -127,7 +124,7 @@ namespace ReportsPlus.Utils.Data
 
             File.WriteAllText($"{FileDataFolder}/lookup.data", fullName);
 
-            Game.LogTrivial("ReportsPlusListener: Updated Lookup File (ped); "+fullName);
+            Game.LogTrivial("ReportsPlusListener: Updated Lookup File (ped); " + fullName);
         }
 
         public static void EstablishCiEvent()

@@ -14,7 +14,7 @@ namespace ReportsPlus
         /*
          UPDATE: Update Version
          */
-        private static readonly string Version = "v1.4.0-alpha";
+        private static readonly string Version = "v1.4.1-alpha";
         public static readonly string FileDataFolder = "ReportsPlus\\data";
 
         internal static bool IsOnDuty;
