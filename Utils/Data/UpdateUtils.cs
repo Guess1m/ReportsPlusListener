@@ -121,7 +121,8 @@ namespace ReportsPlus.Utils.Data
             try
             {
                 timeString = World.DateTime.ToShortTimeString();
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 timeString = "Unknown";
             }

@@ -11,10 +11,10 @@ namespace ReportsPlus.Utils.Data
 {
     public static class MathUtils
     {
-        public const int ExpiredProb = 20;
-        public const int NoneProb = 10;
-        public const int RevokedProb = 5;
-        public const int ValidProb = 65;
+        public static int ExpiredProb = 20;
+        public static int NoneProb = 10;
+        public static int RevokedProb = 5;
+        public static int ValidProb = 65;
 
         private static readonly ThreadLocal<Random> RandThreadLocal = new ThreadLocal<Random>(() => new Random());
 
@@ -155,6 +155,33 @@ namespace ReportsPlus.Utils.Data
             addressBuilder.Append(ParseCountyString(ped.GetPedData().Address.Zone.County.ToString()));
 
             return addressBuilder.ToString();
+        }
+
+        public static List<Dictionary<string, string>> ParseVehicleData(string input)
+        {
+            var vehicles = new List<Dictionary<string, string>>();
+
+            var vehicleEntries = input.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var entry in vehicleEntries)
+            {
+                var vehicleData = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                var fields = entry.Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var field in fields)
+                {
+                    var parts = field.Split(new[] { '=' }, 2);
+                    if (parts.Length != 2) continue;
+                    var key = parts[0].Trim();
+                    var value = parts[1].Trim();
+                    vehicleData[key] = value;
+                }
+
+                if (vehicleData.Count > 0) vehicles.Add(vehicleData);
+            }
+
+            return vehicles;
         }
     }
 }

@@ -1,3 +1,4 @@
+using CommonDataFramework.Modules;
 using CommonDataFramework.Modules.PedDatabase;
 using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
@@ -7,7 +8,7 @@ namespace ReportsPlus.Utils.Data
 {
     public static class GetValueMethods
     {
-        // Policing Redefined Methods
+        /// Policing Redefined Methods
         public static string GetInsExpPr(Vehicle car)
         {
             if (car.GetVehicleData() == null) return "";
@@ -40,21 +41,6 @@ namespace ReportsPlus.Utils.Data
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.Address.ToString();
         }
 
-        public static string GetStolenPr(Vehicle car)
-        {
-            return car.GetVehicleData() == null ? "" : car.GetVehicleData().IsStolen.ToString();
-        }
-
-        public static string GetRegistrationPr(Vehicle car)
-        {
-            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Registration.Status.ToString();
-        }
-
-        public static string GetInsurancePr(Vehicle car)
-        {
-            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Insurance.Status.ToString();
-        }
-
         public static string GetGenderPr(Ped ped)
         {
             return ped.GetPedData() == null ? "" : ped.GetPedData().Gender.ToString();
@@ -65,14 +51,39 @@ namespace ReportsPlus.Utils.Data
             return ped.GetPedData() == null ? "" : ped.GetPedData().FullName;
         }
 
-        // Stop The Ped Methods
-        public static string GetRegistrationStp(Vehicle car)
+        public static string GetStolenPr(Vehicle car, bool setValid)
         {
+            if (setValid) car.GetVehicleData().IsStolen = false;
+
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().IsStolen.ToString();
+        }
+
+        public static string GetRegistrationPr(Vehicle car, bool setValid)
+        {
+            if (setValid) car.GetVehicleData().Registration.Status = EDocumentStatus.Valid;
+
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Registration.Status.ToString();
+        }
+
+        public static string GetInsurancePr(Vehicle car, bool setValid)
+        {
+            if (setValid) car.GetVehicleData().Insurance.Status = EDocumentStatus.Valid;
+
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Insurance.Status.ToString();
+        }
+
+        /// Stop The Ped Methods
+        public static string GetRegistrationStp(Vehicle car, bool setValid)
+        {
+            if (setValid) Functions.setVehicleRegistrationStatus(car, STPVehicleStatus.Valid);
+
             return car == null ? "" : Functions.getVehicleRegistrationStatus(car).ToString();
         }
 
-        public static string GetInsuranceStp(Vehicle car)
+        public static string GetInsuranceStp(Vehicle car, bool setValid)
         {
+            if (setValid) Functions.setVehicleInsuranceStatus(car, STPVehicleStatus.Valid);
+
             return car == null ? "" : Functions.getVehicleInsuranceStatus(car).ToString();
         }
     }

@@ -42,7 +42,6 @@ namespace ReportsPlus.Utils.Data
             EventsAPI.OnDriverIdentificationGiven += PR_OnDriverIdentificationGiven;
             EventsAPI.OnOccupantIdentificationGiven += PR_OnOccupantIdentificationGiven;
             EventsAPI.OnPedStopped += PR_OnPedStopped;
-
             EventsAPI.OnDeadPedSearched += PR_OnDeadPedPatDown;
             EventsAPI.OnPedRanThroughDispatch += PR_OnPedCheck;
             EventsAPI.OnVehicleRanThroughDispatch += PR_OnVehicleCheck;
@@ -75,12 +74,12 @@ namespace ReportsPlus.Utils.Data
             CreatePedObj(ped);
         }
 
-        private static void PR_OnOccupantIdentificationGiven(Ped ped)
+        private static void PR_OnOccupantIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
             UpdateCurrentId(ped);
         }
 
-        private static void PR_OnDriverIdentificationGiven(Ped ped)
+        private static void PR_OnDriverIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
             CreatePedObj(ped);
             UpdateCurrentId(ped);
@@ -97,7 +96,7 @@ namespace ReportsPlus.Utils.Data
             CreatePedObj(ped);
         }
 
-        private static void PR_OnIdentificationGiven(Ped ped)
+        private static void PR_OnIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
             CreatePedObj(ped);
             UpdateCurrentId(ped);

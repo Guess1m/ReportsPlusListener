@@ -6,6 +6,7 @@ using Rage;
 using Rage.Native;
 using ReportsPlus.Utils.Data;
 using static ReportsPlus.Main;
+using static ReportsPlus.Utils.Data.MenuProcessing;
 
 namespace ReportsPlus.Utils.Animation
 {
@@ -139,7 +140,7 @@ namespace ReportsPlus.Utils.Animation
                         return;
                 }
 
-            if (_animationFiber == null || !_animationFiber.IsAlive)
+            if (!(_animationFiber is { IsAlive: true }))
             {
                 _animationFiber = new GameFiber(AnimationFiber);
                 _animationFiber.Start();
@@ -185,6 +186,16 @@ namespace ReportsPlus.Utils.Animation
             DataCollection.CitationSignalPlate = null;
 
             Game.LogTrivial("ReportsPlusListener: Deleted CitationSignal File / Clearing Data");
+
+            // Remove second-to-last item if it exists
+            MainMenu.RefreshIndex();
+            if (MainMenu.MenuItems.Count > 0) MainMenu.MenuItems.RemoveAt(MainMenu.MenuItems.Count - 1);
+
+            MainMenu.RefreshIndex();
+
+            // Remove new last item if it exists
+            if (MainMenu.MenuItems.Count > 0) MainMenu.MenuItems.RemoveAt(MainMenu.MenuItems.Count - 1);
+            MainMenu.RefreshIndex();
         }
 
         private static void AnimationFiber()
@@ -233,6 +244,7 @@ namespace ReportsPlus.Utils.Animation
                         GameFiber.Wait(1000);
                         continue;
                     }
+
                     var randomNumber = MathUtils.Rand.Next(4000, 7001);
                     Game.LogTrivial($"ReportsPlusListener: Player getting into vehicle, sleeping {randomNumber}ms");
                     GameFiber.Wait(randomNumber);

@@ -1,9 +1,13 @@
 using System;
+using System.Drawing;
 using System.IO;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using RAGENativeUI.Elements;
+using ReportsPlus.Utils.Animation;
+using ReportsPlus.Utils.Data.ALPR;
+using static ReportsPlus.Utils.Data.MenuProcessing;
 using static ReportsPlus.Utils.Data.UpdateUtils;
-using static ReportsPlus.Utils.Animation.AnimationUtils;
 using static ReportsPlus.Utils.Utils;
 
 namespace ReportsPlus.Utils.Data
@@ -19,6 +23,9 @@ namespace ReportsPlus.Utils.Data
         public static string CitationSignalType;
         private static string _lastPulledOverPlate = "";
 
+        private static readonly int Delay =
+            MathUtils.Rand.Next(ConfigUtils.RefreshDelay, ConfigUtils.RefreshDelay + 1200);
+
         public static readonly string CitationSignalFilePath =
             Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
 
@@ -26,9 +33,11 @@ namespace ReportsPlus.Utils.Data
         {
             while (Main.IsOnDuty)
             {
-                if (Game.IsKeyDown(AnimationBind)) PlayAnimation();
+                if (Game.IsKeyDown(AnimationBind)) AnimationUtils.PlayAnimation();
 
-                if (Game.IsKeyDown(DiscardBind)) RunDiscardCitation();
+                if (Game.IsKeyDown(DiscardBind)) AnimationUtils.RunDiscardCitation();
+
+                if (Game.IsKeyDown(ALPRMenuBind)) ALPRUtils.ToggleAlpr(ConfigUtils.AlprSetupType);
 
                 CheckForTrafficStop();
             }
@@ -36,25 +45,21 @@ namespace ReportsPlus.Utils.Data
 
         public static void WorldDataCollection()
         {
-            while (Main.IsOnDuty) RefreshWorldData();
-        }
-
-        private static void RefreshWorldData()
-        {
-            var delay = MathUtils.Rand.Next(ConfigUtils.RefreshDelay, ConfigUtils.RefreshDelay + 1200);
-            GameFiber.Wait(delay);
-            RefreshPeds();
-            GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
-            RefreshVehs();
-            GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
-            RefreshGameData();
+            while (Main.IsOnDuty)
+            {
+                GameFiber.Wait(Delay);
+                RefreshPeds();
+                GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
+                RefreshVehs();
+                GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
+                RefreshGameData();
+            }
         }
 
         private static void CheckForTrafficStop()
         {
             if (Functions.IsPlayerPerformingPullover() && !IsPerformingPullover)
                 GameFiber.StartNew(CheckPullover, "PulloverCheck");
-
             GameFiber.Yield();
         }
 
@@ -116,6 +121,8 @@ namespace ReportsPlus.Utils.Data
         {
             while (Main.IsOnDuty)
             {
+                var givecitdesc = "";
+
                 GameFiber.Wait(5000);
                 if (CitationSignalFound) continue;
 
@@ -172,9 +179,9 @@ namespace ReportsPlus.Utils.Data
                                 CitationSignalPlate = null;
                                 Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
                                     "~g~Created Citation",
-                                    "~y~Citation For: ~b~" + name + "\n~w~Give Citation Keybind: ~y~" +
-                                    AnimationBind +
-                                    "\n~w~Discard Citation Keybind: ~y~" + DiscardBind);
+                                    "~y~Citation For: ~b~" + name +
+                                    "\n~w~Menu Keybind: ~y~" + MainMenuBind);
+                                givecitdesc = "Citation for " + name;
                                 break;
 
                             case "3": // Parking citation
@@ -183,9 +190,9 @@ namespace ReportsPlus.Utils.Data
                                 CitationSignalPlate = plate;
                                 Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
                                     "~g~Created Parking Citation",
-                                    "~y~Citation For: ~b~" + plate + "\n~w~Give Citation Keybind: ~y~" +
-                                    AnimationBind +
-                                    "\n~w~Discard Citation Keybind: ~y~" + DiscardBind);
+                                    "~y~Citation For: ~b~" + plate +
+                                    "\n~w~Menu Keybind: ~y~" + MainMenuBind);
+                                givecitdesc = "Citation for " + plate;
                                 break;
 
                             default: // Non-printed or invalid type
@@ -212,8 +219,22 @@ namespace ReportsPlus.Utils.Data
                 }
 
                 GameFiber.Wait(1000);
-                Game.LogTrivial("ReportsPlus: Give Citation Keybind: " + AnimationBind +
-                                ", Discard Citation Keybind: " + DiscardBind);
+
+                var giveCitationMenuButton = new UIMenuItem("Give Citation", givecitdesc)
+                {
+                    ForeColor = Color.FromArgb(34, 139, 34),
+                    HighlightedForeColor = Color.FromArgb(34, 139, 34)
+                };
+                giveCitationMenuButton.Activated += (sender, args) => { AnimationUtils.PlayAnimation(); };
+                MainMenu.AddItem(giveCitationMenuButton);
+
+                var discardCitationMenuButton = new UIMenuItem("Discard Citation")
+                {
+                    ForeColor = Color.FromArgb(226, 82, 47),
+                    HighlightedForeColor = Color.FromArgb(226, 82, 47)
+                };
+                discardCitationMenuButton.Activated += (sender, args) => { AnimationUtils.RunDiscardCitation(); };
+                MainMenu.AddItem(discardCitationMenuButton);
             }
         }
 

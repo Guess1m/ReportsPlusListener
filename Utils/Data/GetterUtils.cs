@@ -1,15 +1,19 @@
+using System;
 using System.IO;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
 using Rage.Native;
 using static ReportsPlus.Utils.Data.GetValueMethods;
 using static ReportsPlus.Main;
+using static ReportsPlus.Utils.ConfigUtils;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus.Utils.Data
 {
     public static class GetterUtils
     {
+        private static readonly Random Random = new Random();
+
         public static string GetPedCurrentZoneName()
         {
             return Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).RealAreaName;
@@ -66,9 +70,22 @@ namespace ReportsPlus.Utils.Data
 
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
-                insurance = GetInsurancePr(car);
-                registration = GetRegistrationPr(car);
-                stolen = GetStolenPr(car);
+                var setValid = false;
+                if (MenuProcessing.ALPRActive)
+                {
+                    if (ALPRSuccessfulScanProbability > 100)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
+                                        ALPRSuccessfulScanProbability);
+                        ALPRSuccessfulScanProbability = 20;
+                    }
+
+                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
+                }
+
+                insurance = GetInsurancePr(car, setValid);
+                registration = GetRegistrationPr(car, setValid);
+                stolen = GetStolenPr(car, setValid);
                 ownerAddress = GetOwnerAddressPr(car);
                 owner = GetOwnerPr(car);
                 vin = GetVinPr(car);
@@ -76,10 +93,24 @@ namespace ReportsPlus.Utils.Data
                 insexp = GetInsExpPr(car);
                 gender = GetOwnerGenderPr(car);
             }
+
             else if (HasStopThePed)
             {
-                insurance = GetInsuranceStp(car);
-                registration = GetRegistrationStp(car);
+                var setValid = false;
+                if (MenuProcessing.ALPRActive)
+                {
+                    if (ALPRSuccessfulScanProbability > 100)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
+                                        ALPRSuccessfulScanProbability);
+                        ALPRSuccessfulScanProbability = 20;
+                    }
+
+                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
+                }
+
+                insurance = GetInsuranceStp(car, setValid);
+                registration = GetRegistrationStp(car, setValid);
             }
 
             var ownerModel = MathUtils.GenerateModelForPed(gender);
@@ -214,15 +245,41 @@ namespace ReportsPlus.Utils.Data
 
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
-                insurance = GetInsurancePr(vehicle);
-                registration = GetRegistrationPr(vehicle);
-                isStolen = GetStolenPr(vehicle);
+                var setValid = false;
+                if (MenuProcessing.ALPRActive)
+                {
+                    if (ALPRSuccessfulScanProbability > 100)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
+                                        ALPRSuccessfulScanProbability);
+                        ALPRSuccessfulScanProbability = 20;
+                    }
+
+                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
+                }
+
+                insurance = GetInsurancePr(vehicle, setValid);
+                registration = GetRegistrationPr(vehicle, setValid);
+                isStolen = GetStolenPr(vehicle, setValid);
                 owner = GetOwnerPr(vehicle);
             }
             else if (HasStopThePed)
             {
-                insurance = GetInsuranceStp(vehicle);
-                registration = GetRegistrationStp(vehicle);
+                var setValid = false;
+                if (MenuProcessing.ALPRActive)
+                {
+                    if (ALPRSuccessfulScanProbability > 100)
+                    {
+                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
+                                        ALPRSuccessfulScanProbability);
+                        ALPRSuccessfulScanProbability = 20;
+                    }
+
+                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
+                }
+
+                insurance = GetInsuranceStp(vehicle, setValid);
+                registration = GetRegistrationStp(vehicle, setValid);
             }
 
             var oldFile = File.ReadAllText($"{FileDataFolder}/trafficStop.data");
@@ -249,9 +306,24 @@ namespace ReportsPlus.Utils.Data
             var oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
             if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
 
-            var addComma = oldFile.Length > 0 ? "," : "";
+            var delimiter = oldFile.Length > 0 ? "|" : "";
 
-            File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{addComma}{data}");
+            File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{delimiter}{data}");
+        }
+
+        public static void CreateVehicleObj(Vehicle vehicle)
+        {
+            if (!vehicle.Exists()) return;
+
+            var data = GetWorldCarData(vehicle);
+            if (data == null) return;
+
+            var oldFile = File.ReadAllText($"{FileDataFolder}/worldCars.data");
+            if (oldFile.Contains(vehicle.LicensePlate)) return;
+
+            var delimiter = oldFile.Length > 0 ? "|" : "";
+
+            File.WriteAllText($"{FileDataFolder}/worldCars.data", $"{oldFile}{delimiter}{data}");
         }
     }
 }
