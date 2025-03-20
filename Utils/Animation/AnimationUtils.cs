@@ -85,7 +85,7 @@ namespace ReportsPlus.Utils.Animation
                             Game.DisplaySubtitle(
                                 $"~r~Move Closer to The Ped, Distance: ~y~{nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." +
                                 "\n~w~Press ~y~" +
-                                Utils.DiscardBind + " ~w~To Discard Citation");
+                                Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
@@ -97,7 +97,7 @@ namespace ReportsPlus.Utils.Animation
                                             DataCollection.CitationSignalName.ToLower());
                             Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" +
                                                  DataCollection.CitationSignalName + "\n~w~Press ~y~" +
-                                                 Utils.DiscardBind + " ~w~To Discard Citation");
+                                                 Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
@@ -117,7 +117,7 @@ namespace ReportsPlus.Utils.Animation
                             Game.DisplaySubtitle(
                                 $"~w~Move Closer to The Vehicle, Distance: ~y~{nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} ~w~units." +
                                 "\n~w~Press ~y~" +
-                                Utils.DiscardBind + " ~w~To Discard Citation");
+                                Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
@@ -130,7 +130,7 @@ namespace ReportsPlus.Utils.Animation
 
                             Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" +
                                                  DataCollection.CitationSignalPlate + "\n~w~Press ~y~" +
-                                                 Utils.DiscardBind + " ~w~To Discard Citation");
+                                                 Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 

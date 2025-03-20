@@ -9,7 +9,7 @@ using Rage;
 using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.Data.GetterUtils;
+using static ReportsPlus.Utils.Data.WorldDataUtils;
 using static ReportsPlus.Utils.Data.UpdateUtils;
 
 namespace ReportsPlus.Utils.Data

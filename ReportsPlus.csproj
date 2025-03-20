@@ -91,22 +91,27 @@
     <ItemGroup>
         <Compile Include="Main.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="Utils\ALPR\ALPRData.cs"/>
+        <Compile Include="Utils\ALPR\ALPRUtils.cs"/>
+        <Compile Include="Utils\ALPR\LicensePlateDisplay.cs"/>
         <Compile Include="Utils\Animation\AnimationUtils.cs"/>
         <Compile Include="Utils\ConfigUtils.cs"/>
-        <Compile Include="Utils\Data\ALPR\ALPRUtils.cs"/>
-        <Compile Include="Utils\Data\ALPR\LicensePlateDisplay.cs"/>
         <Compile Include="Utils\Data\DataCollection.cs"/>
         <Compile Include="Utils\Data\EventUtils.cs"/>
-        <Compile Include="Utils\Data\GetterUtils.cs"/>
-        <Compile Include="Utils\Data\GetValueMethods.cs"/>
-        <Compile Include="Utils\Data\MathUtils.cs"/>
-        <Compile Include="Utils\Data\MenuProcessing.cs"/>
+        <Compile Include="Utils\Data\WorldDataUtils.cs"/>
         <Compile Include="Utils\Data\UpdateUtils.cs"/>
-        <Compile Include="Utils\Utils.cs"/>
+        <Compile Include="Utils\GetValueMethods.cs"/>
+        <Compile Include="Utils\MathUtils.cs"/>
+        <Compile Include="Utils\Menu\MenuProcessing.cs"/>
+        <Compile Include="Utils\Misc.cs"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="App.config"/>
         <None Include="packages.config"/>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\images\ALPRBackground.png"/>
+        <EmbeddedResource Include="Resources\images\LicensePlate.png"/>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

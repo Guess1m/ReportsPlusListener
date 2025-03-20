@@ -6,21 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Rage;
+using ReportsPlus.Utils.Data;
 using static ReportsPlus.Main;
 using static ReportsPlus.Utils.ConfigUtils;
 using static ReportsPlus.Utils.Data.MenuProcessing;
 
-namespace ReportsPlus.Utils.Data.ALPR
+namespace ReportsPlus.Utils.ALPR
 {
-    public static class ALPRUtils
+    public static partial class ALPRUtils
     {
-        public enum AlprSetupType
-        {
-            All,
-            Rear,
-            Front
-        }
-
         public static GameFiber AlprFiber;
         private static DateTime _lastEntityUpdate = DateTime.MinValue;
         private static List<VehicleData> _cachedVehicleData = new List<VehicleData>();
@@ -34,16 +28,41 @@ namespace ReportsPlus.Utils.Data.ALPR
 
             if (ALPRButton != null)
             {
-                ALPRButton.ForeColor = ALPRActive ? Color.FromArgb(34, 139, 34) : Color.FromArgb(226, 82, 47);
+                ALPRButton.ForeColor = ALPRActive ? Color.FromArgb(59, 171, 44) : Color.FromArgb(204, 73, 62);
                 ALPRButton.HighlightedForeColor =
-                    ALPRActive ? Color.FromArgb(34, 139, 34) : Color.FromArgb(226, 82, 47);
+                    ALPRActive ? Color.FromArgb(0, 108, 18) : Color.FromArgb(170, 30, 32);
             }
 
             if (AlprFiber is { IsAlive: true }) AlprFiber.Abort();
             AlprFiber = null;
 
+            try
+            {
+                Game.RawFrameRender -= LicensePlateDisplay.OnFrameRender;
+            }
+            catch (Exception)
+            {
+                Game.LogTrivial("ReportsPlusListener [ERROR]: Error clearing previous framerender");
+                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus", "~r~Error",
+                    "~o~Error clearing previous framerender");
+
+                return;
+            }
+
             if (!ALPRActive) return;
             AlprFiber = GameFiber.StartNew(() => AlprProcess(setupType), "AlprFiber");
+
+            if (!LicensePlateDisplay.EnablePlateDisplay) return;
+            if (LicensePlateDisplay.PlateImage == null || LicensePlateDisplay.BackgroundImg == null)
+            {
+                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus", "~r~Error Loading Images",
+                    "~o~Failed to load license plate or background image");
+                Game.LogTrivial(
+                    "ReportsPlusListener [ERROR]: Failed to load license plate images or background image when starting platedisplay!");
+                return;
+            }
+
+            Game.RawFrameRender += LicensePlateDisplay.OnFrameRender;
         }
 
         private static void AlprProcess(AlprSetupType currentAlprSetup)
@@ -263,7 +282,8 @@ namespace ReportsPlus.Utils.Data.ALPR
             var vehFlags = new StringBuilder();
             var cleanedFlags = "";
 
-            GetterUtils.CreateVehicleObj(targetVehicle);
+            WorldDataUtils.CreateVehicleObj(targetVehicle);
+
             var vehicleData = MathUtils.ParseVehicleData(File.ReadAllText($"{FileDataFolder}/worldCars.data"));
 
             foreach (var vehicle in vehicleData.Where(v => v["licenseplate"] == plate))
@@ -327,7 +347,7 @@ namespace ReportsPlus.Utils.Data.ALPR
                 }, "DeleteALPRBlip");
             }
 
-            RemoveOldPlates();
+            MathUtils.RemoveOldPlates("alpr.data", ReScanPlateInterval);
 
             if (!showDebug) return;
             Debug.DrawLineDebug(scanner.Position, platePos, Color.Green);
@@ -351,28 +371,6 @@ namespace ReportsPlus.Utils.Data.ALPR
             );
 
             return plates;
-        }
-
-        private static void RemoveOldPlates()
-        {
-            var fileContent = File.ReadAllText($"{FileDataFolder}/alpr.data");
-            if (string.IsNullOrWhiteSpace(fileContent)) return;
-
-            var vehicles = MathUtils.ParseVehicleData(fileContent);
-            var now = DateTimeOffset.Now;
-            var filteredVehicles = new List<Dictionary<string, string>>();
-            foreach (var vehicle in vehicles)
-            {
-                if (!vehicle.TryGetValue("timescanned", out var timeScannedStr) ||
-                    !DateTimeOffset.TryParse(timeScannedStr, out var timeScanned))
-                    continue;
-
-                if ((now - timeScanned).TotalMilliseconds <= ReScanPlateInterval) filteredVehicles.Add(vehicle);
-            }
-
-            var newContent = string.Join("|",
-                filteredVehicles.Select(vehicle => string.Join("&", vehicle.Select(kvp => $"{kvp.Key}={kvp.Value}"))));
-            File.WriteAllText($"{FileDataFolder}/alpr.data", newContent);
         }
 
         private static void DrawScanCone(Vector3 position, Vector3 forward, float radius, float angleDegrees,
@@ -432,55 +430,6 @@ namespace ReportsPlus.Utils.Data.ALPR
             list.Insert(index, (vehicle, distanceSq));
             if (list.Count > maxSize)
                 list.RemoveAt(maxSize);
-        }
-
-        private struct VehicleData
-        {
-            public Vehicle Vehicle;
-            public string LicensePlateLower;
-            public bool IsPolice;
-            public Vector3 Position;
-        }
-
-        private class ScannerConfig
-        {
-            public ScannerConfig(Vector3 position, Vector3 forward, float radius,
-                PlateScanLocation scanLocation, ScannerPositionType positionType)
-            {
-                Position = position;
-                Forward = forward;
-                Radius = radius;
-                ScanLocation = scanLocation;
-                ScannerPositionType = positionType;
-                Vehicle = Game.LocalPlayer.Character.CurrentVehicle;
-            }
-
-            public Vector3 Position { get; }
-            public Vector3 Forward { get; }
-            public float Radius { get; }
-            public PlateScanLocation ScanLocation { get; }
-            public ScannerPositionType ScannerPositionType { get; }
-            public Vehicle Vehicle { get; }
-        }
-
-        private enum PlateScanLocation
-        {
-            FrontLeft,
-            FrontRight,
-            RearLeft,
-            RearRight
-        }
-
-        private enum ScannerPositionType
-        {
-            Front,
-            Rear
-        }
-
-        private enum VehiclePlateType
-        {
-            Front,
-            Rear
         }
     }
 }

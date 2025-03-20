@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.Data.GetterUtils;
+using static ReportsPlus.Utils.Data.WorldDataUtils;
 
 namespace ReportsPlus.Utils.Data
 {
@@ -17,15 +19,15 @@ namespace ReportsPlus.Utils.Data
 
             var persona = Functions.GetPersonaForPed(ped);
             var fullName = persona.FullName;
-            var pedModel = Utils.FindPedModel(ped);
+            var pedModel = Misc.FindPedModel(ped);
             var gender = persona.Gender.ToString();
 
-            if (!Utils.PedLicenseNumbers.ContainsKey(fullName))
-                Utils.PedLicenseNumbers[fullName] = MathUtils.GetRandomAddress();
-            if (!Utils.PedAddresses.ContainsKey(fullName)) Utils.PedAddresses[fullName] = MathUtils.GetRandomAddress();
+            if (!Misc.PedLicenseNumbers.ContainsKey(fullName))
+                Misc.PedLicenseNumbers[fullName] = MathUtils.GetRandomAddress();
+            if (!Misc.PedAddresses.ContainsKey(fullName)) Misc.PedAddresses[fullName] = MathUtils.GetRandomAddress();
 
-            var address = Utils.PedAddresses[fullName];
-            var licenseNumber = Utils.PedLicenseNumbers[fullName];
+            var address = Misc.PedAddresses[fullName];
+            var licenseNumber = Misc.PedLicenseNumbers[fullName];
 
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
@@ -58,15 +60,42 @@ namespace ReportsPlus.Utils.Data
                 return;
             }
 
+            var filePath = $"{FileDataFolder}/worldCars.data";
+            var existingPlates = new HashSet<string>();
+
+            if (File.Exists(filePath))
+            {
+                var existingContent = File.ReadAllText(filePath);
+                foreach (var entry in existingContent.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var plateMatch = Regex.Match(entry, "licenseplate=([^&]+)");
+                    if (plateMatch.Success) existingPlates.Add(plateMatch.Groups[1].Value);
+                }
+            }
+
             var allCars = LocalPlayer.GetNearbyVehicles(15);
-            var carsList = new string[allCars.Length];
+            var newEntries = new List<string>();
 
             foreach (var car in allCars)
-                if (car.Exists())
-                    carsList[Array.IndexOf(allCars, car)] = GetWorldCarData(car);
+            {
+                if (!car.Exists()) continue;
 
-            File.WriteAllText($"{FileDataFolder}/worldCars.data", string.Join("|", carsList));
-            Game.LogTrivial("ReportsPlusListener: Updated Vehicle Data");
+                var plate = car.LicensePlate;
+                if (existingPlates.Contains(plate)) continue;
+                var data = GetWorldCarData(car);
+                if (data == null) continue;
+                newEntries.Add(data);
+                existingPlates.Add(plate);
+            }
+
+            if (newEntries.Count > 0)
+            {
+                var delimiter = File.Exists(filePath) && new FileInfo(filePath).Length > 0 ? "|" : "";
+                File.AppendAllText(filePath, $"{delimiter}{string.Join("|", newEntries)}");
+            }
+
+            Game.LogTrivial(
+                $"ReportsPlusListener: Added [{newEntries.Count}] new vehicles to worldCars.data, removed [{MathUtils.RemoveOldPlates("worldCars.data", 35000)}] old vehicles.");
         }
 
         public static void RefreshPeds()

@@ -51,21 +51,21 @@ namespace ReportsPlus.Utils.Data
             return ped.GetPedData() == null ? "" : ped.GetPedData().FullName;
         }
 
-        public static string GetStolenPr(Vehicle car, bool setValid)
+        public static string GetStolenPr(Vehicle car, bool setValid = false)
         {
             if (setValid) car.GetVehicleData().IsStolen = false;
 
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().IsStolen.ToString();
         }
 
-        public static string GetRegistrationPr(Vehicle car, bool setValid)
+        public static string GetRegistrationPr(Vehicle car, bool setValid = false)
         {
             if (setValid) car.GetVehicleData().Registration.Status = EDocumentStatus.Valid;
 
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().Registration.Status.ToString();
         }
 
-        public static string GetInsurancePr(Vehicle car, bool setValid)
+        public static string GetInsurancePr(Vehicle car, bool setValid = false)
         {
             if (setValid) car.GetVehicleData().Insurance.Status = EDocumentStatus.Valid;
 
@@ -73,18 +73,29 @@ namespace ReportsPlus.Utils.Data
         }
 
         /// Stop The Ped Methods
-        public static string GetRegistrationStp(Vehicle car, bool setValid)
+        public static string GetRegistrationStp(Vehicle car, bool setValid = false)
         {
             if (setValid) Functions.setVehicleRegistrationStatus(car, STPVehicleStatus.Valid);
 
             return car == null ? "" : Functions.getVehicleRegistrationStatus(car).ToString();
         }
 
-        public static string GetInsuranceStp(Vehicle car, bool setValid)
+        public static string GetInsuranceStp(Vehicle car, bool setValid = false)
         {
             if (setValid) Functions.setVehicleInsuranceStatus(car, STPVehicleStatus.Valid);
 
             return car == null ? "" : Functions.getVehicleInsuranceStatus(car).ToString();
+        }
+
+        /// Base Game Methods
+        public static string GetRegistrationBg(string reg, bool setValid = false)
+        {
+            return setValid ? "Valid" : reg;
+        }
+
+        public static string GetInsuranceBg(string ins, bool setValid = false)
+        {
+            return setValid ? "Valid" : ins;
         }
     }
 }

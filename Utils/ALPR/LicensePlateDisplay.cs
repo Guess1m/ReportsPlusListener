@@ -4,12 +4,14 @@ using System.Drawing;
 using Rage;
 using Graphics = Rage.Graphics;
 
-namespace ReportsPlus.Utils.Data.ALPR
+namespace ReportsPlus.Utils.ALPR
 {
     public static class LicensePlateDisplay
     {
-        private const string PlateImagePath = "Plugins/lspdfr/LicensePlate.png";
-        private const string BackgroundImgPath = "Plugins/lspdfr/ALPRBackground.png";
+        private const string PlateImagePath = Main.FileResourcesFolder + "LicensePlate.png";
+        private const string BackgroundImgPath = Main.FileResourcesFolder + "ALPRBackground.png";
+        public static bool EnablePlateDisplay;
+
         public static float BackgroundPositionX;
         public static float BackgroundPositionY;
         public static float TargetPlateHeight;
@@ -26,8 +28,8 @@ namespace ReportsPlus.Utils.Data.ALPR
         public static float PlateTextVerticalOffset;
         public static string FrontPlateText = "";
         public static string RearPlateText = "";
-        private static Texture PlateImage;
-        private static Texture BackgroundImg;
+        public static Texture PlateImage;
+        public static Texture BackgroundImg;
         public static Color PlateTextColor;
 
         public static readonly Dictionary<Color, string> ColorPresets = new Dictionary<Color, string>
@@ -51,7 +53,12 @@ namespace ReportsPlus.Utils.Data.ALPR
             }
             catch (Exception)
             {
-                //TODO: make sure paths exist if not dont allow player to use plate display
+                PlateImage = null;
+                BackgroundImg = null;
+                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                    "~r~Error Loading Images", "~o~Failed to load license plate/background image");
+                Game.LogTrivial(
+                    "ReportsPlusListener [ERROR]: Failed to load license plate images or background image!");
             }
         }
 

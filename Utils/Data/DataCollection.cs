@@ -5,10 +5,10 @@ using LSPD_First_Response.Mod.API;
 using Rage;
 using RAGENativeUI.Elements;
 using ReportsPlus.Utils.Animation;
-using ReportsPlus.Utils.Data.ALPR;
 using static ReportsPlus.Utils.Data.MenuProcessing;
 using static ReportsPlus.Utils.Data.UpdateUtils;
-using static ReportsPlus.Utils.Utils;
+using static ReportsPlus.Utils.Misc;
+using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 
 namespace ReportsPlus.Utils.Data
 {
@@ -105,7 +105,7 @@ namespace ReportsPlus.Utils.Data
                 Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName +
                                 " Plate: " + stoppedCar.LicensePlate);
 
-                GetterUtils.CreateTrafficStopObj(stoppedCar);
+                WorldDataUtils.CreateTrafficStopObj(stoppedCar);
             }
             catch (Exception e)
             {

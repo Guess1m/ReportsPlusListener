@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
 using Rage;
 
 namespace ReportsPlus.Utils
 {
-    public static class Utils
+    public static class Misc
     {
         public static readonly List<string> LosSantosAddresses = new List<string>
         {
@@ -254,6 +257,39 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial("ReportsPlusListener: Error fetching model for ped");
                 return "";
+            }
+        }
+
+        public static void CopyImageResourcesIfMissing()
+        {
+            try
+            {
+                var targetDir = Path.Combine(Main.FileResourcesFolder);
+
+                var embeddedImages = new Dictionary<string, string>
+                {
+                    { "ALPRBackground.png", "ReportsPlus.Resources.images.ALPRBackground.png" },
+                    { "LicensePlate.png", "ReportsPlus.Resources.images.LicensePlate.png" }
+                };
+
+                var assembly = Assembly.GetExecutingAssembly();
+                foreach (var image in embeddedImages)
+                {
+                    var destPath = Path.Combine(targetDir, image.Key);
+
+                    if (File.Exists(destPath)) continue;
+                    using var stream = assembly.GetManifestResourceStream(image.Value);
+                    if (stream == null) continue;
+
+                    using var fileStream = File.Create(destPath);
+                    stream.CopyTo(fileStream);
+
+                    Game.LogTrivial("ReportsPlusListener: Copied Resource Image: " + image.Key + " to " + destPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Game.LogTrivial($"Error copying images: {ex.Message}");
             }
         }
     }

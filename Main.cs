@@ -4,9 +4,10 @@ using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using ReportsPlus.Utils;
+using ReportsPlus.Utils.ALPR;
 using ReportsPlus.Utils.Data;
-using ReportsPlus.Utils.Data.ALPR;
 using static ReportsPlus.Utils.Data.EventUtils;
+using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus
@@ -16,8 +17,9 @@ namespace ReportsPlus
         /*
          UPDATE: Update Version
         */
-        private const string Version = "v1.5.0-alpha";
-        public const string FileDataFolder = "ReportsPlus\\data";
+        private const string Version = "v1.5.1-alpha";
+        public const string FileDataFolder = "ReportsPlus/data";
+        public const string FileResourcesFolder = "Plugins/lspdfr/ReportsPlus/";
 
         internal static bool IsOnDuty;
 
@@ -26,8 +28,8 @@ namespace ReportsPlus
 
         public static bool HasStopThePed;
         public static bool HasPolicingRedefined;
-        private static bool _hasCalloutInterface;
         public static bool HasCommonDataFramework;
+        private static bool _hasCalloutInterface;
 
         internal static Ped LocalPlayer => Game.LocalPlayer.Character;
 
@@ -40,11 +42,6 @@ namespace ReportsPlus
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
             Game.LogTrivial("ReportsPlusListener Plugin Initialized. Version: " + Version);
             ConfigUtils.LoadSettings();
-
-            //TODO: !important add actual functionality when alpr is turned on (put in new thread?)
-            LicensePlateDisplay.InitializeLicensePlateDisplay();
-
-            Game.RawFrameRender += LicensePlateDisplay.OnFrameRender;
         }
 
         private void OnOnDutyStateChangedHandler(bool onDuty)
@@ -53,11 +50,16 @@ namespace ReportsPlus
             Game.LogTrivial("ReportsPlusListener: IsOnDuty State Changed: '" + IsOnDuty + "'");
             if (!onDuty) return;
 
-            Utils.Utils.CalloutIds.Clear();
-            Utils.Utils.PedAddresses.Clear();
-            Utils.Utils.PedLicenseNumbers.Clear();
-            if (!Directory.Exists(FileDataFolder))
-                Directory.CreateDirectory(FileDataFolder);
+            Misc.CalloutIds.Clear();
+            Misc.PedAddresses.Clear();
+            Misc.PedLicenseNumbers.Clear();
+
+            if (!Directory.Exists(FileResourcesFolder))
+                Directory.CreateDirectory(FileResourcesFolder);
+
+            Misc.CopyImageResourcesIfMissing();
+
+            LicensePlateDisplay.InitializeLicensePlateDisplay();
 
             ConfigUtils.CreateFiles();
 
@@ -158,6 +160,8 @@ namespace ReportsPlus
             if (MenuProcessing.MenuProcessingFiber != null &&
                 MenuProcessing.MenuProcessingFiber.IsAlive)
                 MenuProcessing.MenuProcessingFiber.Abort();
+
+            Game.RawFrameRender -= LicensePlateDisplay.OnFrameRender;
 
             CurrentIdDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
             CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));

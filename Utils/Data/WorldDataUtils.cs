@@ -5,15 +5,12 @@ using Rage;
 using Rage.Native;
 using static ReportsPlus.Utils.Data.GetValueMethods;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.ConfigUtils;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus.Utils.Data
 {
-    public static class GetterUtils
+    public static class WorldDataUtils
     {
-        private static readonly Random Random = new Random();
-
         public static string GetPedCurrentZoneName()
         {
             return Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).RealAreaName;
@@ -39,6 +36,31 @@ namespace ReportsPlus.Utils.Data
             var gender = MathUtils.Rand.Next(2) == 1 ? "Male" : "Female";
             var regexp = "";
             var insexp = "";
+
+            var setValid = MathUtils.ShouldSetValid();
+
+            if (HasPolicingRedefined && HasCommonDataFramework)
+            {
+                insurance = GetInsurancePr(car, setValid);
+                registration = GetRegistrationPr(car, setValid);
+                stolen = GetStolenPr(car, setValid);
+                ownerAddress = GetOwnerAddressPr(car);
+                owner = GetOwnerPr(car);
+                vin = GetVinPr(car);
+                regexp = GetRegExpPr(car);
+                insexp = GetInsExpPr(car);
+                gender = GetOwnerGenderPr(car);
+            }
+            else if (HasStopThePed)
+            {
+                insurance = GetInsuranceStp(car, setValid);
+                registration = GetRegistrationStp(car, setValid);
+            }
+            else
+            {
+                registration = GetRegistrationBg(registration, setValid);
+                insurance = GetInsuranceBg(insurance, setValid);
+            }
 
             switch (registration.ToLower())
             {
@@ -68,55 +90,25 @@ namespace ReportsPlus.Utils.Data
                     break;
             }
 
-            if (HasPolicingRedefined && HasCommonDataFramework)
-            {
-                var setValid = false;
-                if (MenuProcessing.ALPRActive)
-                {
-                    if (ALPRSuccessfulScanProbability > 100)
-                    {
-                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
-                                        ALPRSuccessfulScanProbability);
-                        ALPRSuccessfulScanProbability = 20;
-                    }
-
-                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
-                }
-
-                insurance = GetInsurancePr(car, setValid);
-                registration = GetRegistrationPr(car, setValid);
-                stolen = GetStolenPr(car, setValid);
-                ownerAddress = GetOwnerAddressPr(car);
-                owner = GetOwnerPr(car);
-                vin = GetVinPr(car);
-                regexp = GetRegExpPr(car);
-                insexp = GetInsExpPr(car);
-                gender = GetOwnerGenderPr(car);
-            }
-
-            else if (HasStopThePed)
-            {
-                var setValid = false;
-                if (MenuProcessing.ALPRActive)
-                {
-                    if (ALPRSuccessfulScanProbability > 100)
-                    {
-                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
-                                        ALPRSuccessfulScanProbability);
-                        ALPRSuccessfulScanProbability = 20;
-                    }
-
-                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
-                }
-
-                insurance = GetInsuranceStp(car, setValid);
-                registration = GetRegistrationStp(car, setValid);
-            }
-
             var ownerModel = MathUtils.GenerateModelForPed(gender);
 
             return
-                $"licenseplate={car.LicensePlate}&model={car.Model.Name}&regexp={regexp}&insexp={insexp}&vin={vin}&isstolen={stolen}&ispolice={car.IsPoliceVehicle}&owner={owner}&ownermodel={ownerModel}&ownergender={gender}&owneraddress={ownerAddress}&driver={driver}&registration={registration}&insurance={insurance}&color={color}";
+                $"licenseplate={car.LicensePlate}&model={car.Model.Name}&regexp={regexp}&insexp={insexp}&vin={vin}&isstolen={stolen}&ispolice={car.IsPoliceVehicle}&owner={owner}&ownermodel={ownerModel}&ownergender={gender}&owneraddress={ownerAddress}&driver={driver}&registration={registration}&insurance={insurance}&color={color}&timescanned={DateTime.Now:o}";
+        }
+
+        public static void CreateVehicleObj(Vehicle vehicle)
+        {
+            if (!vehicle.Exists()) return;
+
+            var oldFile = File.ReadAllText($"{FileDataFolder}/worldCars.data");
+            if (oldFile.Contains(vehicle.LicensePlate)) return;
+
+            var data = GetWorldCarData(vehicle);
+            if (data == null) return;
+
+            var delimiter = oldFile.Length > 0 ? "|" : "";
+
+            File.WriteAllText($"{FileDataFolder}/worldCars.data", $"{oldFile}{delimiter}{data}");
         }
 
         public static string GetPedDataPr(Ped ped)
@@ -129,20 +121,20 @@ namespace ReportsPlus.Utils.Data
             var address = MathUtils.GetPedAddress(ped);
             string licenseNum;
 
-            if (!Utils.PedLicenseNumbers.ContainsKey(pedData.FullName))
+            if (!Misc.PedLicenseNumbers.ContainsKey(pedData.FullName))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
-                Utils.PedLicenseNumbers[pedData.FullName] = licenseNum;
+                Misc.PedLicenseNumbers[pedData.FullName] = licenseNum;
             }
             else
             {
-                licenseNum = Utils.PedLicenseNumbers[pedData.FullName];
+                licenseNum = Misc.PedLicenseNumbers[pedData.FullName];
             }
 
             return
                 $"name={pedData.FullName}" +
                 $"&licensenumber={licenseNum}" +
-                $"&pedmodel={Utils.FindPedModel(ped)}" +
+                $"&pedmodel={Misc.FindPedModel(ped)}" +
                 $"&birthday={pedData.Birthday.Month}/{pedData.Birthday.Day}/{pedData.Birthday.Year}" +
                 $"&gender={pedData.Gender.ToString() ?? ""}" +
                 $"&address={address}" +
@@ -189,31 +181,31 @@ namespace ReportsPlus.Utils.Data
                     break;
             }
 
-            if (!Utils.PedLicenseNumbers.ContainsKey(persona.FullName))
+            if (!Misc.PedLicenseNumbers.ContainsKey(persona.FullName))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
-                Utils.PedLicenseNumbers.Add(persona.FullName, licenseNum);
+                Misc.PedLicenseNumbers.Add(persona.FullName, licenseNum);
             }
             else
             {
-                licenseNum = Utils.PedLicenseNumbers[persona.FullName];
+                licenseNum = Misc.PedLicenseNumbers[persona.FullName];
             }
 
-            if (!Utils.PedAddresses.ContainsKey(persona.FullName))
+            if (!Misc.PedAddresses.ContainsKey(persona.FullName))
             {
                 address = MathUtils.GetRandomAddress();
 
-                Utils.PedAddresses.Add(persona.FullName, address);
+                Misc.PedAddresses.Add(persona.FullName, address);
             }
             else
             {
-                address = Utils.PedAddresses[persona.FullName];
+                address = Misc.PedAddresses[persona.FullName];
             }
 
             return
                 $"name={persona.FullName}" +
                 $"&licensenumber={licenseNum}" +
-                $"&pedmodel={Utils.FindPedModel(ped)}" +
+                $"&pedmodel={Misc.FindPedModel(ped)}" +
                 $"&birthday={persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}" +
                 $"&gender={persona.Gender.ToString()}" +
                 $"&address={address}" +
@@ -245,41 +237,15 @@ namespace ReportsPlus.Utils.Data
 
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
-                var setValid = false;
-                if (MenuProcessing.ALPRActive)
-                {
-                    if (ALPRSuccessfulScanProbability > 100)
-                    {
-                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
-                                        ALPRSuccessfulScanProbability);
-                        ALPRSuccessfulScanProbability = 20;
-                    }
-
-                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
-                }
-
-                insurance = GetInsurancePr(vehicle, setValid);
-                registration = GetRegistrationPr(vehicle, setValid);
-                isStolen = GetStolenPr(vehicle, setValid);
+                insurance = GetInsurancePr(vehicle);
+                registration = GetRegistrationPr(vehicle);
+                isStolen = GetStolenPr(vehicle);
                 owner = GetOwnerPr(vehicle);
             }
             else if (HasStopThePed)
             {
-                var setValid = false;
-                if (MenuProcessing.ALPRActive)
-                {
-                    if (ALPRSuccessfulScanProbability > 100)
-                    {
-                        Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " +
-                                        ALPRSuccessfulScanProbability);
-                        ALPRSuccessfulScanProbability = 20;
-                    }
-
-                    if (Random.Next(0, 100) > ALPRSuccessfulScanProbability) setValid = true;
-                }
-
-                insurance = GetInsuranceStp(vehicle, setValid);
-                registration = GetRegistrationStp(vehicle, setValid);
+                insurance = GetInsuranceStp(vehicle);
+                registration = GetRegistrationStp(vehicle);
             }
 
             var oldFile = File.ReadAllText($"{FileDataFolder}/trafficStop.data");
@@ -295,6 +261,9 @@ namespace ReportsPlus.Utils.Data
         {
             if (!ped.Exists()) return;
 
+            var oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
+            if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
+
             string data;
             if (HasPolicingRedefined && HasCommonDataFramework)
                 data = GetPedDataPr(ped);
@@ -303,27 +272,9 @@ namespace ReportsPlus.Utils.Data
 
             if (data == null) return;
 
-            var oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
-            if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
-
             var delimiter = oldFile.Length > 0 ? "|" : "";
 
             File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{delimiter}{data}");
-        }
-
-        public static void CreateVehicleObj(Vehicle vehicle)
-        {
-            if (!vehicle.Exists()) return;
-
-            var data = GetWorldCarData(vehicle);
-            if (data == null) return;
-
-            var oldFile = File.ReadAllText($"{FileDataFolder}/worldCars.data");
-            if (oldFile.Contains(vehicle.LicensePlate)) return;
-
-            var delimiter = oldFile.Length > 0 ? "|" : "";
-
-            File.WriteAllText($"{FileDataFolder}/worldCars.data", $"{oldFile}{delimiter}{data}");
         }
     }
 }

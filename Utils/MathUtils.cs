@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
+using static ReportsPlus.Utils.ConfigUtils;
 
 namespace ReportsPlus.Utils.Data
 {
@@ -81,12 +84,12 @@ namespace ReportsPlus.Utils.Data
 
         public static string GetRandomAddress()
         {
-            var chosenList = Rand.Next(2) == 0 ? Utils.LosSantosAddresses : Utils.BlaineCountyAddresses;
+            var chosenList = Rand.Next(2) == 0 ? Misc.LosSantosAddresses : Misc.BlaineCountyAddresses;
             var index = Rand.Next(chosenList.Count);
             var addressNumber = Rand.Next(1000).ToString().PadLeft(3, '0');
             var address = $"{addressNumber} {chosenList[index]}";
 
-            while (Utils.PedAddresses.ContainsValue(address))
+            while (Misc.PedAddresses.ContainsValue(address))
             {
                 index = Rand.Next(chosenList.Count);
                 addressNumber = Rand.Next(1000).ToString().PadLeft(3, '0');
@@ -182,6 +185,45 @@ namespace ReportsPlus.Utils.Data
             }
 
             return vehicles;
+        }
+
+        public static bool ShouldSetValid()
+        {
+            if (!MenuProcessing.ALPRActive) return false;
+            if (ALPRSuccessfulScanProbability <= 100) return Rand.Next(0, 100) > ALPRSuccessfulScanProbability;
+            Game.LogTrivial(
+                "ReportsPlusListener: Error: successPercentage > 100; its: " + ALPRSuccessfulScanProbability);
+            ALPRSuccessfulScanProbability = 20;
+
+            return Rand.Next(0, 100) < ALPRSuccessfulScanProbability;
+        }
+
+        public static int RemoveOldPlates(string filePath, int interval)
+        {
+            var fileContent = File.ReadAllText($"{Main.FileDataFolder}/" + filePath);
+            if (string.IsNullOrWhiteSpace(fileContent)) return 0;
+
+            var removed = 0;
+            var vehicles = ParseVehicleData(fileContent);
+            var now = DateTimeOffset.Now;
+            var filteredVehicles = new List<Dictionary<string, string>>();
+            foreach (var vehicle in vehicles)
+            {
+                if (!vehicle.TryGetValue("timescanned", out var timeScannedStr) ||
+                    !DateTimeOffset.TryParse(timeScannedStr, out var timeScanned))
+                    continue;
+
+                if ((now - timeScanned).TotalMilliseconds <= interval)
+                    filteredVehicles.Add(vehicle);
+                else
+                    removed++;
+            }
+
+            var newContent = string.Join("|",
+                filteredVehicles.Select(vehicle => string.Join("&", vehicle.Select(kvp => $"{kvp.Key}={kvp.Value}"))));
+            File.WriteAllText($"{Main.FileDataFolder}/" + filePath, newContent);
+
+            return removed;
         }
     }
 }

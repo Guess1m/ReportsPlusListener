@@ -6,11 +6,11 @@ using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using ReportsPlus.Utils.Data;
-using ReportsPlus.Utils.Data.ALPR;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.Data.ALPR.LicensePlateDisplay;
+using static ReportsPlus.Utils.ALPR.LicensePlateDisplay;
 using static ReportsPlus.Utils.Data.MathUtils;
-using static ReportsPlus.Utils.Utils;
+using static ReportsPlus.Utils.Misc;
+using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 
 namespace ReportsPlus.Utils
 {
@@ -58,7 +58,7 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: PlateTextColor Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "PlateTextColor", Color.Black);
+                IniFile.Write("PlateDisplay", "PlateTextColor", Color.FromArgb(43, 49, 127));
             }
 
             if (!IniFile.DoesKeyExist("Settings", "DataRefreshInterval"))
@@ -101,6 +101,13 @@ namespace ReportsPlus.Utils
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: ShowAlprDebug Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "ShowAlprDebug", false);
+            }
+
+            if (!IniFile.DoesKeyExist("PlateDisplay", "EnablePlateDisplay"))
+            {
+                Game.LogTrivial(
+                    "ReportsPlusListener {CONFIG}: EnablePlateDisplay Config setting didn't exist, creating");
+                IniFile.Write("PlateDisplay", "EnablePlateDisplay", true);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "BlipDisplayTime"))
@@ -159,14 +166,14 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: BackgroundPositionX Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "BackgroundPositionX", 0f);
+                IniFile.Write("PlateDisplay", "BackgroundPositionX", 330f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "BackgroundPositionY"))
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: BackgroundPositionY Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "BackgroundPositionY", 0f);
+                IniFile.Write("PlateDisplay", "BackgroundPositionY", 900f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "TargetPlateHeight"))
@@ -179,20 +186,20 @@ namespace ReportsPlus.Utils
             if (!IniFile.DoesKeyExist("PlateDisplay", "PlateSpacing"))
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateSpacing Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "PlateSpacing", 5f);
+                IniFile.Write("PlateDisplay", "PlateSpacing", 10f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "LabelFontSize"))
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: LabelFontSize Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "LabelFontSize", 10);
+                IniFile.Write("PlateDisplay", "LabelFontSize", 11);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "LabelVerticalOffset"))
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: LabelVerticalOffset Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "LabelVerticalOffset", 16f);
+                IniFile.Write("PlateDisplay", "LabelVerticalOffset", 19f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "LicensePlateVerticalOffset"))
@@ -206,20 +213,20 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: PlateTextVerticalOffset Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "PlateTextVerticalOffset", 18f);
+                IniFile.Write("PlateDisplay", "PlateTextVerticalOffset", 15f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "PlateTextFontSize"))
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: PlateTextFontSize Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "PlateTextFontSize", 16f);
+                IniFile.Write("PlateDisplay", "PlateTextFontSize", 20f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "BackgroundScale"))
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: BackgroundScale Config setting didn't exist, creating");
-                IniFile.Write("PlateDisplay", "BackgroundScale", 1.0f);
+                IniFile.Write("PlateDisplay", "BackgroundScale", 1.04f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "TargetPlateWidth"))
@@ -253,20 +260,20 @@ namespace ReportsPlus.Utils
             RevokedProb = IniFile.ReadInt32("Probabilities", "RevokedProbability", 5);
             ValidProb = IniFile.ReadInt32("Probabilities", "ValidProbability", 65);
 
-            BackgroundPositionX = IniFile.ReadSingle("PlateDisplay", "BackgroundPositionX");
-            BackgroundPositionY = IniFile.ReadSingle("PlateDisplay", "BackgroundPositionY");
+            BackgroundPositionX = IniFile.ReadSingle("PlateDisplay", "BackgroundPositionX", 330f);
+            BackgroundPositionY = IniFile.ReadSingle("PlateDisplay", "BackgroundPositionY", 900f);
             TargetPlateHeight = IniFile.ReadSingle("PlateDisplay", "TargetPlateHeight", 50f);
-            PlateSpacing = IniFile.ReadSingle("PlateDisplay", "PlateSpacing", 5f);
-            LabelFontSize = IniFile.ReadInt32("PlateDisplay", "LabelFontSize", 10);
-            LabelVerticalOffset = IniFile.ReadSingle("PlateDisplay", "LabelVerticalOffset", 16);
+            PlateSpacing = IniFile.ReadSingle("PlateDisplay", "PlateSpacing", 10f);
+            LabelFontSize = IniFile.ReadInt32("PlateDisplay", "LabelFontSize", 11);
+            LabelVerticalOffset = IniFile.ReadSingle("PlateDisplay", "LabelVerticalOffset", 19);
             LicensePlateVerticalOffset = IniFile.ReadSingle("PlateDisplay", "LicensePlateVerticalOffset", 5);
-            PlateTextVerticalOffset = IniFile.ReadSingle("PlateDisplay", "PlateTextVerticalOffset", 18);
-            PlateTextFontSize = IniFile.ReadSingle("PlateDisplay", "PlateTextFontSize", 16);
-            BackgroundScale = IniFile.ReadSingle("PlateDisplay", "BackgroundScale", 1.0f);
+            PlateTextVerticalOffset = IniFile.ReadSingle("PlateDisplay", "PlateTextVerticalOffset", 15);
+            PlateTextFontSize = IniFile.ReadSingle("PlateDisplay", "PlateTextFontSize", 20);
+            BackgroundScale = IniFile.ReadSingle("PlateDisplay", "BackgroundScale", 1.04f);
             TargetPlateWidth = IniFile.ReadSingle("PlateDisplay", "TargetPlateWidth", 100f);
-            TargetPlateHeight = IniFile.ReadSingle("PlateDisplay", "TargetPlateHeight", 50f);
+            EnablePlateDisplay = IniFile.ReadBoolean("PlateDisplay", "EnablePlateDisplay", true);
 
-            var colorParts = IniFile.ReadString("PlateDisplay", "PlateTextColor", "255,0,0,0").Split(',')
+            var colorParts = IniFile.ReadString("PlateDisplay", "PlateTextColor", "255,43,49,127").Split(',')
                 .Select(int.Parse).ToArray();
             var tempColor = Color.FromArgb(colorParts[0], colorParts[1], colorParts[2], colorParts[3]);
             PlateTextColor = AvailableColors.FirstOrDefault(c =>
@@ -315,6 +322,7 @@ namespace ReportsPlus.Utils
             Game.LogTrivial("ReportsPlusListener {CONFIG}: BackgroundScale- '" + BackgroundScale + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: TargetPlateWidth- '" + TargetPlateWidth + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: TargetPlateHeight- '" + TargetPlateHeight + "'");
+            Game.LogTrivial("ReportsPlusListener {CONFIG}: EnablePlateDisplay- '" + EnablePlateDisplay + "'");
         }
 
         public static bool IsPluginInstalled(string pluginName)
@@ -337,10 +345,8 @@ namespace ReportsPlus.Utils
                 try
                 {
                     var filePath = Path.Combine(FileDataFolder, fileName);
-                    if (!File.Exists(filePath)) File.Create(filePath);
-                    using (File.Create(filePath))
-                    {
-                    }
+                    if (!File.Exists(filePath))
+                        File.Create(filePath);
                 }
                 catch (Exception)
                 {
