@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
@@ -62,34 +63,6 @@ namespace ReportsPlus.Utils.Data
                 insurance = GetInsuranceBg(insurance, setValid);
             }
 
-            switch (registration.ToLower())
-            {
-                case "valid":
-                    regexp = MathUtils.GenerateValidLicenseExpirationDate();
-                    break;
-                case "expired":
-                    regexp = MathUtils.GenerateExpiredLicenseExpirationDate(3);
-                    break;
-                case "none":
-                case "revoked":
-                    regexp = "";
-                    break;
-            }
-
-            switch (insurance.ToLower())
-            {
-                case "valid":
-                    insexp = MathUtils.GenerateValidLicenseExpirationDate();
-                    break;
-                case "expired":
-                    insexp = MathUtils.GenerateExpiredLicenseExpirationDate(3);
-                    break;
-                case "none":
-                case "revoked":
-                    insexp = "";
-                    break;
-            }
-
             var ownerModel = MathUtils.GenerateModelForPed(gender);
 
             return
@@ -121,14 +94,14 @@ namespace ReportsPlus.Utils.Data
             var address = MathUtils.GetPedAddress(ped);
             string licenseNum;
 
-            if (!Misc.PedLicenseNumbers.ContainsKey(pedData.FullName))
+            if (!Misc.PedLicenseNumbers.TryGetValue(pedData.FullName, out var number))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
                 Misc.PedLicenseNumbers[pedData.FullName] = licenseNum;
             }
             else
             {
-                licenseNum = Misc.PedLicenseNumbers[pedData.FullName];
+                licenseNum = number;
             }
 
             return
@@ -181,17 +154,17 @@ namespace ReportsPlus.Utils.Data
                     break;
             }
 
-            if (!Misc.PedLicenseNumbers.ContainsKey(persona.FullName))
+            if (!Misc.PedLicenseNumbers.TryGetValue(persona.FullName, out var number))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
                 Misc.PedLicenseNumbers.Add(persona.FullName, licenseNum);
             }
             else
             {
-                licenseNum = Misc.PedLicenseNumbers[persona.FullName];
+                licenseNum = number;
             }
 
-            if (!Misc.PedAddresses.ContainsKey(persona.FullName))
+            if (!Misc.PedAddresses.TryGetValue(persona.FullName, out var pedAddress))
             {
                 address = MathUtils.GetRandomAddress();
 
@@ -199,7 +172,7 @@ namespace ReportsPlus.Utils.Data
             }
             else
             {
-                address = Misc.PedAddresses[persona.FullName];
+                address = pedAddress;
             }
 
             return
@@ -220,41 +193,64 @@ namespace ReportsPlus.Utils.Data
         public static void CreateTrafficStopObj(Vehicle vehicle)
         {
             if (!vehicle.Exists()) return;
-            var color = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1
-                ? ""
-                : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}";
-            var owner = Functions.GetVehicleOwnerName(vehicle);
+
             var plate = vehicle.LicensePlate;
-            var model = vehicle.Model.Name;
-            var isStolen = vehicle.IsStolen.ToString();
-            var isPolice = vehicle.IsPoliceVehicle;
-            var insurance = MathUtils.GetRandomVehicleStatus(MathUtils.ExpiredProb, MathUtils.NoneProb,
-                MathUtils.ValidProb, MathUtils.RevokedProb);
-            var registration = MathUtils.GetRandomVehicleStatus(MathUtils.ExpiredProb, MathUtils.NoneProb,
-                MathUtils.ValidProb, MathUtils.RevokedProb);
-            var street = World.GetStreetName(LocalPlayer.Position);
+            var vehicleData = GetVehicleDataFromWorldCars(plate);
+
+            if (vehicleData == null)
+            {
+                CreateVehicleObj(vehicle);
+                vehicleData = GetVehicleDataFromWorldCars(plate);
+                if (vehicleData == null) return;
+            }
+
+            vehicleData.TryGetValue("model", out var model);
+            vehicleData.TryGetValue("isstolen", out var isStolen);
+            vehicleData.TryGetValue("owner", out var owner);
+            vehicleData.TryGetValue("registration", out var registration);
+            vehicleData.TryGetValue("insurance", out var insurance);
+            vehicleData.TryGetValue("color", out var color);
+
+            var street = World.GetStreetName(Game.LocalPlayer.Character.Position);
             var area = GetPedCurrentZoneName();
 
-            if (HasPolicingRedefined && HasCommonDataFramework)
-            {
-                insurance = GetInsurancePr(vehicle);
-                registration = GetRegistrationPr(vehicle);
-                isStolen = GetStolenPr(vehicle);
-                owner = GetOwnerPr(vehicle);
-            }
-            else if (HasStopThePed)
-            {
-                insurance = GetInsuranceStp(vehicle);
-                registration = GetRegistrationStp(vehicle);
-            }
+            var trafficStopFile = $"{FileDataFolder}/trafficStop.data";
+            if (File.ReadAllText(trafficStopFile).Contains(plate)) return;
 
-            var oldFile = File.ReadAllText($"{FileDataFolder}/trafficStop.data");
-            if (oldFile.Contains(plate)) return;
-            var vehicleData =
-                $"licenseplate={plate}&model={model}&isstolen={isStolen}&ispolice={isPolice}&owner={owner}&registration={registration}&insurance={insurance}&color={color}&street={street}&area={area}";
+            var vehicleDataEntry = $"licenseplate={plate}&model={model}&isstolen={isStolen}" +
+                                   $"&owner={owner}&registration={registration}&insurance={insurance}&color={color}" +
+                                   $"&street={street}&area={area}";
 
-            File.WriteAllText($"{FileDataFolder}/trafficStop.data", $"{vehicleData}");
+            File.WriteAllText(trafficStopFile, vehicleDataEntry);
             Game.LogTrivial("ReportsPlusListener: TrafficStop DataFile Created");
+        }
+
+        private static Dictionary<string, string> GetVehicleDataFromWorldCars(string plate)
+        {
+            var filePath = $"{FileDataFolder}/worldCars.data";
+            if (!File.Exists(filePath)) return null;
+
+            foreach (var entry in File.ReadAllText(filePath).Split('|'))
+            {
+                var data = ParseEntry(entry);
+                if (data.TryGetValue("licenseplate", out var existingPlate) && existingPlate == plate)
+                    return data;
+            }
+
+            return null;
+        }
+
+        private static Dictionary<string, string> ParseEntry(string entry)
+        {
+            var dict = new Dictionary<string, string>();
+            foreach (var pair in entry.Split('&'))
+            {
+                var keyValue = pair.Split('=');
+                if (keyValue.Length == 2)
+                    dict[keyValue[0]] = Uri.UnescapeDataString(keyValue[1]);
+            }
+
+            return dict;
         }
 
         public static void CreatePedObj(Ped ped)

@@ -19,6 +19,7 @@ namespace ReportsPlus.Utils.ALPR
 
         public static float BackgroundScale;
         public static float TargetPlateWidth;
+        public static bool EnableDisplayOnFoot;
 
         public static float LabelFontSize;
         public static float LabelVerticalOffset;
@@ -55,7 +56,7 @@ namespace ReportsPlus.Utils.ALPR
             {
                 PlateImage = null;
                 BackgroundImg = null;
-                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
                     "~r~Error Loading Images", "~o~Failed to load license plate/background image");
                 Game.LogTrivial(
                     "ReportsPlusListener [ERROR]: Failed to load license plate images or background image!");
@@ -65,6 +66,8 @@ namespace ReportsPlus.Utils.ALPR
         public static void OnFrameRender(object sender, GraphicsEventArgs e)
         {
             if (PlateImage == null || BackgroundImg == null) return;
+
+            if (!EnableDisplayOnFoot && !Main.CachedIsInVehicle) return;
 
             var bgWidth = BackgroundImg.Size.Width * BackgroundScale;
             var bgHeight = BackgroundImg.Size.Height * BackgroundScale;

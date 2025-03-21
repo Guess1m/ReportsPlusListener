@@ -9,7 +9,7 @@ using ReportsPlus.Utils.ALPR;
 using static ReportsPlus.Utils.ConfigUtils;
 using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 
-namespace ReportsPlus.Utils.Data
+namespace ReportsPlus.Utils.Menu
 {
     public static class MenuProcessing
     {
@@ -42,7 +42,7 @@ namespace ReportsPlus.Utils.Data
                 Value = ALPRSuccessfulScanProbability
             };
             var rescanPlateInterval = new UIMenuNumericScrollerItem<int>("Rescan Interval",
-                "Interval for a plate being scanned again (sec)", 10, 200, 5)
+                "Interval for a plate being scanned again (sec)", 10, 900, 10)
             {
                 Value = ReScanPlateInterval / 1000
             };
@@ -103,7 +103,7 @@ namespace ReportsPlus.Utils.Data
                 IniFile.Write("ALPRSettings", "ALPRType", alprType.SelectedItem);
                 AlprSetupType = alprType.SelectedItem;
 
-                ALPRUtils.ToggleAlpr(alprType.SelectedItem);
+                ALPRUtils.ToggleAlpr();
                 ALPRButton.Enabled = true;
             };
             alprMenu.AddItems(ALPRButton, alprType, successfulScanProbability, rescanPlateInterval, scanRadius,
@@ -112,12 +112,23 @@ namespace ReportsPlus.Utils.Data
 
             var plateDisplayMenu = new UIMenu("Plate Display Menu", "Plate Display Settings");
             var enablePlateDisplay =
-                new UIMenuCheckboxItem("Show Plate Display", ShowAlprDebug, "Toggle in-game plate display")
+                new UIMenuCheckboxItem("Show Plate Display", LicensePlateDisplay.EnablePlateDisplay,
+                    "Toggle in-game plate display")
                 {
                     Style = UIMenuCheckboxStyle.Cross,
                     ForeColor = Color.FromArgb(185, 185, 185),
                     HighlightedForeColor = Color.FromArgb(40, 40, 40),
                     Checked = LicensePlateDisplay.EnablePlateDisplay
+                };
+
+            var EnableDisplayOnFoot =
+                new UIMenuCheckboxItem("Display On Foot", LicensePlateDisplay.EnableDisplayOnFoot,
+                    "Toggle whether to display plates when on foot")
+                {
+                    Style = UIMenuCheckboxStyle.Cross,
+                    ForeColor = Color.FromArgb(185, 185, 185),
+                    HighlightedForeColor = Color.FromArgb(40, 40, 40),
+                    Checked = LicensePlateDisplay.EnableDisplayOnFoot
                 };
 
             var plateDisplayX = new UIMenuNumericScrollerItem<float>("Plate Display X",
@@ -259,6 +270,8 @@ namespace ReportsPlus.Utils.Data
                 LicensePlateDisplay.PlateTextFontSize = plateNumberFontSize.Value;
                 IniFile.Write("PlateDisplay", "EnablePlateDisplay", enablePlateDisplay.Checked);
                 LicensePlateDisplay.EnablePlateDisplay = enablePlateDisplay.Checked;
+                IniFile.Write("PlateDisplay", "EnableDisplayOnFoot", EnableDisplayOnFoot.Checked);
+                LicensePlateDisplay.EnableDisplayOnFoot = EnableDisplayOnFoot.Checked;
 
                 var selectedColor = LicensePlateDisplay.AvailableColors.Contains(plateTextColor.SelectedItem)
                     ? plateTextColor.SelectedItem
@@ -291,6 +304,7 @@ namespace ReportsPlus.Utils.Data
                 plateTextColor.SelectedItem = Color.FromArgb(43, 49, 127);
 
                 IniFile.Write("PlateDisplay", "EnablePlateDisplay", true);
+                IniFile.Write("PlateDisplay", "EnableDisplayOnFoot", true);
                 IniFile.Write("PlateDisplay", "BackgroundPositionX", 330f);
                 IniFile.Write("PlateDisplay", "BackgroundPositionY", 900f);
                 IniFile.Write("PlateDisplay", "PlateSpacing", 10f);
@@ -305,6 +319,7 @@ namespace ReportsPlus.Utils.Data
                 IniFile.Write("PlateDisplay", "PlateTextColor", Color.FromArgb(43, 49, 127));
 
                 LicensePlateDisplay.EnablePlateDisplay = true;
+                LicensePlateDisplay.EnableDisplayOnFoot = true;
                 LicensePlateDisplay.BackgroundPositionX = 330f;
                 LicensePlateDisplay.BackgroundPositionY = 900f;
                 LicensePlateDisplay.PlateSpacing = 10f;
@@ -318,14 +333,16 @@ namespace ReportsPlus.Utils.Data
                 LicensePlateDisplay.BackgroundScale = 1.04f;
                 LicensePlateDisplay.PlateTextColor = Color.FromArgb(43, 49, 127);
 
-                Game.DisplayNotification("~g~Success~s~: Plate display settings reset to defaults!");
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
+                    "~g~Success",
+                    "Plate display settings reset to defaults!");
             };
 
             var placeholder = new UIMenuItem("", "") { Skipped = true, Enabled = false };
 
             plateDisplayMenu.AddItems(enablePlateDisplay, bgScale, plateDisplayX, plateDisplayY, labelSize, labelOffset,
                 plateSpacing, plateWidth, plateHeight, licensePlateVerticalOffset, plateNumberOffset,
-                plateNumberFontSize, plateTextColor, placeholder, resetDefaultsButton,
+                plateNumberFontSize, plateTextColor, placeholder, EnableDisplayOnFoot, resetDefaultsButton,
                 savePlateDisplaySettings);
 
             var openALPRMenuButton = new UIMenuItem("ALPR Menu", "Open the ALPR settings menu");

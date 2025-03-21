@@ -8,9 +8,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
+using ReportsPlus.Utils.Menu;
 using static ReportsPlus.Utils.ConfigUtils;
 
-namespace ReportsPlus.Utils.Data
+namespace ReportsPlus.Utils
 {
     public static class MathUtils
     {
@@ -103,13 +104,7 @@ namespace ReportsPlus.Utils.Data
         {
             var maxYears = 4;
             var currentDate = DateTime.Now;
-
-            long minDaysAhead = 0;
-            var maxDaysAhead = maxYears * 365L + maxYears / 4;
-            long randomDaysAhead = Rand.Next((int)minDaysAhead, (int)maxDaysAhead + 1);
-
-            var expirationDate = currentDate.AddDays(randomDaysAhead);
-
+            var expirationDate = currentDate.AddYears(maxYears).AddDays(Rand.Next(0, 365));
             return expirationDate.ToString("MM-dd-yyyy");
         }
 
@@ -198,30 +193,51 @@ namespace ReportsPlus.Utils.Data
             return Rand.Next(0, 100) < ALPRSuccessfulScanProbability;
         }
 
+        // TODO: check if pr is being used, if so use getVehicleData.licenseplate instead
         public static int RemoveOldPlates(string filePath, int interval)
         {
-            var fileContent = File.ReadAllText($"{Main.FileDataFolder}/" + filePath);
+            var fullPath = $"{Main.FileDataFolder}/{filePath}";
+            var fileContent = File.ReadAllText(fullPath);
             if (string.IsNullOrWhiteSpace(fileContent)) return 0;
 
-            var removed = 0;
-            var vehicles = ParseVehicleData(fileContent);
-            var now = DateTimeOffset.Now;
-            var filteredVehicles = new List<Dictionary<string, string>>();
-            foreach (var vehicle in vehicles)
-            {
-                if (!vehicle.TryGetValue("timescanned", out var timeScannedStr) ||
-                    !DateTimeOffset.TryParse(timeScannedStr, out var timeScanned))
-                    continue;
+            var existingPlates = World.GetAllVehicles()
+                .Where(v => v.Exists())
+                .Select(v => v.LicensePlate.Trim().ToLower())
+                .ToHashSet();
 
-                if ((now - timeScanned).TotalMilliseconds <= interval)
-                    filteredVehicles.Add(vehicle);
+            var vehicles = ParseVehicleData(fileContent).ToList();
+            var now = DateTimeOffset.Now;
+            var removed = 0;
+
+            foreach (var vehicle in vehicles.ToList())
+            {
+                var isPresent = false;
+                if (vehicle.TryGetValue("licenseplate", out var plate))
+                {
+                    plate = plate.Trim().ToLower();
+                    isPresent = existingPlates.Contains(plate);
+                }
+
+                var isExpired = false;
+                if (vehicle.TryGetValue("timescanned", out var timeScannedStr) &&
+                    DateTimeOffset.TryParse(timeScannedStr, out var timeScanned))
+                {
+                    var timeDifference = now - timeScanned;
+                    isExpired = timeDifference.TotalMilliseconds > interval || timeDifference.TotalMilliseconds < 0;
+                }
                 else
-                    removed++;
+                {
+                    isExpired = true;
+                }
+
+                if (isPresent && !isExpired) continue;
+                vehicles.Remove(vehicle);
+                removed++;
             }
 
-            var newContent = string.Join("|",
-                filteredVehicles.Select(vehicle => string.Join("&", vehicle.Select(kvp => $"{kvp.Key}={kvp.Value}"))));
-            File.WriteAllText($"{Main.FileDataFolder}/" + filePath, newContent);
+            var newContent = string.Join("|", vehicles.Select(v =>
+                string.Join("&", v.Select(kvp => $"{kvp.Key}={kvp.Value}"))));
+            File.WriteAllText(fullPath, newContent);
 
             return removed;
         }

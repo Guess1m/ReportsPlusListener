@@ -6,6 +6,7 @@ using Rage;
 using ReportsPlus.Utils;
 using ReportsPlus.Utils.ALPR;
 using ReportsPlus.Utils.Data;
+using ReportsPlus.Utils.Menu;
 using static ReportsPlus.Utils.Data.EventUtils;
 using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 using Functions = LSPD_First_Response.Mod.API.Functions;
@@ -22,6 +23,7 @@ namespace ReportsPlus
         public const string FileResourcesFolder = "Plugins/lspdfr/ReportsPlus/";
 
         internal static bool IsOnDuty;
+        public static bool CachedIsInVehicle;
 
         public static XDocument CurrentIdDoc;
         public static XDocument CalloutDoc;
@@ -31,28 +33,40 @@ namespace ReportsPlus
         public static bool HasCommonDataFramework;
         private static bool _hasCalloutInterface;
 
-        internal static Ped LocalPlayer => Game.LocalPlayer.Character;
+        private static GameFiber _primaryFiber;
+        private static GameFiber _playerStateCheckFiber;
+
+        internal static Ped LocalPlayer;
 
         /*
          * Thank you @HeyPalu, Creator of ExternalPoliceComputer, for the ideas for adding the GTA V integration.
          */
 
+        //TODO: !important add check for nativeUI
+
         public override void Initialize()
         {
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
             Game.LogTrivial("ReportsPlusListener Plugin Initialized. Version: " + Version);
-            ConfigUtils.LoadSettings();
         }
 
         private void OnOnDutyStateChangedHandler(bool onDuty)
         {
             IsOnDuty = onDuty;
             Game.LogTrivial("ReportsPlusListener: IsOnDuty State Changed: '" + IsOnDuty + "'");
-            if (!onDuty) return;
+            if (!onDuty)
+            {
+                RunFullCleanup();
+                return;
+            }
 
-            Misc.CalloutIds.Clear();
-            Misc.PedAddresses.Clear();
-            Misc.PedLicenseNumbers.Clear();
+            LocalPlayer = Game.LocalPlayer.Character;
+
+            Misc.CalloutIds?.Clear();
+            Misc.PedAddresses?.Clear();
+            Misc.PedLicenseNumbers?.Clear();
+
+            ConfigUtils.LoadSettings();
 
             if (!Directory.Exists(FileResourcesFolder))
                 Directory.CreateDirectory(FileResourcesFolder);
@@ -73,20 +87,25 @@ namespace ReportsPlus
 
             MenuProcessing.InitializeMenu();
 
-            GameFiber.StartNew(() =>
+            _primaryFiber = GameFiber.StartNew(() =>
             {
+                _playerStateCheckFiber =
+                    GameFiber.StartNew(UpdatePlayerState, "ReportsPlus-UpdatePlayerState");
                 DataCollection.TrafficStopCollectionFiber =
-                    GameFiber.StartNew(DataCollection.TrafficStopCollection, "CombinedDataCollection");
+                    GameFiber.StartNew(DataCollection.TrafficStopCollection, "ReportsPlus-TrafficStopCollection");
+                DataCollection.KeyCollectionFiber =
+                    GameFiber.StartNew(DataCollection.KeyCollection, "ReportsPlus-KeyCollection");
                 MenuProcessing.MenuProcessingFiber =
-                    GameFiber.StartNew(MenuProcessing.ProcessMenus, "ReportsPlusMenuProcessing");
+                    GameFiber.StartNew(MenuProcessing.ProcessMenus, "ReportsPlus-MenuProcessing");
                 DataCollection.WorldDataCollectionFiber =
-                    GameFiber.StartNew(DataCollection.WorldDataCollection, "DataCollection");
+                    GameFiber.StartNew(DataCollection.WorldDataCollection, "DReportsPlus-ataCollection");
                 DataCollection.SignalFileCheckFiber =
-                    GameFiber.StartNew(DataCollection.SignalFileCheck, "SignalFileCheck");
+                    GameFiber.StartNew(DataCollection.SignalFileCheck, "ReportsPlus-SignalFileCheck");
 
-                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlusListener",
-                    "~g~Version: " + Version + " Loaded!",
-                    "~w~Menu Keybind: ~y~" + MenuProcessing.MainMenuBind + "\n" + checksOutcome);
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlusListener",
+                    "By: ~y~Guess1m",
+                    "~g~Version: " + Version + " Loaded!" + "\n" + "~w~Menu Keybind: ~y~" +
+                    MenuProcessing.MainMenuBind + "\n" + checksOutcome);
 
                 Game.LogTrivial("ReportsPlusListener: " + Version + ", Loaded Successfully");
             }, "ReportsPlusListener");
@@ -141,30 +160,42 @@ namespace ReportsPlus
         public override void Finally()
         {
             Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
-            if (DataCollection.TrafficStopCollectionFiber != null &&
-                DataCollection.TrafficStopCollectionFiber.IsAlive)
-                DataCollection.TrafficStopCollectionFiber.Abort();
 
-            if (ALPRUtils.AlprFiber != null &&
-                ALPRUtils.AlprFiber.IsAlive)
-                ALPRUtils.AlprFiber.Abort();
+            RunFullCleanup();
+        }
 
-            if (DataCollection.WorldDataCollectionFiber != null &&
-                DataCollection.WorldDataCollectionFiber.IsAlive)
-                DataCollection.WorldDataCollectionFiber.Abort();
+        private static void UpdatePlayerState()
+        {
+            while (IsOnDuty)
+            {
+                GameFiber.Wait(2000);
+                CachedIsInVehicle = Game.LocalPlayer.Character?.IsInAnyVehicle(false) ?? false;
+            }
+        }
 
-            if (DataCollection.SignalFileCheckFiber != null &&
-                DataCollection.SignalFileCheckFiber.IsAlive)
-                DataCollection.SignalFileCheckFiber.Abort();
+        private static void RunFullCleanup()
+        {
+            Misc.CleanupFiber(DataCollection.TrafficStopCollectionFiber);
+            Misc.CleanupFiber(DataCollection.KeyCollectionFiber);
+            Misc.CleanupFiber(ALPRUtils.AlprFiber);
+            Misc.CleanupFiber(DataCollection.WorldDataCollectionFiber);
+            Misc.CleanupFiber(DataCollection.SignalFileCheckFiber);
+            Misc.CleanupFiber(DataCollection.ActivePulloverCheckFiber);
+            Misc.CleanupFiber(MenuProcessing.MenuProcessingFiber);
+            Misc.CleanupFiber(_primaryFiber);
+            Misc.CleanupFiber(_playerStateCheckFiber);
 
-            if (MenuProcessing.MenuProcessingFiber != null &&
-                MenuProcessing.MenuProcessingFiber.IsAlive)
-                MenuProcessing.MenuProcessingFiber.Abort();
+            ALPRUtils.CleanupAllBlips();
 
             Game.RawFrameRender -= LicensePlateDisplay.OnFrameRender;
 
-            CurrentIdDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
-            CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));
+            CurrentIdDoc?.Save(Path.Combine(FileDataFolder, "currentID.xml"));
+            CalloutDoc?.Save(Path.Combine(FileDataFolder, "callout.xml"));
+
+            Misc.CalloutIds?.Clear();
+            Misc.PedAddresses?.Clear();
+            Misc.PedLicenseNumbers?.Clear();
+
             Game.LogTrivial("ReportsPlusListener: Cleaned Up.");
         }
     }

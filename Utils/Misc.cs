@@ -255,7 +255,7 @@ namespace ReportsPlus.Utils
             }
             catch
             {
-                Game.LogTrivial("ReportsPlusListener: Error fetching model for ped");
+                Game.LogTrivial("ReportsPlusListener: Error fetching model for ped: " + ped);
                 return "";
             }
         }
@@ -291,6 +291,12 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial($"Error copying images: {ex.Message}");
             }
+        }
+
+        public static void CleanupFiber(GameFiber fiber)
+        {
+            if (!(fiber is { IsAlive: true })) return;
+            fiber.Abort();
         }
     }
 }

@@ -9,7 +9,7 @@ using Rage;
 using ReportsPlus.Utils.Data;
 using static ReportsPlus.Main;
 using static ReportsPlus.Utils.ConfigUtils;
-using static ReportsPlus.Utils.Data.MenuProcessing;
+using static ReportsPlus.Utils.Menu.MenuProcessing;
 
 namespace ReportsPlus.Utils.ALPR
 {
@@ -19,7 +19,10 @@ namespace ReportsPlus.Utils.ALPR
         private static DateTime _lastEntityUpdate = DateTime.MinValue;
         private static List<VehicleData> _cachedVehicleData = new List<VehicleData>();
 
-        public static void ToggleAlpr(AlprSetupType setupType)
+        private static readonly List<Tuple<Blip, GameFiber>> ActiveBlipFibers = new List<Tuple<Blip, GameFiber>>();
+        private static readonly object BlipLock = new object();
+
+        public static void ToggleAlpr()
         {
             ALPRActive = !ALPRActive;
 
@@ -43,19 +46,21 @@ namespace ReportsPlus.Utils.ALPR
             catch (Exception)
             {
                 Game.LogTrivial("ReportsPlusListener [ERROR]: Error clearing previous framerender");
-                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus", "~r~Error",
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
+                    "~r~Error",
                     "~o~Error clearing previous framerender");
 
                 return;
             }
 
             if (!ALPRActive) return;
-            AlprFiber = GameFiber.StartNew(() => AlprProcess(setupType), "AlprFiber");
+            AlprFiber = GameFiber.StartNew(() => AlprProcess(ConfigUtils.AlprSetupType), "AlprFiber");
 
             if (!LicensePlateDisplay.EnablePlateDisplay) return;
             if (LicensePlateDisplay.PlateImage == null || LicensePlateDisplay.BackgroundImg == null)
             {
-                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus", "~r~Error Loading Images",
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
+                    "~r~Error Loading Images",
                     "~o~Failed to load license plate or background image");
                 Game.LogTrivial(
                     "ReportsPlusListener [ERROR]: Failed to load license plate images or background image when starting platedisplay!");
@@ -73,15 +78,16 @@ namespace ReportsPlus.Utils.ALPR
             while (IsOnDuty)
             {
                 GameFiber.Wait(ALPRUpdateDelay);
-                RunVehicleALPR(currentAlprSetup);
+
+                var patrolCar = Game.LocalPlayer.Character.CurrentVehicle;
+                if (patrolCar == null || !patrolCar.IsValid() || !LocalPlayer.IsInAnyVehicle(false)) continue;
+
+                RunVehicleALPR(currentAlprSetup, patrolCar);
             }
         }
 
-        private static void RunVehicleALPR(AlprSetupType setupType)
+        private static void RunVehicleALPR(AlprSetupType setupType, Vehicle patrolCar)
         {
-            var patrolCar = Game.LocalPlayer.Character.CurrentVehicle;
-            if (patrolCar == null || !patrolCar.IsValid()) return;
-
             var scanners = GetScannerConfigurations(patrolCar, setupType);
             if (scanners.Count == 0) return;
 
@@ -327,24 +333,14 @@ namespace ReportsPlus.Utils.ALPR
 
             if (!string.IsNullOrEmpty(vehFlags.ToString()))
             {
-                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
                     $"~b~ALPR Scan [{scanner.ScanLocation}]~s~\n",
                     $"~y~Plate:~w~ {plate}\n" +
                     $"~y~Plate Type:~w~ {plateType}\n" +
                     $"~y~Distance:~w~ {Vector3.Distance(scanner.Position, platePos):0.0}\n" +
                     $"{vehFlags}");
 
-                var targetBlip = targetVehicle.AttachBlip();
-                targetBlip.Name = "ALPR Scan";
-                targetBlip.Color = vehFlags.ToString().Contains("Stolen") || vehFlags.ToString().Contains("No")
-                    ? Color.Red
-                    : Color.Orange;
-                GameFiber.StartNew(() =>
-                {
-                    GameFiber.Sleep(BlipDisplayTime);
-                    if (targetBlip.IsValid())
-                        targetBlip.Delete();
-                }, "DeleteALPRBlip");
+                CreateTemporaryBlip(targetVehicle);
             }
 
             MathUtils.RemoveOldPlates("alpr.data", ReScanPlateInterval);
@@ -352,6 +348,44 @@ namespace ReportsPlus.Utils.ALPR
             if (!showDebug) return;
             Debug.DrawLineDebug(scanner.Position, platePos, Color.Green);
             Debug.DrawSphere(platePos, 0.1f, Color.Green);
+        }
+
+        private static void CreateTemporaryBlip(Vehicle vehicle)
+        {
+            var targetBlip = vehicle.AttachBlip();
+            targetBlip.Color = Color.Red;
+            targetBlip.Scale = 0.7f;
+
+            var deletionFiber = GameFiber.StartNew(() =>
+            {
+                GameFiber.Sleep(BlipDisplayTime);
+
+                lock (BlipLock)
+                {
+                    if (targetBlip) targetBlip.Delete();
+
+                    ActiveBlipFibers.RemoveAll(bf => bf.Item1 == targetBlip);
+                }
+            }, "DeleteALPRBlip");
+
+            lock (BlipLock)
+            {
+                ActiveBlipFibers.Add(Tuple.Create(targetBlip, deletionFiber));
+            }
+        }
+
+        public static void CleanupAllBlips()
+        {
+            lock (BlipLock)
+            {
+                foreach (var (blip, fiber) in ActiveBlipFibers.ToList())
+                {
+                    if (fiber.IsAlive) fiber.Abort();
+                    if (blip) blip.Delete();
+
+                    ActiveBlipFibers.RemoveAll(bf => bf.Item1 == blip);
+                }
+            }
         }
 
         private static Dictionary<Vector3, VehiclePlateType> GetPlatePositions(Vehicle vehicle)

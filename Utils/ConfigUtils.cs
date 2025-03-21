@@ -5,10 +5,10 @@ using System.Linq;
 using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
 using Rage;
-using ReportsPlus.Utils.Data;
+using ReportsPlus.Utils.Menu;
 using static ReportsPlus.Main;
 using static ReportsPlus.Utils.ALPR.LicensePlateDisplay;
-using static ReportsPlus.Utils.Data.MathUtils;
+using static ReportsPlus.Utils.MathUtils;
 using static ReportsPlus.Utils.Misc;
 using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 
@@ -65,14 +65,14 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: DataRefreshInterval Config setting didn't exist, creating");
-                IniFile.Write("Settings", "DataRefreshInterval", 13000);
+                IniFile.Write("Settings", "DataRefreshInterval", 15000);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "RescanPlateInterval"))
             {
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: RescanPlateInterval Config setting didn't exist, creating");
-                IniFile.Write("ALPRSettings", "RescanPlateInterval", 60000);
+                IniFile.Write("ALPRSettings", "RescanPlateInterval", 600000);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRSuccessfulScanProbability"))
@@ -108,6 +108,13 @@ namespace ReportsPlus.Utils
                 Game.LogTrivial(
                     "ReportsPlusListener {CONFIG}: EnablePlateDisplay Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "EnablePlateDisplay", true);
+            }
+
+            if (!IniFile.DoesKeyExist("PlateDisplay", "EnableDisplayOnFoot"))
+            {
+                Game.LogTrivial(
+                    "ReportsPlusListener {CONFIG}: EnableDisplayOnFoot Config setting didn't exist, creating");
+                IniFile.Write("PlateDisplay", "EnableDisplayOnFoot", true);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "BlipDisplayTime"))
@@ -245,9 +252,9 @@ namespace ReportsPlus.Utils
             MenuProcessing.MainMenuBind = IniFile.ReadEnum("Settings", "MenuKey", Keys.F7);
             MenuProcessing.ALPRMenuBind = IniFile.ReadEnum("Settings", "ALPRKey", Keys.None);
             AlprSetupType = IniFile.ReadEnum("ALPRSettings", "ALPRType", ALPRUtils.AlprSetupType.Front);
-            RefreshDelay = IniFile.ReadInt32("Settings", "DataRefreshInterval", 13000);
+            RefreshDelay = IniFile.ReadInt32("Settings", "DataRefreshInterval", 15000);
             ALPRSuccessfulScanProbability = IniFile.ReadInt32("ALPRSettings", "ALPRSuccessfulScanProbability", 20);
-            ReScanPlateInterval = IniFile.ReadInt32("ALPRSettings", "RescanPlateInterval", 60000);
+            ReScanPlateInterval = IniFile.ReadInt32("ALPRSettings", "RescanPlateInterval", 600000);
             BlipDisplayTime = IniFile.ReadInt32("ALPRSettings", "BlipDisplayTime", 15000);
             ScanRadius = IniFile.ReadSingle("ALPRSettings", "ScanRadius", 15f);
             MaxScanAngle = IniFile.ReadSingle("ALPRSettings", "MaxScanAngle", 40f);
@@ -272,6 +279,7 @@ namespace ReportsPlus.Utils
             BackgroundScale = IniFile.ReadSingle("PlateDisplay", "BackgroundScale", 1.04f);
             TargetPlateWidth = IniFile.ReadSingle("PlateDisplay", "TargetPlateWidth", 100f);
             EnablePlateDisplay = IniFile.ReadBoolean("PlateDisplay", "EnablePlateDisplay", true);
+            EnableDisplayOnFoot = IniFile.ReadBoolean("PlateDisplay", "EnableDisplayOnFoot", true);
 
             var colorParts = IniFile.ReadString("PlateDisplay", "PlateTextColor", "255,43,49,127").Split(',')
                 .Select(int.Parse).ToArray();
@@ -323,6 +331,7 @@ namespace ReportsPlus.Utils
             Game.LogTrivial("ReportsPlusListener {CONFIG}: TargetPlateWidth- '" + TargetPlateWidth + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: TargetPlateHeight- '" + TargetPlateHeight + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: EnablePlateDisplay- '" + EnablePlateDisplay + "'");
+            Game.LogTrivial("ReportsPlusListener {CONFIG}: EnableDisplayOnFoot- '" + EnableDisplayOnFoot + "'");
         }
 
         public static bool IsPluginInstalled(string pluginName)

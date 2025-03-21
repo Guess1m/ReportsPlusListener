@@ -5,7 +5,7 @@ using LSPD_First_Response.Mod.API;
 using Rage;
 using RAGENativeUI.Elements;
 using ReportsPlus.Utils.Animation;
-using static ReportsPlus.Utils.Data.MenuProcessing;
+using static ReportsPlus.Utils.Menu.MenuProcessing;
 using static ReportsPlus.Utils.Data.UpdateUtils;
 using static ReportsPlus.Utils.Misc;
 using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
@@ -15,52 +15,50 @@ namespace ReportsPlus.Utils.Data
     public static class DataCollection
     {
         public static GameFiber TrafficStopCollectionFiber;
+        public static GameFiber KeyCollectionFiber;
         public static GameFiber WorldDataCollectionFiber;
         public static GameFiber SignalFileCheckFiber;
+        public static GameFiber ActivePulloverCheckFiber;
         public static bool CitationSignalFound;
         public static string CitationSignalName;
         public static string CitationSignalPlate;
         public static string CitationSignalType;
         private static string _lastPulledOverPlate = "";
 
-        private static readonly int Delay =
-            MathUtils.Rand.Next(ConfigUtils.RefreshDelay, ConfigUtils.RefreshDelay + 1200);
-
         public static readonly string CitationSignalFilePath =
             Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
+
+        public static void KeyCollection()
+        {
+            if (Game.IsKeyDown(AnimationBind)) AnimationUtils.PlayAnimation();
+
+            if (Game.IsKeyDown(DiscardBind)) AnimationUtils.RunDiscardCitation();
+
+            if (Game.IsKeyDown(ALPRMenuBind)) ALPRUtils.ToggleAlpr();
+
+            GameFiber.Yield();
+        }
 
         public static void TrafficStopCollection()
         {
             while (Main.IsOnDuty)
             {
-                if (Game.IsKeyDown(AnimationBind)) AnimationUtils.PlayAnimation();
+                if (Functions.IsPlayerPerformingPullover() && !IsPerformingPullover)
+                {
+                    if (ActivePulloverCheckFiber is { IsAlive: true }) ActivePulloverCheckFiber.Abort();
 
-                if (Game.IsKeyDown(DiscardBind)) AnimationUtils.RunDiscardCitation();
+                    ActivePulloverCheckFiber = GameFiber.StartNew(() =>
+                    {
+                        IsPerformingPullover = true;
+                        CheckPullover();
+                        IsPerformingPullover = false;
+                    }, "ReportsPlus-PulloverCheck");
 
-                if (Game.IsKeyDown(ALPRMenuBind)) ALPRUtils.ToggleAlpr(ConfigUtils.AlprSetupType);
+                    GameFiber.Wait(1000);
+                }
 
-                CheckForTrafficStop();
+                GameFiber.Yield();
             }
-        }
-
-        public static void WorldDataCollection()
-        {
-            while (Main.IsOnDuty)
-            {
-                GameFiber.Wait(Delay);
-                RefreshPeds();
-                GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
-                RefreshVehs();
-                GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
-                RefreshGameData();
-            }
-        }
-
-        private static void CheckForTrafficStop()
-        {
-            if (Functions.IsPlayerPerformingPullover() && !IsPerformingPullover)
-                GameFiber.StartNew(CheckPullover, "PulloverCheck");
-            GameFiber.Yield();
         }
 
         private static void CheckPullover()
@@ -114,6 +112,19 @@ namespace ReportsPlus.Utils.Data
             finally
             {
                 IsPerformingPullover = false;
+            }
+        }
+
+        public static void WorldDataCollection()
+        {
+            while (Main.IsOnDuty)
+            {
+                GameFiber.Wait(ConfigUtils.RefreshDelay);
+                RefreshPeds();
+                GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
+                RefreshVehs();
+                GameFiber.Wait(MathUtils.Rand.Next(500, 1200));
+                RefreshGameData();
             }
         }
 
@@ -177,7 +188,8 @@ namespace ReportsPlus.Utils.Data
                                 Game.LogTrivial("ReportsPlusListener: Received PrintedCitation for: " + name);
                                 CitationSignalName = name;
                                 CitationSignalPlate = null;
-                                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept",
+                                    "~w~ReportsPlus",
                                     "~g~Created Citation",
                                     "~y~Citation For: ~b~" + name +
                                     "\n~w~Menu Keybind: ~y~" + MainMenuBind);
@@ -188,7 +200,8 @@ namespace ReportsPlus.Utils.Data
                                 Game.LogTrivial("ReportsPlusListener: Received ParkingCitation for: " + plate);
                                 CitationSignalName = null;
                                 CitationSignalPlate = plate;
-                                Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept",
+                                    "~w~ReportsPlus",
                                     "~g~Created Parking Citation",
                                     "~y~Citation For: ~b~" + plate +
                                     "\n~w~Menu Keybind: ~y~" + MainMenuBind);

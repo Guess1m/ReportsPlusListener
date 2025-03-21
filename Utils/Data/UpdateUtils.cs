@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using LSPD_First_Response.Mod.API;
@@ -73,7 +75,7 @@ namespace ReportsPlus.Utils.Data
                 }
             }
 
-            var allCars = LocalPlayer.GetNearbyVehicles(15);
+            var allCars = LocalPlayer.GetNearbyVehicles(13);
             var newEntries = new List<string>();
 
             foreach (var car in allCars)
@@ -95,7 +97,7 @@ namespace ReportsPlus.Utils.Data
             }
 
             Game.LogTrivial(
-                $"ReportsPlusListener: Added [{newEntries.Count}] new vehicles to worldCars.data, removed [{MathUtils.RemoveOldPlates("worldCars.data", 35000)}] old vehicles.");
+                $"ReportsPlusListener: Added [{newEntries.Count}] new vehicles to worldCars.data, vehicles no longer in world: [{MathUtils.RemoveOldPlates("worldCars.data", 600000)}] removed");
         }
 
         public static void RefreshPeds()
@@ -106,28 +108,63 @@ namespace ReportsPlus.Utils.Data
                 return;
             }
 
-            var allPeds = LocalPlayer.GetNearbyPeds(15);
-            var pedsList = new string[allPeds.Length];
+            var filePath = $"{FileDataFolder}/worldPeds.data";
+            var existingPeds = new Dictionary<string, string>();
+
+            if (File.Exists(filePath))
+            {
+                var existingContent = File.ReadAllText(filePath);
+                foreach (var entry in existingContent.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var pedIdMatch = Regex.Match(entry, "pedid=([^&]+)");
+                    if (!pedIdMatch.Success) continue;
+                    var pedId = pedIdMatch.Groups[1].Value;
+                    existingPeds[pedId] = entry;
+                }
+            }
+
+            var allPeds = LocalPlayer.GetNearbyPeds(13);
+            var newEntries = new List<string>();
 
             foreach (var ped in allPeds)
-                if (ped != null)
-                {
-                    if (!ped.Exists()) continue;
+            {
+                if (ped == null || !ped.Exists()) continue;
 
-                    string pedData;
-                    if (HasPolicingRedefined && HasCommonDataFramework)
-                        pedData = GetPedDataPr(ped);
-                    else
-                        pedData = GetPedData(ped);
+                var pedId = $"ped_{ped.Handle}";
 
-                    if (pedData == null) continue;
+                if (existingPeds.ContainsKey(pedId)) continue;
 
-                    pedsList[Array.IndexOf(allPeds, ped)] = pedData;
-                }
+                string pedData;
+                if (HasPolicingRedefined && HasCommonDataFramework)
+                    pedData = GetPedDataPr(ped);
+                else
+                    pedData = GetPedData(ped);
 
-            File.WriteAllText($"{FileDataFolder}/worldPeds.data", string.Join("|", pedsList));
+                if (pedData == null) continue;
 
-            Game.LogTrivial("ReportsPlusListener: Updated Pedestrian Data");
+                pedData = $"pedid={pedId}&{pedData}";
+
+                newEntries.Add(pedData);
+                existingPeds[pedId] = pedData;
+            }
+
+            var removedCount = 0;
+            var activePedIds = allPeds
+                .Where(p => p != null && p.Exists())
+                .Select(p => $"ped_{p.Handle}")
+                .ToHashSet();
+
+            foreach (var pedId in existingPeds.Keys.ToList().Where(pedId => !activePedIds.Contains(pedId)))
+            {
+                existingPeds.Remove(pedId);
+                removedCount++;
+            }
+
+            var newContent = string.Join("|", existingPeds.Values);
+            File.WriteAllText(filePath, newContent);
+
+            Game.LogTrivial(
+                $"ReportsPlusListener: Added [{newEntries.Count}] new peds to worldPeds.data, peds no longer in world: [{removedCount}] removed");
         }
 
         public static void RefreshGameData()
@@ -149,7 +186,7 @@ namespace ReportsPlus.Utils.Data
             string timeString;
             try
             {
-                timeString = World.DateTime.ToShortTimeString();
+                timeString = World.DateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
             }
             catch (Exception)
             {

@@ -6,7 +6,7 @@ using Rage;
 using Rage.Native;
 using ReportsPlus.Utils.Data;
 using static ReportsPlus.Main;
-using static ReportsPlus.Utils.Data.MenuProcessing;
+using static ReportsPlus.Utils.Menu.MenuProcessing;
 
 namespace ReportsPlus.Utils.Animation
 {
@@ -136,7 +136,7 @@ namespace ReportsPlus.Utils.Animation
 
                         break;
                     default:
-                        Game.LogTrivial("ReportsPlusListener: non-printed so returning");
+                        Game.LogTrivial("ReportsPlusListener: non-printed citation type so returning");
                         return;
                 }
 
@@ -162,12 +162,12 @@ namespace ReportsPlus.Utils.Animation
             switch (DataCollection.CitationSignalType)
             {
                 case "2":
-                    Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
                         "~r~Citation Discarded",
                         "~y~Citation for: ~b~" + DataCollection.CitationSignalName + " ~y~Has Been Discarded");
                     break;
                 case "3":
-                    Game.DisplayNotification("commonmenu", "mp_alerttriangle", "~w~ReportsPlus",
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
                         "~r~Citation Discarded",
                         "~y~Citation for: ~b~" + DataCollection.CitationSignalPlate + " ~y~Has Been Discarded");
                     break;
@@ -190,7 +190,6 @@ namespace ReportsPlus.Utils.Animation
             // Remove second-to-last item if it exists
             MainMenu.RefreshIndex();
             if (MainMenu.MenuItems.Count > 0) MainMenu.MenuItems.RemoveAt(MainMenu.MenuItems.Count - 1);
-
             MainMenu.RefreshIndex();
 
             // Remove new last item if it exists
@@ -262,7 +261,5 @@ namespace ReportsPlus.Utils.Animation
                 }
             }
         }
-
-        //TODO: add animation for ped receiving ticket
     }
 }
