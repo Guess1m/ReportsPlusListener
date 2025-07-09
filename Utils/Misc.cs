@@ -235,6 +235,9 @@ namespace ReportsPlus.Utils
         };
 
         public static readonly Dictionary<string, string> PedAddresses = new Dictionary<string, string>();
+        public static readonly Dictionary<string, string> PedHeights = new Dictionary<string, string>();
+        public static readonly Dictionary<string, string> PedWeights = new Dictionary<string, string>();
+        public static readonly Dictionary<string, string> PedExpirations = new Dictionary<string, string>();
 
         public static readonly Dictionary<string, string> PedLicenseNumbers = new Dictionary<string, string>();
 

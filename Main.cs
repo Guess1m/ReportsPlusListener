@@ -18,7 +18,7 @@ namespace ReportsPlus
         /*
          UPDATE: Update Version
         */
-        private const string Version = "v1.5.1-alpha";
+        private const string Version = "v1.5.2-alpha";
         public const string FileDataFolder = "ReportsPlus/data";
         public const string FileResourcesFolder = "Plugins/lspdfr/ReportsPlus/";
 
@@ -42,7 +42,7 @@ namespace ReportsPlus
          * Thank you @HeyPalu, Creator of ExternalPoliceComputer, for the ideas for adding the GTA V integration.
          */
 
-        //TODO: !important add check for nativeUI
+        //TODO: add check for nativeUI
 
         public override void Initialize()
         {
@@ -64,6 +64,9 @@ namespace ReportsPlus
 
             Misc.CalloutIds?.Clear();
             Misc.PedAddresses?.Clear();
+            Misc.PedHeights?.Clear();
+            Misc.PedWeights?.Clear();
+            Misc.PedExpirations?.Clear();
             Misc.PedLicenseNumbers?.Clear();
 
             ConfigUtils.LoadSettings();
@@ -195,6 +198,9 @@ namespace ReportsPlus
             Misc.CalloutIds?.Clear();
             Misc.PedAddresses?.Clear();
             Misc.PedLicenseNumbers?.Clear();
+            Misc.PedHeights?.Clear();
+            Misc.PedWeights?.Clear();
+            Misc.PedExpirations?.Clear();
 
             Game.LogTrivial("ReportsPlusListener: Cleaned Up.");
         }

@@ -23,19 +23,63 @@ namespace ReportsPlus.Utils.Data
             var fullName = persona.FullName;
             var pedModel = Misc.FindPedModel(ped);
             var gender = persona.Gender.ToString();
-
-            if (!Misc.PedLicenseNumbers.ContainsKey(fullName))
-                Misc.PedLicenseNumbers[fullName] = MathUtils.GetRandomAddress();
-            if (!Misc.PedAddresses.ContainsKey(fullName)) Misc.PedAddresses[fullName] = MathUtils.GetRandomAddress();
-
-            var address = Misc.PedAddresses[fullName];
-            var licenseNumber = Misc.PedLicenseNumbers[fullName];
+            string address;
+            string licenseExp;
+            string weight;
 
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
-                gender = GetValueMethods.GetGenderPr(ped);
                 fullName = GetValueMethods.GetFullNamePr(ped);
+                gender = GetValueMethods.GetGenderPr(ped);
                 address = MathUtils.GetPedAddress(ped);
+                if (!Misc.PedExpirations.TryGetValue(fullName, out licenseExp))
+                {
+                    licenseExp = GetValueMethods.GetLicenseExpiration(ped);
+                    Misc.PedExpirations.Add(fullName, licenseExp);
+                }
+            }
+            else
+            {
+                address = Misc.PedAddresses[fullName];
+                if (!Misc.PedExpirations.TryGetValue(fullName, out licenseExp))
+                {
+                    var licenseStatus = persona.ELicenseState.ToString();
+                    licenseExp = licenseStatus.ToLower() switch
+                    {
+                        //TODO: !important find every  use here and update it to include suspended, unlicensed etc.
+                        // only issue with STP / probably base
+                        "valid" => MathUtils.GenerateValidLicenseExpirationDate(),
+                        "expired" => MathUtils.GenerateExpiredLicenseExpirationDate(3),
+                        _ => ""
+                    };
+
+                    Misc.PedExpirations.Add(fullName, licenseExp);
+                }
+            }
+
+            if (!Misc.PedLicenseNumbers.ContainsKey(fullName))
+                Misc.PedLicenseNumbers[fullName] = MathUtils.GenerateLicenseNumber();
+            if (!Misc.PedAddresses.ContainsKey(fullName))
+                Misc.PedAddresses[fullName] = MathUtils.GetRandomAddress();
+
+            var licenseNumber = Misc.PedLicenseNumbers[fullName];
+
+            if (!Misc.PedHeights.TryGetValue(fullName, out var height))
+            {
+                var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
+                height = heightAndWeight[0];
+                weight = heightAndWeight[1];
+                Misc.PedHeights.Add(fullName, height);
+                Misc.PedWeights.Add(fullName, weight);
+            }
+            else
+            {
+                if (!Misc.PedWeights.TryGetValue(fullName, out weight))
+                {
+                    var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
+                    weight = heightAndWeight[1];
+                    Misc.PedWeights.Add(fullName, weight);
+                }
             }
 
             var newEntry = new XElement("ID",
@@ -44,7 +88,10 @@ namespace ReportsPlus.Utils.Data
                 new XElement("Gender", gender),
                 new XElement("Address", address),
                 new XElement("PedModel", pedModel),
-                new XElement("LicenseNumber", licenseNumber)
+                new XElement("LicenseNumber", licenseNumber),
+                new XElement("Expiration", licenseExp),
+                new XElement("Height", height),
+                new XElement("Weight", weight)
             );
 
             var newDoc = new XDocument(new XElement("IDs"));

@@ -136,6 +136,54 @@ namespace ReportsPlus.Utils
             return randomValue <= expiredChance + noneChance + validChance ? "Valid" : "Revoked";
         }
 
+        public static string GetRandomLicenseStatus(int expiredChance, int noneChance, int validChance,
+            int suspendedChance)
+        {
+            var totalChance = expiredChance + noneChance + validChance + suspendedChance;
+
+            if (totalChance != 100) throw new ArgumentException("The sum of the chances must equal 100.");
+
+            var randomValue = Rand.Next(1, 101);
+
+            if (randomValue <= expiredChance) return "Expired";
+            if (randomValue <= expiredChance + noneChance) return "None";
+            return randomValue <= expiredChance + noneChance + validChance ? "Valid" : "Suspended";
+        }
+
+        public static string GenerateRandomCoverage()
+        {
+            var coverageProbabilities = new Dictionary<string, int>
+            {
+                { "Liability Coverage", 98 },
+                { "Collision Coverage", 70 },
+                { "Comprehensive Coverage", 65 },
+
+                { "Uninsured/Underinsured Motorist Coverage", 50 },
+                { "Medical Payments Coverage (MedPay)", 40 },
+                { "Personal Injury Protection (PIP)", 35 },
+
+                { "Rental Car Reimbursement", 25 },
+                { "Roadside Assistance", 20 }
+            };
+
+            var selectedCoverages = new List<string>();
+
+            if (Rand.Next(1, 101) <= coverageProbabilities["Liability Coverage"])
+                selectedCoverages.Add("Liability Coverage");
+
+            foreach (var entry in from entry in coverageProbabilities
+                     where entry.Key != "Liability Coverage" || !selectedCoverages.Contains("Liability Coverage")
+                     let roll = Rand.Next(1, 101)
+                     where roll <= entry.Value
+                     where !selectedCoverages.Contains(entry.Key)
+                     select entry)
+                selectedCoverages.Add(entry.Key);
+
+            if (!selectedCoverages.Contains("Liability Coverage")) selectedCoverages.Insert(0, "Liability Coverage");
+
+            return string.Join(", ", selectedCoverages.OrderBy(c => c));
+        }
+
         public static string ParseCountyString(string input)
         {
             return Regex.Replace(input, "(?<!^)([A-Z])", " $1");
@@ -191,6 +239,51 @@ namespace ReportsPlus.Utils
             ALPRSuccessfulScanProbability = 20;
 
             return Rand.Next(0, 100) < ALPRSuccessfulScanProbability;
+        }
+
+        public static string GenerateDob(int minAge, int maxAge)
+        {
+            var today = DateTime.Today;
+            var latestBirthDate = today.AddYears(-minAge);
+            var earliestBirthDate = today.AddYears(-(maxAge + 1)).AddDays(1);
+
+            var lowerBoundTicks = earliestBirthDate.Ticks;
+            var upperBoundTicks = latestBirthDate.Ticks;
+            var randomTicks = (long)(lowerBoundTicks + (upperBoundTicks - lowerBoundTicks) * Rand.NextDouble());
+
+            return new DateTime(randomTicks).ToString("MM/dd/yyyy");
+        }
+
+        public static bool GenerateIsWanted(int wantedPercentage)
+        {
+            if (wantedPercentage < 0 || wantedPercentage > 100)
+                throw new ArgumentOutOfRangeException(nameof(wantedPercentage),
+                    "Wanted percentage must be between 0 and 100.");
+
+            return Rand.Next(1, 101) <= wantedPercentage;
+        }
+
+        public static string[] GenerateHeightAndWeight(string gender)
+        {
+            int totalInches;
+            if ("female".Equals(gender, StringComparison.OrdinalIgnoreCase))
+                totalInches = 62 + Rand.Next(6);
+            else
+                totalInches = 67 + Rand.Next(8);
+            var feet = totalInches / 12;
+            var inches = totalInches % 12;
+            var height = $"{feet}' {inches}\"";
+            double inchesOver5Feet = Math.Max(0, totalInches - 60);
+            double baseWeightKg;
+            if ("female".Equals(gender, StringComparison.OrdinalIgnoreCase))
+                baseWeightKg = 45.5 + 2.3 * inchesOver5Feet;
+            else
+                baseWeightKg = 50.0 + 2.3 * inchesOver5Feet;
+            var weightVariance = Rand.NextDouble() * 0.30 - 0.15;
+            var finalWeightKg = baseWeightKg * (1 + weightVariance);
+            var finalWeightLbs = (int)(finalWeightKg * 2.20462);
+            var weight = finalWeightLbs + " lbs";
+            return new[] { height, weight };
         }
 
         // TODO: check if pr is being used, if so use getVehicleData.licenseplate instead

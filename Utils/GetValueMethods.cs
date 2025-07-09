@@ -41,6 +41,23 @@ namespace ReportsPlus.Utils.Data
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.Address.ToString();
         }
 
+        public static string GetOwnerDobPr(Vehicle car)
+        {
+            return car.GetVehicleData() == null
+                ? ""
+                : $"{car.GetVehicleData().Owner.Birthday.Month}/{car.GetVehicleData().Owner.Birthday.Day}/{car.GetVehicleData().Owner.Birthday.Year}";
+        }
+
+        public static string GetOwnerLicenseStatePr(Vehicle car)
+        {
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.DriversLicenseState.ToString();
+        }
+
+        public static string GetOwnerIsWantedPr(Vehicle car)
+        {
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Owner.Wanted.ToString();
+        }
+
         public static string GetGenderPr(Ped ped)
         {
             return ped.GetPedData() == null ? "" : ped.GetPedData().Gender.ToString();
@@ -70,6 +87,21 @@ namespace ReportsPlus.Utils.Data
             if (setValid) car.GetVehicleData().Insurance.Status = EDocumentStatus.Valid;
 
             return car.GetVehicleData() == null ? "" : car.GetVehicleData().Insurance.Status.ToString();
+        }
+
+        public static string GetMakePr(Vehicle car)
+        {
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Make;
+        }
+
+        public static string GetModelPr(Vehicle car)
+        {
+            return car.GetVehicleData() == null ? "" : car.GetVehicleData().Model;
+        }
+
+        public static string GetLicenseExpiration(Ped ped)
+        {
+            return ped.GetPedData() == null ? "" : ped.GetPedData().DriversLicenseExpiration?.ToString("MM-dd-yyyy");
         }
 
         /// Stop The Ped Methods
