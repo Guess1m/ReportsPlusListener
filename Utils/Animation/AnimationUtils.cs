@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using LSPD_First_Response.Mod.API;
 using Rage;
@@ -71,33 +72,28 @@ namespace ReportsPlus.Utils.Animation
                 switch (DataCollection.CitationSignalType)
                 {
                     case "2":
-                        var nearbyPed = LocalPlayer.GetNearbyPeds(1)[0];
-                        if (nearbyPed == null || !nearbyPed.Exists())
-                        {
-                            Game.LogTrivial("ReportsPlusListener: No nearby ped found or ped does not exist.");
-                            return;
-                        }
+                        var targetPed = LocalPlayer.GetNearbyPeds(4)
+                            .FirstOrDefault(p => p != null && p.Exists() && Functions.GetPersonaForPed(p).FullName
+                                .Equals(DataCollection.CitationSignalName, StringComparison.OrdinalIgnoreCase));
 
-                        if (!IsPlayerWithinDistanceOfPed(nearbyPed, 2.7f))
+                        if (targetPed == null)
                         {
                             Game.LogTrivial(
-                                $"ReportsPlusListener: Player is not within 2.7 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
-                            Game.DisplaySubtitle(
-                                $"~r~Move Closer to The Ped, Distance: ~y~{nearbyPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." +
-                                "\n~w~Press ~y~" +
-                                Misc.DiscardBind + " ~w~To Discard Citation");
+                                $"ReportsPlusListener: Ped for citation '{DataCollection.CitationSignalName}' not found in the nearest 4 peds.");
+                            Game.DisplaySubtitle("~r~Cannot Give Citation, Ped Not Found: ~y~" +
+                                                 DataCollection.CitationSignalName + "\n~w~Press ~y~" +
+                                                 Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
-                        var pedName = Functions.GetPersonaForPed(nearbyPed).FullName.ToLower();
-                        if (!pedName.Equals(DataCollection.CitationSignalName.ToLower()))
+                        if (!IsPlayerWithinDistanceOfPed(targetPed, 2.7f))
                         {
-                            Game.LogTrivial("ReportsPlusListener: ped name: " + pedName +
-                                            " is invalid. Citation for: " +
-                                            DataCollection.CitationSignalName.ToLower());
-                            Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" +
-                                                 DataCollection.CitationSignalName + "\n~w~Press ~y~" +
-                                                 Misc.DiscardBind + " ~w~To Discard Citation");
+                            Game.LogTrivial(
+                                $"ReportsPlusListener: Player is not within 2.7 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {targetPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                            Game.DisplaySubtitle(
+                                $"~r~Move Closer to The Ped, Distance: ~y~{targetPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." +
+                                "\n~w~Press ~y~" +
+                                Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 

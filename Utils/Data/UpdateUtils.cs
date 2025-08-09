@@ -46,11 +46,10 @@ namespace ReportsPlus.Utils.Data
                     var licenseStatus = persona.ELicenseState.ToString();
                     licenseExp = licenseStatus.ToLower() switch
                     {
-                        //TODO: !important find every  use here and update it to include suspended, unlicensed etc.
-                        // only issue with STP / probably base
                         "valid" => MathUtils.GenerateValidLicenseExpirationDate(),
+                        "suspended" => MathUtils.GenerateValidLicenseExpirationDate(),
                         "expired" => MathUtils.GenerateExpiredLicenseExpirationDate(3),
-                        _ => ""
+                        _ => "N/A"
                     };
 
                     Misc.PedExpirations.Add(fullName, licenseExp);

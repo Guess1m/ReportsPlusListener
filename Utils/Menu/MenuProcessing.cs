@@ -20,6 +20,7 @@ namespace ReportsPlus.Utils.Menu
 
         private static readonly MenuPool MainMenuPool = new MenuPool();
         public static UIMenu MainMenu;
+        private static bool _alprKeyWasPressed;
 
         public static bool ALPRActive { get; set; }
 
@@ -361,6 +362,19 @@ namespace ReportsPlus.Utils.Menu
                 GameFiber.Yield();
 
                 MainMenuPool.ProcessMenus();
+
+                if (Game.IsKeyDown(ALPRMenuBind))
+                {
+                    if (!_alprKeyWasPressed)
+                    {
+                        ALPRUtils.ToggleAlpr();
+                        _alprKeyWasPressed = true;
+                    }
+                }
+                else
+                {
+                    _alprKeyWasPressed = false;
+                }
 
                 if (!Game.IsKeyDown(MainMenuBind)) continue;
 

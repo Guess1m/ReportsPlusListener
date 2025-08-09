@@ -210,8 +210,9 @@ namespace ReportsPlus.Utils.Data
                 licenseExp = licenseStatus.ToLower() switch
                 {
                     "valid" => MathUtils.GenerateValidLicenseExpirationDate(),
+                    "suspended" => MathUtils.GenerateValidLicenseExpirationDate(),
                     "expired" => MathUtils.GenerateExpiredLicenseExpirationDate(3),
-                    _ => ""
+                    _ => "N/A"
                 };
 
                 Misc.PedExpirations.Add(persona.FullName, licenseExp);

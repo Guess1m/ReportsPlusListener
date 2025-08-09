@@ -8,7 +8,6 @@ using ReportsPlus.Utils.Animation;
 using static ReportsPlus.Utils.Menu.MenuProcessing;
 using static ReportsPlus.Utils.Data.UpdateUtils;
 using static ReportsPlus.Utils.Misc;
-using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 
 namespace ReportsPlus.Utils.Data
 {
@@ -24,19 +23,42 @@ namespace ReportsPlus.Utils.Data
         public static string CitationSignalPlate;
         public static string CitationSignalType;
         private static string _lastPulledOverPlate = "";
+        private static bool _giveTicketKeyWasPressed;
+        private static bool _discardTicketKeyWasPressed;
 
         public static readonly string CitationSignalFilePath =
             Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
 
         public static void KeyCollection()
         {
-            if (Game.IsKeyDown(AnimationBind)) AnimationUtils.PlayAnimation();
+            while (Main.IsOnDuty)
+            {
+                GameFiber.Yield();
 
-            if (Game.IsKeyDown(DiscardBind)) AnimationUtils.RunDiscardCitation();
+                if (Game.IsKeyDown(AnimationBind))
+                {
+                    if (!_giveTicketKeyWasPressed)
+                    {
+                        AnimationUtils.PlayAnimation();
+                        _giveTicketKeyWasPressed = true;
+                    }
+                }
+                else
+                {
+                    _giveTicketKeyWasPressed = false;
+                }
 
-            if (Game.IsKeyDown(ALPRMenuBind)) ALPRUtils.ToggleAlpr();
-
-            GameFiber.Yield();
+                if (Game.IsKeyDown(DiscardBind))
+                {
+                    if (_discardTicketKeyWasPressed) continue;
+                    AnimationUtils.RunDiscardCitation();
+                    _discardTicketKeyWasPressed = true;
+                }
+                else
+                {
+                    _discardTicketKeyWasPressed = false;
+                }
+            }
         }
 
         public static void TrafficStopCollection()
@@ -180,12 +202,11 @@ namespace ReportsPlus.Utils.Data
 
                     if (!string.IsNullOrEmpty(type))
                     {
-                        CitationSignalFound = true;
-
                         switch (type)
                         {
                             case "2": // Printed citation
                                 Game.LogTrivial("ReportsPlusListener: Received PrintedCitation for: " + name);
+                                CitationSignalFound = true;
                                 CitationSignalName = name;
                                 CitationSignalPlate = null;
                                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept",
@@ -198,6 +219,7 @@ namespace ReportsPlus.Utils.Data
 
                             case "3": // Parking citation
                                 Game.LogTrivial("ReportsPlusListener: Received ParkingCitation for: " + plate);
+                                CitationSignalFound = true;
                                 CitationSignalName = null;
                                 CitationSignalPlate = plate;
                                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept",
@@ -231,7 +253,7 @@ namespace ReportsPlus.Utils.Data
                     continue;
                 }
 
-                GameFiber.Wait(1000);
+                if (!CitationSignalFound) continue;
 
                 var giveCitationMenuButton = new UIMenuItem("Give Citation", givecitdesc)
                 {
