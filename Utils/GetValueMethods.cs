@@ -43,9 +43,7 @@ namespace ReportsPlus.Utils.Data
 
         public static string GetOwnerDobPr(Vehicle car)
         {
-            return car.GetVehicleData() == null
-                ? ""
-                : $"{car.GetVehicleData().Owner.Birthday.Month}/{car.GetVehicleData().Owner.Birthday.Day}/{car.GetVehicleData().Owner.Birthday.Year}";
+            return car.GetVehicleData() == null ? "" : $"{car.GetVehicleData().Owner.Birthday.Month}/{car.GetVehicleData().Owner.Birthday.Day}/{car.GetVehicleData().Owner.Birthday.Year}";
         }
 
         public static string GetOwnerLicenseStatePr(Vehicle car)

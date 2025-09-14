@@ -32,8 +32,7 @@ namespace ReportsPlus.Utils.ALPR
             if (ALPRButton != null)
             {
                 ALPRButton.ForeColor = ALPRActive ? Color.FromArgb(59, 171, 44) : Color.FromArgb(204, 73, 62);
-                ALPRButton.HighlightedForeColor =
-                    ALPRActive ? Color.FromArgb(0, 108, 18) : Color.FromArgb(170, 30, 32);
+                ALPRButton.HighlightedForeColor = ALPRActive ? Color.FromArgb(0, 108, 18) : Color.FromArgb(170, 30, 32);
             }
 
             if (AlprFiber is { IsAlive: true }) AlprFiber.Abort();
@@ -46,9 +45,7 @@ namespace ReportsPlus.Utils.ALPR
             catch (Exception)
             {
                 Game.LogTrivial("ReportsPlusListener [ERROR]: Error clearing previous framerender");
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                    "~r~Error",
-                    "~o~Error clearing previous framerender");
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Error", "~o~Error clearing previous framerender");
 
                 return;
             }
@@ -59,11 +56,8 @@ namespace ReportsPlus.Utils.ALPR
             if (!LicensePlateDisplay.EnablePlateDisplay) return;
             if (LicensePlateDisplay.PlateImage == null || LicensePlateDisplay.BackgroundImg == null)
             {
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                    "~r~Error Loading Images",
-                    "~o~Failed to load license plate or background image");
-                Game.LogTrivial(
-                    "ReportsPlusListener [ERROR]: Failed to load license plate images or background image when starting platedisplay!");
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Error Loading Images", "~o~Failed to load license plate or background image");
+                Game.LogTrivial("ReportsPlusListener [ERROR]: Failed to load license plate images or background image when starting platedisplay!");
                 return;
             }
 
@@ -96,18 +90,13 @@ namespace ReportsPlus.Utils.ALPR
                 var maxScannerDistance = scanners.Max(s => Vector3.Distance(patrolCar.Position, s.Position));
                 var combinedRadius = maxScannerDistance + scanners[0].Radius;
 
-                _cachedVehicleData = World
-                    .GetEntities(patrolCar.Position, combinedRadius, GetEntitiesFlags.ConsiderCars)
-                    .OfType<Vehicle>()
-                    .Where(v => v.IsValid() && v != patrolCar)
-                    .Select(v => new VehicleData
-                    {
-                        Vehicle = v,
-                        LicensePlateLower = v.LicensePlate?.ToLower() ?? "",
-                        IsPolice = v.IsPoliceVehicle,
-                        Position = v.Position
-                    })
-                    .ToList();
+                _cachedVehicleData = World.GetEntities(patrolCar.Position, combinedRadius, GetEntitiesFlags.ConsiderCars).OfType<Vehicle>().Where(v => v.IsValid() && v != patrolCar).Select(v => new VehicleData
+                {
+                    Vehicle = v,
+                    LicensePlateLower = v.LicensePlate?.ToLower() ?? "",
+                    IsPolice = v.IsPoliceVehicle,
+                    Position = v.Position
+                }).ToList();
 
                 _lastEntityUpdate = DateTime.Now;
             }
@@ -127,53 +116,13 @@ namespace ReportsPlus.Utils.ALPR
             var allScanners = new[]
             {
                 // Front-Right
-                new ScannerConfig(
-                    vehicle.GetOffsetPosition(new Vector3(
-                        sideOffset,
-                        max.Y * frontBackOffset - 0.75f,
-                        max.Z + scannerHeight
-                    )),
-                    (vehicle.RightVector * 0.8f + vehicle.ForwardVector * 0.7f).ToNormalized(),
-                    ScanRadius,
-                    PlateScanLocation.FrontRight,
-                    ScannerPositionType.Front
-                ),
+                new ScannerConfig(vehicle.GetOffsetPosition(new Vector3(sideOffset, max.Y * frontBackOffset - 0.75f, max.Z + scannerHeight)), (vehicle.RightVector * 0.8f + vehicle.ForwardVector * 0.7f).ToNormalized(), ScanRadius, PlateScanLocation.FrontRight, ScannerPositionType.Front),
                 // Front-Left
-                new ScannerConfig(
-                    vehicle.GetOffsetPosition(new Vector3(
-                        -sideOffset,
-                        max.Y * frontBackOffset - 0.75f,
-                        max.Z + scannerHeight
-                    )),
-                    (-vehicle.RightVector * 0.8f + vehicle.ForwardVector * 0.7f).ToNormalized(),
-                    ScanRadius,
-                    PlateScanLocation.FrontLeft,
-                    ScannerPositionType.Front
-                ),
+                new ScannerConfig(vehicle.GetOffsetPosition(new Vector3(-sideOffset, max.Y * frontBackOffset - 0.75f, max.Z + scannerHeight)), (-vehicle.RightVector * 0.8f + vehicle.ForwardVector * 0.7f).ToNormalized(), ScanRadius, PlateScanLocation.FrontLeft, ScannerPositionType.Front),
                 // Rear-Right
-                new ScannerConfig(
-                    vehicle.GetOffsetPosition(new Vector3(
-                        sideOffset,
-                        -max.Y * frontBackOffset,
-                        max.Z + scannerHeight
-                    )),
-                    (vehicle.RightVector * 0.8f - vehicle.ForwardVector * 0.6f).ToNormalized(),
-                    ScanRadius,
-                    PlateScanLocation.RearRight,
-                    ScannerPositionType.Rear
-                ),
+                new ScannerConfig(vehicle.GetOffsetPosition(new Vector3(sideOffset, -max.Y * frontBackOffset, max.Z + scannerHeight)), (vehicle.RightVector * 0.8f - vehicle.ForwardVector * 0.6f).ToNormalized(), ScanRadius, PlateScanLocation.RearRight, ScannerPositionType.Rear),
                 // Rear-Left
-                new ScannerConfig(
-                    vehicle.GetOffsetPosition(new Vector3(
-                        -sideOffset,
-                        -max.Y * frontBackOffset,
-                        max.Z + scannerHeight
-                    )),
-                    (-vehicle.RightVector * 0.8f - vehicle.ForwardVector * 0.6f).ToNormalized(),
-                    ScanRadius,
-                    PlateScanLocation.RearLeft,
-                    ScannerPositionType.Rear
-                )
+                new ScannerConfig(vehicle.GetOffsetPosition(new Vector3(-sideOffset, -max.Y * frontBackOffset, max.Z + scannerHeight)), (-vehicle.RightVector * 0.8f - vehicle.ForwardVector * 0.6f).ToNormalized(), ScanRadius, PlateScanLocation.RearLeft, ScannerPositionType.Rear)
             };
 
             scanners.AddRange(setupType switch
@@ -210,9 +159,7 @@ namespace ReportsPlus.Utils.ALPR
             }
 
             var alprFilePath = $"{FileDataFolder}/alpr.data";
-            var existingPlates = new HashSet<string>(File.ReadLines(alprFilePath)
-                .Where(line => line.Contains("licenseplate="))
-                .Select(line => line.Split('=')[1].Split('&')[0]));
+            var existingPlates = new HashSet<string>(File.ReadLines(alprFilePath).Where(line => line.Contains("licenseplate=")).Select(line => line.Split('=')[1].Split('&')[0]));
 
             foreach (var targetVehicle in nearbyVehicles.Select(v => v.Vehicle))
             {
@@ -230,13 +177,10 @@ namespace ReportsPlus.Utils.ALPR
                     if (distance > scanner.Radius) continue;
 
                     var directionToPlate = (platePos - scanner.Position).ToNormalized();
-                    var horizontalAngle = (float)(Math.Acos(Vector3.Dot(scanner.Forward.ToNormalized(),
-                        directionToPlate.ToNormalized())) * (180 / Math.PI));
+                    var horizontalAngle = (float)(Math.Acos(Vector3.Dot(scanner.Forward.ToNormalized(), directionToPlate.ToNormalized())) * (180 / Math.PI));
                     if (horizontalAngle > MaxScanAngle) continue;
 
-                    var hit = World.TraceLine(scanner.Position,
-                        platePos + new Vector3(0, 0, 0.5f), TraceFlags.IntersectEverything,
-                        scanner.Vehicle);
+                    var hit = World.TraceLine(scanner.Position, platePos + new Vector3(0, 0, 0.5f), TraceFlags.IntersectEverything, scanner.Vehicle);
 
                     if (!hit.Hit || hit.HitEntity != targetVehicle) continue;
 
@@ -254,34 +198,20 @@ namespace ReportsPlus.Utils.ALPR
                 }
 
                 if (!validPlates.Any()) continue;
-                var closest = validPlates
-                    .OrderBy(p => Vector3.Distance(scanner.Position, p.Key))
-                    .First();
+                var closest = validPlates.OrderBy(p => Vector3.Distance(scanner.Position, p.Key)).First();
 
-                ProcessPlateDetection(
-                    targetVehicle,
-                    closest.Key,
-                    closest.Value,
-                    scanner,
-                    showDebug
-                );
+                ProcessPlateDetection(targetVehicle, closest.Key, closest.Value, scanner, showDebug);
             }
         }
 
-        private static void ProcessPlateDetection(Vehicle targetVehicle, Vector3 platePos, VehiclePlateType plateType,
-            ScannerConfig scanner, bool showDebug)
+        private static void ProcessPlateDetection(Vehicle targetVehicle, Vector3 platePos, VehiclePlateType plateType, ScannerConfig scanner, bool showDebug)
         {
             var plate = targetVehicle.LicensePlate;
 
             var alprFilePath = $"{FileDataFolder}/alpr.data";
             var entries = MathUtils.ParseVehicleData(File.ReadAllText(alprFilePath));
             var now = DateTimeOffset.Now;
-            var isAlreadyScanned = entries.Any(entry =>
-                entry.TryGetValue("licenseplate", out var existingPlate) &&
-                existingPlate == plate &&
-                entry.TryGetValue("timescanned", out var timeScannedStr) &&
-                DateTimeOffset.TryParse(timeScannedStr, out var timeScanned) &&
-                (now - timeScanned).TotalMilliseconds <= ReScanPlateInterval);
+            var isAlreadyScanned = entries.Any(entry => entry.TryGetValue("licenseplate", out var existingPlate) && existingPlate == plate && entry.TryGetValue("timescanned", out var timeScannedStr) && DateTimeOffset.TryParse(timeScannedStr, out var timeScanned) && (now - timeScanned).TotalMilliseconds <= ReScanPlateInterval);
 
             if (isAlreadyScanned) return;
 
@@ -327,18 +257,12 @@ namespace ReportsPlus.Utils.ALPR
 
             var oldContent = File.ReadAllText(alprFilePath);
             var delimiter = oldContent.Length > 0 ? "|" : "";
-            var data =
-                $"licenseplate={plate}&plateType={plateType}&speed={targetVehicle.Speed:F}&distance={Vector3.Distance(scanner.Position, platePos):0.0}&scanner={scanner.ScanLocation}&flags={cleanedFlags}&timescanned={DateTime.Now:o}";
+            var data = $"licenseplate={plate}&plateType={plateType}&speed={targetVehicle.Speed:F}&distance={Vector3.Distance(scanner.Position, platePos):0.0}&scanner={scanner.ScanLocation}&flags={cleanedFlags}&timescanned={DateTime.Now:o}";
             File.WriteAllText(alprFilePath, $"{oldContent}{delimiter}{data}");
 
             if (!string.IsNullOrEmpty(vehFlags.ToString()))
             {
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                    $"~b~ALPR Scan [{scanner.ScanLocation}]~s~\n",
-                    $"~y~Plate:~w~ {plate}\n" +
-                    $"~y~Plate Type:~w~ {plateType}\n" +
-                    $"~y~Distance:~w~ {Vector3.Distance(scanner.Position, platePos):0.0}\n" +
-                    $"{vehFlags}");
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", $"~b~ALPR Scan [{scanner.ScanLocation}]~s~\n", $"~y~Plate:~w~ {plate}\n" + $"~y~Plate Type:~w~ {plateType}\n" + $"~y~Distance:~w~ {Vector3.Distance(scanner.Position, platePos):0.0}\n" + $"{vehFlags}");
 
                 CreateTemporaryBlip(targetVehicle);
             }
@@ -394,21 +318,14 @@ namespace ReportsPlus.Utils.ALPR
             vehicle.Model.GetDimensions(out var min, out var max);
 
             if (!vehicle.IsBike)
-                plates.Add(
-                    vehicle.GetOffsetPosition(new Vector3(0, max.Y - 0.2f, min.Z)),
-                    VehiclePlateType.Front
-                );
+                plates.Add(vehicle.GetOffsetPosition(new Vector3(0, max.Y - 0.2f, min.Z)), VehiclePlateType.Front);
 
-            plates.Add(
-                vehicle.GetOffsetPosition(new Vector3(0, min.Y + 0.2f, min.Z)),
-                VehiclePlateType.Rear
-            );
+            plates.Add(vehicle.GetOffsetPosition(new Vector3(0, min.Y + 0.2f, min.Z)), VehiclePlateType.Rear);
 
             return plates;
         }
 
-        private static void DrawScanCone(Vector3 position, Vector3 forward, float radius, float angleDegrees,
-            Color scanColor)
+        private static void DrawScanCone(Vector3 position, Vector3 forward, float radius, float angleDegrees, Color scanColor)
         {
             const int segments = 12;
             var angleRad = MathHelper.ConvertDegreesToRadians(angleDegrees);
@@ -453,8 +370,7 @@ namespace ReportsPlus.Utils.ALPR
             }
         }
 
-        private static void InsertClosestVehicle(List<(Vehicle Vehicle, float DistanceSq)> list, Vehicle vehicle,
-            float distanceSq, int maxSize)
+        private static void InsertClosestVehicle(List<(Vehicle Vehicle, float DistanceSq)> list, Vehicle vehicle, float distanceSq, int maxSize)
         {
             var index = list.Count;
             while (index > 0 && distanceSq < list[index - 1].DistanceSq)

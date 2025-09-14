@@ -159,19 +159,7 @@ namespace ReportsPlus.Utils.Data
                 var cleanCalloutMessage = Regex.Replace(callout.CalloutMessage, @"~.*?~", "").Trim();
 
                 CalloutDoc = new XDocument(new XElement("Callouts"));
-                var calloutElement = new XElement("Callout",
-                    new XElement("Number", calloutId),
-                    new XElement("Name", name),
-                    new XElement("Type", cleanCalloutMessage),
-                    new XElement("Description", description),
-                    new XElement("Message", calMessage),
-                    new XElement("Priority", priority),
-                    new XElement("Street", street),
-                    new XElement("Area", zone.RealAreaName),
-                    new XElement("County", zone.County),
-                    new XElement("StartTime", currentTime),
-                    new XElement("StartDate", currentDate)
-                );
+                var calloutElement = new XElement("Callout", new XElement("Number", calloutId), new XElement("Name", name), new XElement("Type", cleanCalloutMessage), new XElement("Description", description), new XElement("Message", calMessage), new XElement("Priority", priority), new XElement("Street", street), new XElement("Area", zone.RealAreaName), new XElement("County", zone.County), new XElement("StartTime", currentTime), new XElement("StartDate", currentDate));
 
                 CalloutDoc.Root?.Add(calloutElement);
                 CalloutDoc.Save(Path.Combine(FileDataFolder, "callout.xml"));

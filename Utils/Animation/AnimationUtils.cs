@@ -21,11 +21,7 @@ namespace ReportsPlus.Utils.Animation
 
         private static bool CheckRequirements()
         {
-            return LocalPlayer.Exists() && LocalPlayer.IsAlive &&
-                   LocalPlayer.IsValid() && LocalPlayer.IsOnFoot &&
-                   !LocalPlayer.IsRagdoll &&
-                   !LocalPlayer.IsReloading && !LocalPlayer.IsFalling && !LocalPlayer.IsInAir &&
-                   !LocalPlayer.IsJumping && !LocalPlayer.IsInWater && !LocalPlayer.IsGettingIntoVehicle;
+            return LocalPlayer.Exists() && LocalPlayer.IsAlive && LocalPlayer.IsValid() && LocalPlayer.IsOnFoot && !LocalPlayer.IsRagdoll && !LocalPlayer.IsReloading && !LocalPlayer.IsFalling && !LocalPlayer.IsInAir && !LocalPlayer.IsJumping && !LocalPlayer.IsInWater && !LocalPlayer.IsGettingIntoVehicle;
         }
 
         private static bool IsPlayerWithinDistanceOfPed(Ped targetPed, float maxDistance)
@@ -72,28 +68,19 @@ namespace ReportsPlus.Utils.Animation
                 switch (DataCollection.CitationSignalType)
                 {
                     case "2":
-                        var targetPed = LocalPlayer.GetNearbyPeds(4)
-                            .FirstOrDefault(p => p != null && p.Exists() && Functions.GetPersonaForPed(p).FullName
-                                .Equals(DataCollection.CitationSignalName, StringComparison.OrdinalIgnoreCase));
+                        var targetPed = LocalPlayer.GetNearbyPeds(4).FirstOrDefault(p => p != null && p.Exists() && Functions.GetPersonaForPed(p).FullName.Equals(DataCollection.CitationSignalName, StringComparison.OrdinalIgnoreCase));
 
                         if (targetPed == null)
                         {
-                            Game.LogTrivial(
-                                $"ReportsPlusListener: Ped for citation '{DataCollection.CitationSignalName}' not found in the nearest 4 peds.");
-                            Game.DisplaySubtitle("~r~Cannot Give Citation, Ped Not Found: ~y~" +
-                                                 DataCollection.CitationSignalName + "\n~w~Press ~y~" +
-                                                 Misc.DiscardBind + " ~w~To Discard Citation");
+                            Game.LogTrivial($"ReportsPlusListener: Ped for citation '{DataCollection.CitationSignalName}' not found in the nearest 4 peds.");
+                            Game.DisplaySubtitle("~r~Cannot Give Citation, Ped Not Found: ~y~" + DataCollection.CitationSignalName + "\n~w~Press ~y~" + Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
                         if (!IsPlayerWithinDistanceOfPed(targetPed, 2.7f))
                         {
-                            Game.LogTrivial(
-                                $"ReportsPlusListener: Player is not within 2.7 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {targetPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
-                            Game.DisplaySubtitle(
-                                $"~r~Move Closer to The Ped, Distance: ~y~{targetPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." +
-                                "\n~w~Press ~y~" +
-                                Misc.DiscardBind + " ~w~To Discard Citation");
+                            Game.LogTrivial($"ReportsPlusListener: Player is not within 2.7 units of the ped: [{DataCollection.CitationSignalName}]. Distance: {targetPed.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                            Game.DisplaySubtitle($"~r~Move Closer to The Ped, Distance: ~y~{targetPed.Position.DistanceTo(LocalPlayer.Position):F2} ~r~units." + "\n~w~Press ~y~" + Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
@@ -108,25 +95,17 @@ namespace ReportsPlus.Utils.Animation
 
                         if (!IsPlayerWithinDistanceOfVeh(nearbyVeh, 2f))
                         {
-                            Game.LogTrivial(
-                                $"ReportsPlusListener: Player is not within 2 units of the veh: [{DataCollection.CitationSignalPlate}]. Distance: {nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} units.");
-                            Game.DisplaySubtitle(
-                                $"~w~Move Closer to The Vehicle, Distance: ~y~{nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} ~w~units." +
-                                "\n~w~Press ~y~" +
-                                Misc.DiscardBind + " ~w~To Discard Citation");
+                            Game.LogTrivial($"ReportsPlusListener: Player is not within 2 units of the veh: [{DataCollection.CitationSignalPlate}]. Distance: {nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} units.");
+                            Game.DisplaySubtitle($"~w~Move Closer to The Vehicle, Distance: ~y~{nearbyVeh.Position.DistanceTo(LocalPlayer.Position):F2} ~w~units." + "\n~w~Press ~y~" + Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
                         var vehiclePlate = nearbyVeh.LicensePlate.ToLower();
                         if (!vehiclePlate.Equals(DataCollection.CitationSignalPlate.ToLower()))
                         {
-                            Game.LogTrivial("ReportsPlusListener: vehicle plate: " + vehiclePlate +
-                                            " is invalid. Citation for: " +
-                                            DataCollection.CitationSignalPlate.ToLower());
+                            Game.LogTrivial("ReportsPlusListener: vehicle plate: " + vehiclePlate + " is invalid. Citation for: " + DataCollection.CitationSignalPlate.ToLower());
 
-                            Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" +
-                                                 DataCollection.CitationSignalPlate + "\n~w~Press ~y~" +
-                                                 Misc.DiscardBind + " ~w~To Discard Citation");
+                            Game.DisplaySubtitle("~r~Cannot Give Citation, Citation is For: ~y~" + DataCollection.CitationSignalPlate + "\n~w~Press ~y~" + Misc.DiscardBind + " ~w~To Discard Citation");
                             return;
                         }
 
@@ -158,14 +137,10 @@ namespace ReportsPlus.Utils.Animation
             switch (DataCollection.CitationSignalType)
             {
                 case "2":
-                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                        "~r~Citation Discarded",
-                        "~y~Citation for: ~b~" + DataCollection.CitationSignalName + " ~y~Has Been Discarded");
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Citation Discarded", "~y~Citation for: ~b~" + DataCollection.CitationSignalName + " ~y~Has Been Discarded");
                     break;
                 case "3":
-                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                        "~r~Citation Discarded",
-                        "~y~Citation for: ~b~" + DataCollection.CitationSignalPlate + " ~y~Has Been Discarded");
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Citation Discarded", "~y~Citation for: ~b~" + DataCollection.CitationSignalPlate + " ~y~Has Been Discarded");
                     break;
             }
 
@@ -204,8 +179,7 @@ namespace ReportsPlus.Utils.Animation
                 Game.LogTrivial("ReportsPlusListener: Playing Animation: " + StartName);
                 LocalPlayer.Tasks.PlayAnimation(StartDict, StartName, 0.7f, AnimationFlags.None);
                 GameFiber.Wait(1600);
-                NativeFunction.Natives.x28004F88151E03E0(Game.LocalPlayer.Character, StartName,
-                    StartDict, 0.5f);
+                NativeFunction.Natives.x28004F88151E03E0(Game.LocalPlayer.Character, StartName, StartDict, 0.5f);
                 Game.LogTrivial("ReportsPlusListener: Animation Finished");
                 _isAnimationActive = false;
 
@@ -214,13 +188,11 @@ namespace ReportsPlus.Utils.Animation
                     {
                         case "2":
                             Game.DisplaySubtitle("~g~Handed Citation to ~w~" + DataCollection.CitationSignalName);
-                            Game.LogTrivial("ReportsPlusListener: Handed Citation to " +
-                                            DataCollection.CitationSignalName);
+                            Game.LogTrivial("ReportsPlusListener: Handed Citation to " + DataCollection.CitationSignalName);
                             break;
                         case "3":
                             Game.DisplaySubtitle("~g~Placed Citation on ~w~" + DataCollection.CitationSignalPlate);
-                            Game.LogTrivial("ReportsPlusListener: Placed Parking Citation on " +
-                                            DataCollection.CitationSignalPlate);
+                            Game.LogTrivial("ReportsPlusListener: Placed Parking Citation on " + DataCollection.CitationSignalPlate);
                             break;
                     }
 

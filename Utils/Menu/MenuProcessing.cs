@@ -20,7 +20,6 @@ namespace ReportsPlus.Utils.Menu
 
         private static readonly MenuPool MainMenuPool = new MenuPool();
         public static UIMenu MainMenu;
-        private static bool _alprKeyWasPressed;
 
         public static bool ALPRActive { get; set; }
 
@@ -28,44 +27,35 @@ namespace ReportsPlus.Utils.Menu
         {
             MainMenu = new UIMenu("ReportsPlus", "Main Menu");
 
-            var openPlateSettingsMenuButton =
-                new UIMenuItem("Plate Display Settings", "Configure onscreen license plate display")
-                {
-                    ForeColor = Color.FromArgb(121, 163, 224),
-                    HighlightedForeColor = Color.FromArgb(68, 95, 224)
-                };
+            var openPlateSettingsMenuButton = new UIMenuItem("Plate Display Settings", "Configure onscreen license plate display")
+            {
+                ForeColor = Color.FromArgb(121, 163, 224),
+                HighlightedForeColor = Color.FromArgb(68, 95, 224)
+            };
 
             var alprMenu = new UIMenu("ALPR", "ALPR Menu");
-            var successfulScanProbability = new UIMenuNumericScrollerItem<int>("Success Percentage",
-                "(RECOMMENDED) Percentage of a plate being scanned successfully. This is needed since STP/PR have very high rates for flags on vehicles.",
-                1, 100, 1)
+            var successfulScanProbability = new UIMenuNumericScrollerItem<int>("Success Percentage", "(RECOMMENDED) Percentage of a plate being scanned successfully. This is needed since STP/PR have very high rates for flags on vehicles.", 1, 100, 1)
             {
                 Value = ALPRSuccessfulScanProbability
             };
-            var rescanPlateInterval = new UIMenuNumericScrollerItem<int>("Rescan Interval",
-                "Interval for a plate being scanned again (sec)", 10, 900, 10)
+            var rescanPlateInterval = new UIMenuNumericScrollerItem<int>("Rescan Interval", "Interval for a plate being scanned again (sec)", 10, 900, 10)
             {
                 Value = ReScanPlateInterval / 1000
             };
-            var alprUpdateDelay = new UIMenuNumericScrollerItem<int>("ALPR Update Delay",
-                "Interval for ALPR to update (ms). Lower values *can* impact fps (1000ms = 1sec)", 0, 1500,
-                50)
+            var alprUpdateDelay = new UIMenuNumericScrollerItem<int>("ALPR Update Delay", "Interval for ALPR to update (ms). Lower values *can* impact fps (1000ms = 1sec)", 0, 1500, 50)
             {
                 Value = ALPRUpdateDelay
             };
 
-            var scanRadius = new UIMenuNumericScrollerItem<float>("Scan Radius",
-                "Radius of the scanners (distance)", 7, 20, 1)
+            var scanRadius = new UIMenuNumericScrollerItem<float>("Scan Radius", "Radius of the scanners (distance)", 7, 20, 1)
             {
                 Value = ScanRadius
             };
-            var maxScanAngle = new UIMenuNumericScrollerItem<float>("Max Scan Angle",
-                "Maximum angle of the alpr scanners", 20, 55, 1)
+            var maxScanAngle = new UIMenuNumericScrollerItem<float>("Max Scan Angle", "Maximum angle of the alpr scanners", 20, 55, 1)
             {
                 Value = MaxScanAngle
             };
-            var alprBlipDisplayTime = new UIMenuNumericScrollerItem<int>("ALPR Blip Duration",
-                "Duration of the ALPR blip (sec)", 5, 60, 5)
+            var alprBlipDisplayTime = new UIMenuNumericScrollerItem<int>("ALPR Blip Duration", "Duration of the ALPR blip (sec)", 5, 60, 5)
             {
                 Value = BlipDisplayTime / 1000
             };
@@ -77,8 +67,7 @@ namespace ReportsPlus.Utils.Menu
                 Checked = ShowAlprDebug
             };
 
-            var alprType = new UIMenuListScrollerItem<ALPRUtils.AlprSetupType>("ALPR Type", "Set the type of ALPR",
-                new[] { ALPRUtils.AlprSetupType.All, ALPRUtils.AlprSetupType.Front, ALPRUtils.AlprSetupType.Rear })
+            var alprType = new UIMenuListScrollerItem<ALPRUtils.AlprSetupType>("ALPR Type", "Set the type of ALPR", new[] { ALPRUtils.AlprSetupType.All, ALPRUtils.AlprSetupType.Front, ALPRUtils.AlprSetupType.Rear })
             {
                 SelectedItem = AlprSetupType
             };
@@ -107,116 +96,93 @@ namespace ReportsPlus.Utils.Menu
                 ALPRUtils.ToggleAlpr();
                 ALPRButton.Enabled = true;
             };
-            alprMenu.AddItems(ALPRButton, alprType, successfulScanProbability, rescanPlateInterval, scanRadius,
-                maxScanAngle,
-                alprBlipDisplayTime, alprUpdateDelay, showDebugLines, openPlateSettingsMenuButton);
+            alprMenu.AddItems(ALPRButton, alprType, successfulScanProbability, rescanPlateInterval, scanRadius, maxScanAngle, alprBlipDisplayTime, alprUpdateDelay, showDebugLines, openPlateSettingsMenuButton);
 
             var plateDisplayMenu = new UIMenu("Plate Display Menu", "Plate Display Settings");
-            var enablePlateDisplay =
-                new UIMenuCheckboxItem("Show Plate Display", LicensePlateDisplay.EnablePlateDisplay,
-                    "Toggle in-game plate display")
-                {
-                    Style = UIMenuCheckboxStyle.Cross,
-                    ForeColor = Color.FromArgb(185, 185, 185),
-                    HighlightedForeColor = Color.FromArgb(40, 40, 40),
-                    Checked = LicensePlateDisplay.EnablePlateDisplay
-                };
+            var enablePlateDisplay = new UIMenuCheckboxItem("Show Plate Display", LicensePlateDisplay.EnablePlateDisplay, "Toggle in-game plate display")
+            {
+                Style = UIMenuCheckboxStyle.Cross,
+                ForeColor = Color.FromArgb(185, 185, 185),
+                HighlightedForeColor = Color.FromArgb(40, 40, 40),
+                Checked = LicensePlateDisplay.EnablePlateDisplay
+            };
 
-            var EnableDisplayOnFoot =
-                new UIMenuCheckboxItem("Display On Foot", LicensePlateDisplay.EnableDisplayOnFoot,
-                    "Toggle whether to display plates when on foot")
-                {
-                    Style = UIMenuCheckboxStyle.Cross,
-                    ForeColor = Color.FromArgb(185, 185, 185),
-                    HighlightedForeColor = Color.FromArgb(40, 40, 40),
-                    Checked = LicensePlateDisplay.EnableDisplayOnFoot
-                };
+            var EnableDisplayOnFoot = new UIMenuCheckboxItem("Display On Foot", LicensePlateDisplay.EnableDisplayOnFoot, "Toggle whether to display plates when on foot")
+            {
+                Style = UIMenuCheckboxStyle.Cross,
+                ForeColor = Color.FromArgb(185, 185, 185),
+                HighlightedForeColor = Color.FromArgb(40, 40, 40),
+                Checked = LicensePlateDisplay.EnableDisplayOnFoot
+            };
 
-            var plateDisplayX = new UIMenuNumericScrollerItem<float>("Plate Display X",
-                "Horizontal position of plate display", 0f, 3000f, 10f)
+            var plateDisplayX = new UIMenuNumericScrollerItem<float>("Plate Display X", "Horizontal position of plate display", 0f, 3000f, 10f)
             {
                 Value = LicensePlateDisplay.BackgroundPositionX,
                 ForeColor = Color.FromArgb(42, 157, 185),
                 HighlightedForeColor = Color.FromArgb(20, 105, 185)
             };
 
-            var plateDisplayY = new UIMenuNumericScrollerItem<float>("Plate Display Y",
-                "Vertical position of plate display", 0f, 2000f, 10f)
+            var plateDisplayY = new UIMenuNumericScrollerItem<float>("Plate Display Y", "Vertical position of plate display", 0f, 2000f, 10f)
             {
                 Value = LicensePlateDisplay.BackgroundPositionY,
                 ForeColor = Color.FromArgb(42, 157, 185),
                 HighlightedForeColor = Color.FromArgb(20, 105, 185)
             };
 
-            var plateSpacing = new UIMenuNumericScrollerItem<float>("Plate Spacing",
-                "Space between front/rear plates", 5f, 50f, 1f)
+            var plateSpacing = new UIMenuNumericScrollerItem<float>("Plate Spacing", "Space between front/rear plates", 5f, 50f, 1f)
             {
                 Value = LicensePlateDisplay.PlateSpacing,
                 ForeColor = Color.FromArgb(52, 185, 128),
                 HighlightedForeColor = Color.FromArgb(15, 150, 24)
             };
 
-            var labelSize = new UIMenuNumericScrollerItem<float>("Label Size",
-                "Text size for front/rear labels", 8f, 30f, 1f)
+            var labelSize = new UIMenuNumericScrollerItem<float>("Label Size", "Text size for front/rear labels", 8f, 30f, 1f)
             {
                 Value = LicensePlateDisplay.LabelFontSize,
                 ForeColor = Color.FromArgb(185, 148, 80),
                 HighlightedForeColor = Color.FromArgb(162, 104, 13)
             };
 
-            var labelOffset = new UIMenuNumericScrollerItem<float>("Label Offset",
-                "Vertical offset for labels", 0f, 50f, 1f)
+            var labelOffset = new UIMenuNumericScrollerItem<float>("Label Offset", "Vertical offset for labels", 0f, 50f, 1f)
             {
                 Value = LicensePlateDisplay.LabelVerticalOffset,
                 ForeColor = Color.FromArgb(185, 148, 80),
                 HighlightedForeColor = Color.FromArgb(162, 104, 13)
             };
 
-            var licensePlateVerticalOffset = new UIMenuNumericScrollerItem<float>("Plate Offset",
-                "Vertical offset for plates", 0f, 50f, 1f)
+            var licensePlateVerticalOffset = new UIMenuNumericScrollerItem<float>("Plate Offset", "Vertical offset for plates", 0f, 50f, 1f)
             {
                 Value = LicensePlateDisplay.LicensePlateVerticalOffset,
                 ForeColor = Color.FromArgb(52, 185, 128),
                 HighlightedForeColor = Color.FromArgb(15, 150, 24)
             };
 
-            var plateNumberFontSize = new UIMenuNumericScrollerItem<float>("Plate Number Size",
-                "Font size for plate numbers", 0f, 50f, 1f)
+            var plateNumberFontSize = new UIMenuNumericScrollerItem<float>("Plate Number Size", "Font size for plate numbers", 0f, 50f, 1f)
             {
                 Value = LicensePlateDisplay.PlateTextFontSize,
                 ForeColor = Color.FromArgb(181, 42, 185),
                 HighlightedForeColor = Color.FromArgb(128, 0, 167)
             };
 
-            var plateNumberOffset = new UIMenuNumericScrollerItem<float>("Plate Number Offset",
-                "Vertical offset for plate numbers", 0f, 50f, 1f)
+            var plateNumberOffset = new UIMenuNumericScrollerItem<float>("Plate Number Offset", "Vertical offset for plate numbers", 0f, 50f, 1f)
             {
                 Value = LicensePlateDisplay.PlateTextVerticalOffset,
                 ForeColor = Color.FromArgb(181, 42, 185),
                 HighlightedForeColor = Color.FromArgb(128, 0, 167)
             };
 
-            var plateTextColor = new UIMenuListScrollerItem<Color>("Plate Text Color",
-                "Set the color of the plate numbers",
-                LicensePlateDisplay.ColorPresets.Keys.ToArray())
+            var plateTextColor = new UIMenuListScrollerItem<Color>("Plate Text Color", "Set the color of the plate numbers", LicensePlateDisplay.ColorPresets.Keys.ToArray())
             {
-                Formatter = color => LicensePlateDisplay.ColorPresets.TryGetValue(color, out var name)
-                    ? name
-                    : $"Custom ({color.R},{color.G},{color.B})",
+                Formatter = color => LicensePlateDisplay.ColorPresets.TryGetValue(color, out var name) ? name : $"Custom ({color.R},{color.G},{color.B})",
 
-                SelectedItem = LicensePlateDisplay.ColorPresets.Keys.FirstOrDefault(c =>
-                    c.A == LicensePlateDisplay.PlateTextColor.A &&
-                    c.R == LicensePlateDisplay.PlateTextColor.R &&
-                    c.G == LicensePlateDisplay.PlateTextColor.G &&
-                    c.B == LicensePlateDisplay.PlateTextColor.B),
+                SelectedItem = LicensePlateDisplay.ColorPresets.Keys.FirstOrDefault(c => c.A == LicensePlateDisplay.PlateTextColor.A && c.R == LicensePlateDisplay.PlateTextColor.R && c.G == LicensePlateDisplay.PlateTextColor.G && c.B == LicensePlateDisplay.PlateTextColor.B),
                 ForeColor = Color.FromArgb(181, 42, 185),
                 HighlightedForeColor = Color.FromArgb(128, 0, 167)
             };
 
             if (!LicensePlateDisplay.AvailableColors.Contains(plateTextColor.SelectedItem))
                 plateTextColor.SelectedItem = Color.Black;
-            var bgScale = new UIMenuNumericScrollerItem<float>("Background Scale",
-                "Size of background image", 0.1f, 3.0f, 0.01f)
+            var bgScale = new UIMenuNumericScrollerItem<float>("Background Scale", "Size of background image", 0.1f, 3.0f, 0.01f)
             {
                 Value = LicensePlateDisplay.BackgroundScale,
                 Formatter = v => $"{v * 100}%",
@@ -224,16 +190,14 @@ namespace ReportsPlus.Utils.Menu
                 HighlightedForeColor = Color.FromArgb(145, 127, 0)
             };
 
-            var plateWidth = new UIMenuNumericScrollerItem<float>("Plate Width",
-                "Width of license plates", 50f, 300f, 1f)
+            var plateWidth = new UIMenuNumericScrollerItem<float>("Plate Width", "Width of license plates", 50f, 300f, 1f)
             {
                 Value = LicensePlateDisplay.TargetPlateWidth,
                 ForeColor = Color.FromArgb(52, 185, 128),
                 HighlightedForeColor = Color.FromArgb(15, 150, 24)
             };
 
-            var plateHeight = new UIMenuNumericScrollerItem<float>("Plate Height",
-                "Height of license plates", 20f, 100f, 1f)
+            var plateHeight = new UIMenuNumericScrollerItem<float>("Plate Height", "Height of license plates", 20f, 100f, 1f)
             {
                 Value = LicensePlateDisplay.TargetPlateHeight,
                 ForeColor = Color.FromArgb(52, 185, 128),
@@ -274,11 +238,8 @@ namespace ReportsPlus.Utils.Menu
                 IniFile.Write("PlateDisplay", "EnableDisplayOnFoot", EnableDisplayOnFoot.Checked);
                 LicensePlateDisplay.EnableDisplayOnFoot = EnableDisplayOnFoot.Checked;
 
-                var selectedColor = LicensePlateDisplay.AvailableColors.Contains(plateTextColor.SelectedItem)
-                    ? plateTextColor.SelectedItem
-                    : Color.Black;
-                IniFile.Write("PlateDisplay", "PlateTextColor",
-                    $"{selectedColor.A},{selectedColor.R},{selectedColor.G},{selectedColor.B}");
+                var selectedColor = LicensePlateDisplay.AvailableColors.Contains(plateTextColor.SelectedItem) ? plateTextColor.SelectedItem : Color.Black;
+                IniFile.Write("PlateDisplay", "PlateTextColor", $"{selectedColor.A},{selectedColor.R},{selectedColor.G},{selectedColor.B}");
                 LicensePlateDisplay.PlateTextColor = selectedColor;
             };
 
@@ -334,17 +295,12 @@ namespace ReportsPlus.Utils.Menu
                 LicensePlateDisplay.BackgroundScale = 1.04f;
                 LicensePlateDisplay.PlateTextColor = Color.FromArgb(43, 49, 127);
 
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                    "~g~Success",
-                    "Plate display settings reset to defaults!");
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Success", "Plate display settings reset to defaults!");
             };
 
             var placeholder = new UIMenuItem("", "") { Skipped = true, Enabled = false };
 
-            plateDisplayMenu.AddItems(enablePlateDisplay, bgScale, plateDisplayX, plateDisplayY, labelSize, labelOffset,
-                plateSpacing, plateWidth, plateHeight, licensePlateVerticalOffset, plateNumberOffset,
-                plateNumberFontSize, plateTextColor, placeholder, EnableDisplayOnFoot, resetDefaultsButton,
-                savePlateDisplaySettings);
+            plateDisplayMenu.AddItems(enablePlateDisplay, bgScale, plateDisplayX, plateDisplayY, labelSize, labelOffset, plateSpacing, plateWidth, plateHeight, licensePlateVerticalOffset, plateNumberOffset, plateNumberFontSize, plateTextColor, placeholder, EnableDisplayOnFoot, resetDefaultsButton, savePlateDisplaySettings);
 
             var openALPRMenuButton = new UIMenuItem("ALPR Menu", "Open the ALPR settings menu");
             MainMenu.AddItems(openALPRMenuButton);
@@ -361,20 +317,9 @@ namespace ReportsPlus.Utils.Menu
             {
                 GameFiber.Yield();
 
-                MainMenuPool.ProcessMenus();
+                if (MainMenuBind == Keys.None) continue;
 
-                if (Game.IsKeyDown(ALPRMenuBind))
-                {
-                    if (!_alprKeyWasPressed)
-                    {
-                        ALPRUtils.ToggleAlpr();
-                        _alprKeyWasPressed = true;
-                    }
-                }
-                else
-                {
-                    _alprKeyWasPressed = false;
-                }
+                MainMenuPool.ProcessMenus();
 
                 if (!Game.IsKeyDown(MainMenuBind)) continue;
 

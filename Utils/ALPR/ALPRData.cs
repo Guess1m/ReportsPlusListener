@@ -21,8 +21,7 @@ namespace ReportsPlus.Utils.ALPR
 
         private class ScannerConfig
         {
-            public ScannerConfig(Vector3 position, Vector3 forward, float radius,
-                PlateScanLocation scanLocation, ScannerPositionType positionType)
+            public ScannerConfig(Vector3 position, Vector3 forward, float radius, PlateScanLocation scanLocation, ScannerPositionType positionType)
             {
                 Position = position;
                 Forward = forward;

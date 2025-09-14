@@ -35,99 +35,85 @@ namespace ReportsPlus.Utils
 
             if (!IniFile.DoesKeyExist("Settings", "MenuKey"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: MenuKey Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: MenuKey Config setting didn't exist, creating");
                 IniFile.Write("Settings", "MenuKey", Keys.F7);
             }
 
             if (!IniFile.DoesKeyExist("Settings", "ALPRKey"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ALPRKey Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRKey Config setting didn't exist, creating");
                 IniFile.Write("Settings", "ALPRKey", Keys.None);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRType"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ALPRType Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRType Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "ALPRType", ALPRUtils.AlprSetupType.Front);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "PlateTextColor"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: PlateTextColor Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateTextColor Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "PlateTextColor", Color.FromArgb(43, 49, 127));
             }
 
             if (!IniFile.DoesKeyExist("Settings", "DataRefreshInterval"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: DataRefreshInterval Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: DataRefreshInterval Config setting didn't exist, creating");
                 IniFile.Write("Settings", "DataRefreshInterval", 15000);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "RescanPlateInterval"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: RescanPlateInterval Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: RescanPlateInterval Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "RescanPlateInterval", 600000);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRSuccessfulScanProbability"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ALPRSuccessfulScanProbability Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRSuccessfulScanProbability Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "ALPRSuccessfulScanProbability", 20);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ScanRadius"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ScanRadius Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ScanRadius Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "ScanRadius", 13f);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "MaxScanAngle"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: MaxScanAngle Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: MaxScanAngle Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "MaxScanAngle", 40f);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ShowAlprDebug"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ShowAlprDebug Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ShowAlprDebug Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "ShowAlprDebug", false);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "EnablePlateDisplay"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: EnablePlateDisplay Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: EnablePlateDisplay Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "EnablePlateDisplay", true);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "EnableDisplayOnFoot"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: EnableDisplayOnFoot Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: EnableDisplayOnFoot Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "EnableDisplayOnFoot", true);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "BlipDisplayTime"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: BlipDisplayTime Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: BlipDisplayTime Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "BlipDisplayTime", 15000);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRUpdateDelay"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ALPRUpdateDelay Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRUpdateDelay Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "ALPRUpdateDelay", 400);
             }
 
@@ -145,8 +131,7 @@ namespace ReportsPlus.Utils
 
             if (!IniFile.DoesKeyExist("Probabilities", "ExpiredProbability"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: ExpiredProbability Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: ExpiredProbability Config setting didn't exist, creating");
                 IniFile.Write("Probabilities", "ExpiredProbability", 20);
             }
 
@@ -158,8 +143,7 @@ namespace ReportsPlus.Utils
 
             if (!IniFile.DoesKeyExist("Probabilities", "RevokedProbability"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: RevokedProbability Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: RevokedProbability Config setting didn't exist, creating");
                 IniFile.Write("Probabilities", "RevokedProbability", 5);
             }
 
@@ -171,22 +155,19 @@ namespace ReportsPlus.Utils
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "BackgroundPositionX"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: BackgroundPositionX Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: BackgroundPositionX Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "BackgroundPositionX", 330f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "BackgroundPositionY"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: BackgroundPositionY Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: BackgroundPositionY Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "BackgroundPositionY", 900f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "TargetPlateHeight"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: TargetPlateHeight Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: TargetPlateHeight Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "TargetPlateHeight", 50f);
             }
 
@@ -204,29 +185,25 @@ namespace ReportsPlus.Utils
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "LabelVerticalOffset"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: LabelVerticalOffset Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: LabelVerticalOffset Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "LabelVerticalOffset", 19f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "LicensePlateVerticalOffset"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: LicensePlateVerticalOffset Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: LicensePlateVerticalOffset Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "LicensePlateVerticalOffset", 5f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "PlateTextVerticalOffset"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: PlateTextVerticalOffset Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateTextVerticalOffset Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "PlateTextVerticalOffset", 15f);
             }
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "PlateTextFontSize"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: PlateTextFontSize Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateTextFontSize Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "PlateTextFontSize", 20f);
             }
 
@@ -244,8 +221,7 @@ namespace ReportsPlus.Utils
 
             if (!IniFile.DoesKeyExist("PlateDisplay", "TargetPlateHeight"))
             {
-                Game.LogTrivial(
-                    "ReportsPlusListener {CONFIG}: TargetPlateHeight Config setting didn't exist, creating");
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: TargetPlateHeight Config setting didn't exist, creating");
                 IniFile.Write("PlateDisplay", "TargetPlateHeight", 50f);
             }
 
@@ -281,14 +257,9 @@ namespace ReportsPlus.Utils
             EnablePlateDisplay = IniFile.ReadBoolean("PlateDisplay", "EnablePlateDisplay", true);
             EnableDisplayOnFoot = IniFile.ReadBoolean("PlateDisplay", "EnableDisplayOnFoot", true);
 
-            var colorParts = IniFile.ReadString("PlateDisplay", "PlateTextColor", "255,43,49,127").Split(',')
-                .Select(int.Parse).ToArray();
+            var colorParts = IniFile.ReadString("PlateDisplay", "PlateTextColor", "255,43,49,127").Split(',').Select(int.Parse).ToArray();
             var tempColor = Color.FromArgb(colorParts[0], colorParts[1], colorParts[2], colorParts[3]);
-            PlateTextColor = AvailableColors.FirstOrDefault(c =>
-                c.A == tempColor.A &&
-                c.R == tempColor.R &&
-                c.G == tempColor.G &&
-                c.B == tempColor.B);
+            PlateTextColor = AvailableColors.FirstOrDefault(c => c.A == tempColor.A && c.R == tempColor.R && c.G == tempColor.G && c.B == tempColor.B);
             if (PlateTextColor == Color.Empty)
                 PlateTextColor = Color.Black;
 
@@ -299,8 +270,7 @@ namespace ReportsPlus.Utils
             Game.LogTrivial("ReportsPlusListener {CONFIG}: GiveTicket Keybind- '" + AnimationBind + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: Discard Citation Keybind- '" + DiscardBind + "'");
 
-            Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRSuccessfulScanProbability- '" +
-                            ALPRSuccessfulScanProbability + "'");
+            Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRSuccessfulScanProbability- '" + ALPRSuccessfulScanProbability + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRUpdateDelay- '" + ALPRUpdateDelay + "'");
 
             Game.LogTrivial("ReportsPlusListener {CONFIG}: ScanRadius- '" + ScanRadius + "'");
@@ -322,8 +292,7 @@ namespace ReportsPlus.Utils
             Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateSpacing- '" + PlateSpacing + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: LabelFontSize- '" + LabelFontSize + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: LabelVerticalOffset- '" + LabelVerticalOffset + "'");
-            Game.LogTrivial("ReportsPlusListener {CONFIG}: LicensePlateVerticalOffset- '" + LicensePlateVerticalOffset +
-                            "'");
+            Game.LogTrivial("ReportsPlusListener {CONFIG}: LicensePlateVerticalOffset- '" + LicensePlateVerticalOffset + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateTextVerticalOffset- '" + PlateTextVerticalOffset + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateTextFontSize- '" + PlateTextFontSize + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: PlateTextColor- '" + PlateTextColor + "'");
@@ -347,8 +316,7 @@ namespace ReportsPlus.Utils
         {
             if (!Directory.Exists(FileDataFolder)) Directory.CreateDirectory(FileDataFolder);
 
-            string[] filesToCreate =
-                { "callout.xml", "currentID.xml", "worldCars.data", "worldPeds.data", "trafficStop.data", "alpr.data" };
+            string[] filesToCreate = { "callout.xml", "currentID.xml", "worldCars.data", "worldPeds.data", "trafficStop.data", "alpr.data" };
 
             foreach (var fileName in filesToCreate)
                 try

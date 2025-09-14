@@ -81,17 +81,7 @@ namespace ReportsPlus.Utils.Data
                 }
             }
 
-            var newEntry = new XElement("ID",
-                new XElement("Name", fullName),
-                new XElement("Birthday", $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}"),
-                new XElement("Gender", gender),
-                new XElement("Address", address),
-                new XElement("PedModel", pedModel),
-                new XElement("LicenseNumber", licenseNumber),
-                new XElement("Expiration", licenseExp),
-                new XElement("Height", height),
-                new XElement("Weight", weight)
-            );
+            var newEntry = new XElement("ID", new XElement("Name", fullName), new XElement("Birthday", $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}"), new XElement("Gender", gender), new XElement("Address", address), new XElement("PedModel", pedModel), new XElement("LicenseNumber", licenseNumber), new XElement("Expiration", licenseExp), new XElement("Height", height), new XElement("Weight", weight));
 
             var newDoc = new XDocument(new XElement("IDs"));
             newDoc.Root?.Add(newEntry);
@@ -142,8 +132,7 @@ namespace ReportsPlus.Utils.Data
                 File.AppendAllText(filePath, $"{delimiter}{string.Join("|", newEntries)}");
             }
 
-            Game.LogTrivial(
-                $"ReportsPlusListener: Added [{newEntries.Count}] new vehicles to worldCars.data, vehicles no longer in world: [{MathUtils.RemoveOldPlates("worldCars.data", 600000)}] removed");
+            Game.LogTrivial($"ReportsPlusListener: Added [{newEntries.Count}] new vehicles to worldCars.data, vehicles no longer in world: [{MathUtils.RemoveOldPlates("worldCars.data", 600000)}] removed");
         }
 
         public static void RefreshPeds()
@@ -195,10 +184,7 @@ namespace ReportsPlus.Utils.Data
             }
 
             var removedCount = 0;
-            var activePedIds = allPeds
-                .Where(p => p != null && p.Exists())
-                .Select(p => $"ped_{p.Handle}")
-                .ToHashSet();
+            var activePedIds = allPeds.Where(p => p != null && p.Exists()).Select(p => $"ped_{p.Handle}").ToHashSet();
 
             foreach (var pedId in existingPeds.Keys.ToList().Where(pedId => !activePedIds.Contains(pedId)))
             {
@@ -209,8 +195,7 @@ namespace ReportsPlus.Utils.Data
             var newContent = string.Join("|", existingPeds.Values);
             File.WriteAllText(filePath, newContent);
 
-            Game.LogTrivial(
-                $"ReportsPlusListener: Added [{newEntries.Count}] new peds to worldPeds.data, peds no longer in world: [{removedCount}] removed");
+            Game.LogTrivial($"ReportsPlusListener: Added [{newEntries.Count}] new peds to worldPeds.data, peds no longer in world: [{removedCount}] removed");
         }
 
         public static void RefreshGameData()
@@ -223,9 +208,7 @@ namespace ReportsPlus.Utils.Data
 
             var currentStreet = World.GetStreetName(LocalPlayer.Position);
             var currentZone = GetPedCurrentZoneName();
-            var currentCounty =
-                MathUtils.ParseCountyString(Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).County
-                    .ToString());
+            var currentCounty = MathUtils.ParseCountyString(Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).County.ToString());
 
             var fullLocation = currentStreet + ", " + currentZone + ", " + currentCounty;
 

@@ -92,23 +92,14 @@ namespace ReportsPlus
 
             _primaryFiber = GameFiber.StartNew(() =>
             {
-                _playerStateCheckFiber =
-                    GameFiber.StartNew(UpdatePlayerState, "ReportsPlus-UpdatePlayerState");
-                DataCollection.TrafficStopCollectionFiber =
-                    GameFiber.StartNew(DataCollection.TrafficStopCollection, "ReportsPlus-TrafficStopCollection");
-                DataCollection.KeyCollectionFiber =
-                    GameFiber.StartNew(DataCollection.KeyCollection, "ReportsPlus-KeyCollection");
-                MenuProcessing.MenuProcessingFiber =
-                    GameFiber.StartNew(MenuProcessing.ProcessMenus, "ReportsPlus-MenuProcessing");
-                DataCollection.WorldDataCollectionFiber =
-                    GameFiber.StartNew(DataCollection.WorldDataCollection, "DReportsPlus-ataCollection");
-                DataCollection.SignalFileCheckFiber =
-                    GameFiber.StartNew(DataCollection.SignalFileCheck, "ReportsPlus-SignalFileCheck");
+                _playerStateCheckFiber = GameFiber.StartNew(UpdatePlayerState, "ReportsPlus-UpdatePlayerState");
+                DataCollection.TrafficStopCollectionFiber = GameFiber.StartNew(DataCollection.TrafficStopCollection, "ReportsPlus-TrafficStopCollection");
+                DataCollection.KeyCollectionFiber = GameFiber.StartNew(DataCollection.KeyCollection, "ReportsPlus-KeyCollection");
+                MenuProcessing.MenuProcessingFiber = GameFiber.StartNew(MenuProcessing.ProcessMenus, "ReportsPlus-MenuProcessing");
+                DataCollection.WorldDataCollectionFiber = GameFiber.StartNew(DataCollection.WorldDataCollection, "DReportsPlus-ataCollection");
+                DataCollection.SignalFileCheckFiber = GameFiber.StartNew(DataCollection.SignalFileCheck, "ReportsPlus-SignalFileCheck");
 
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlusListener",
-                    "By: ~y~Guess1m",
-                    "~g~Version: " + Version + " Loaded!" + "\n" + "~w~Menu Keybind: ~y~" +
-                    MenuProcessing.MainMenuBind + "\n" + checksOutcome);
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlusListener", "By: ~y~Guess1m", "~g~Version: " + Version + " Loaded!" + "\n" + "~w~Menu Keybind: ~y~" + MenuProcessing.MainMenuBind + "\n" + checksOutcome);
 
                 Game.LogTrivial("ReportsPlusListener: " + Version + ", Loaded Successfully");
             }, "ReportsPlusListener");

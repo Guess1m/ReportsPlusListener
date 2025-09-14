@@ -37,9 +37,7 @@ namespace ReportsPlus.Utils
                 "[csb_mrs_r][0][0]", "[mp_f_counterfeit_01][0][0]", "[mp_f_cardesign_01][0][0]"
             };
 
-            return gender.ToLower().Equals("male")
-                ? maleModels[Rand.Next(maleModels.Count)]
-                : femaleModels[Rand.Next(femaleModels.Count)];
+            return gender.ToLower().Equals("male") ? maleModels[Rand.Next(maleModels.Count)] : femaleModels[Rand.Next(femaleModels.Count)];
         }
 
         public static bool CheckProbability(int probability)
@@ -122,8 +120,7 @@ namespace ReportsPlus.Utils
             return expirationDate.ToString("MM-dd-yyyy");
         }
 
-        public static string GetRandomVehicleStatus(int expiredChance, int noneChance, int validChance,
-            int revokedChance)
+        public static string GetRandomVehicleStatus(int expiredChance, int noneChance, int validChance, int revokedChance)
         {
             var totalChance = expiredChance + noneChance + validChance + revokedChance;
 
@@ -136,8 +133,7 @@ namespace ReportsPlus.Utils
             return randomValue <= expiredChance + noneChance + validChance ? "Valid" : "Revoked";
         }
 
-        public static string GetRandomLicenseStatus(int expiredChance, int noneChance, int validChance,
-            int suspendedChance)
+        public static string GetRandomLicenseStatus(int expiredChance, int noneChance, int validChance, int suspendedChance)
         {
             var totalChance = expiredChance + noneChance + validChance + suspendedChance;
 
@@ -171,12 +167,7 @@ namespace ReportsPlus.Utils
             if (Rand.Next(1, 101) <= coverageProbabilities["Liability Coverage"])
                 selectedCoverages.Add("Liability Coverage");
 
-            foreach (var entry in from entry in coverageProbabilities
-                     where entry.Key != "Liability Coverage" || !selectedCoverages.Contains("Liability Coverage")
-                     let roll = Rand.Next(1, 101)
-                     where roll <= entry.Value
-                     where !selectedCoverages.Contains(entry.Key)
-                     select entry)
+            foreach (var entry in from entry in coverageProbabilities where entry.Key != "Liability Coverage" || !selectedCoverages.Contains("Liability Coverage") let roll = Rand.Next(1, 101) where roll <= entry.Value where !selectedCoverages.Contains(entry.Key) select entry)
                 selectedCoverages.Add(entry.Key);
 
             if (!selectedCoverages.Contains("Liability Coverage")) selectedCoverages.Insert(0, "Liability Coverage");
@@ -234,8 +225,7 @@ namespace ReportsPlus.Utils
         {
             if (!MenuProcessing.ALPRActive) return false;
             if (ALPRSuccessfulScanProbability <= 100) return Rand.Next(0, 100) > ALPRSuccessfulScanProbability;
-            Game.LogTrivial(
-                "ReportsPlusListener: Error: successPercentage > 100; its: " + ALPRSuccessfulScanProbability);
+            Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " + ALPRSuccessfulScanProbability);
             ALPRSuccessfulScanProbability = 20;
 
             return Rand.Next(0, 100) < ALPRSuccessfulScanProbability;
@@ -257,8 +247,7 @@ namespace ReportsPlus.Utils
         public static bool GenerateIsWanted(int wantedPercentage)
         {
             if (wantedPercentage < 0 || wantedPercentage > 100)
-                throw new ArgumentOutOfRangeException(nameof(wantedPercentage),
-                    "Wanted percentage must be between 0 and 100.");
+                throw new ArgumentOutOfRangeException(nameof(wantedPercentage), "Wanted percentage must be between 0 and 100.");
 
             return Rand.Next(1, 101) <= wantedPercentage;
         }
@@ -293,10 +282,7 @@ namespace ReportsPlus.Utils
             var fileContent = File.ReadAllText(fullPath);
             if (string.IsNullOrWhiteSpace(fileContent)) return 0;
 
-            var existingPlates = World.GetAllVehicles()
-                .Where(v => v.Exists())
-                .Select(v => v.LicensePlate.Trim().ToLower())
-                .ToHashSet();
+            var existingPlates = World.GetAllVehicles().Where(v => v.Exists()).Select(v => v.LicensePlate.Trim().ToLower()).ToHashSet();
 
             var vehicles = ParseVehicleData(fileContent).ToList();
             var now = DateTimeOffset.Now;
@@ -312,8 +298,7 @@ namespace ReportsPlus.Utils
                 }
 
                 var isExpired = false;
-                if (vehicle.TryGetValue("timescanned", out var timeScannedStr) &&
-                    DateTimeOffset.TryParse(timeScannedStr, out var timeScanned))
+                if (vehicle.TryGetValue("timescanned", out var timeScannedStr) && DateTimeOffset.TryParse(timeScannedStr, out var timeScanned))
                 {
                     var timeDifference = now - timeScanned;
                     isExpired = timeDifference.TotalMilliseconds > interval || timeDifference.TotalMilliseconds < 0;
@@ -328,8 +313,7 @@ namespace ReportsPlus.Utils
                 removed++;
             }
 
-            var newContent = string.Join("|", vehicles.Select(v =>
-                string.Join("&", v.Select(kvp => $"{kvp.Key}={kvp.Value}"))));
+            var newContent = string.Join("|", vehicles.Select(v => string.Join("&", v.Select(kvp => $"{kvp.Key}={kvp.Value}"))));
             File.WriteAllText(fullPath, newContent);
 
             return removed;

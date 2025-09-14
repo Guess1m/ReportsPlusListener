@@ -42,8 +42,7 @@ namespace ReportsPlus.Utils.ALPR
             { Color.White, "White" }
         };
 
-        public static readonly Color[] AvailableColors =
-            { Color.Black, Color.FromArgb(43, 49, 127), Color.Red, Color.Yellow, Color.White };
+        public static readonly Color[] AvailableColors = { Color.Black, Color.FromArgb(43, 49, 127), Color.Red, Color.Yellow, Color.White };
 
         public static void InitializeLicensePlateDisplay()
         {
@@ -56,10 +55,8 @@ namespace ReportsPlus.Utils.ALPR
             {
                 PlateImage = null;
                 BackgroundImg = null;
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus",
-                    "~r~Error Loading Images", "~o~Failed to load license plate/background image");
-                Game.LogTrivial(
-                    "ReportsPlusListener [ERROR]: Failed to load license plate images or background image!");
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Error Loading Images", "~o~Failed to load license plate/background image");
+                Game.LogTrivial("ReportsPlusListener [ERROR]: Failed to load license plate images or background image!");
             }
         }
 
@@ -72,61 +69,39 @@ namespace ReportsPlus.Utils.ALPR
             var bgWidth = BackgroundImg.Size.Width * BackgroundScale;
             var bgHeight = BackgroundImg.Size.Height * BackgroundScale;
 
-            e.Graphics.DrawTexture(BackgroundImg,
-                BackgroundPositionX,
-                BackgroundPositionY,
-                bgWidth,
-                bgHeight);
+            e.Graphics.DrawTexture(BackgroundImg, BackgroundPositionX, BackgroundPositionY, bgWidth, bgHeight);
 
-            CalculatePositions(bgWidth, bgHeight,
-                out var frontPos, out var rearPos);
+            CalculatePositions(bgWidth, bgHeight, out var frontPos, out var rearPos);
 
             DrawPlate(e.Graphics, frontPos, TargetPlateWidth, TargetPlateHeight, "FRONT", FrontPlateText);
             DrawPlate(e.Graphics, rearPos, TargetPlateWidth, TargetPlateHeight, "REAR", RearPlateText);
         }
 
-        private static void CalculatePositions(float bgWidth, float bgHeight,
-            out PointF frontPos, out PointF rearPos)
+        private static void CalculatePositions(float bgWidth, float bgHeight, out PointF frontPos, out PointF rearPos)
         {
             var totalWidth = TargetPlateWidth * 2 + PlateSpacing;
             var startX = (bgWidth - totalWidth) / 2;
 
             var startY = (bgHeight - TargetPlateHeight) / 2 + LicensePlateVerticalOffset;
 
-            frontPos = new PointF(
-                BackgroundPositionX + startX,
-                BackgroundPositionY + startY
-            );
+            frontPos = new PointF(BackgroundPositionX + startX, BackgroundPositionY + startY);
 
-            rearPos = new PointF(
-                frontPos.X + TargetPlateWidth + PlateSpacing,
-                frontPos.Y
-            );
+            rearPos = new PointF(frontPos.X + TargetPlateWidth + PlateSpacing, frontPos.Y);
         }
 
-        private static void DrawPlate(Graphics g, PointF position, float width, float height,
-            string plateTypeLabel, string plateText)
+        private static void DrawPlate(Graphics g, PointF position, float width, float height, string plateTypeLabel, string plateText)
         {
             g.DrawTexture(PlateImage, position.X, position.Y, width, height);
 
-            DrawCenteredText(g, plateTypeLabel, LabelFontSize,
-                new PointF(position.X, position.Y - LabelVerticalOffset),
-                width, Color.White);
+            DrawCenteredText(g, plateTypeLabel, LabelFontSize, new PointF(position.X, position.Y - LabelVerticalOffset), width, Color.White);
 
-            DrawCenteredText(g, plateText, PlateTextFontSize,
-                new PointF(position.X, position.Y + PlateTextVerticalOffset),
-                width, PlateTextColor);
+            DrawCenteredText(g, plateText, PlateTextFontSize, new PointF(position.X, position.Y + PlateTextVerticalOffset), width, PlateTextColor);
         }
 
-        private static void DrawCenteredText(Graphics g, string text, float fontSize,
-            PointF basePosition, float plateWidth, Color color)
+        private static void DrawCenteredText(Graphics g, string text, float fontSize, PointF basePosition, float plateWidth, Color color)
         {
             var textSize = Graphics.MeasureText(text, "HouseScript", fontSize);
-            g.DrawText(text, "HouseScript", fontSize,
-                new PointF(
-                    basePosition.X + plateWidth / 2 - textSize.Width / 2,
-                    basePosition.Y
-                ), color);
+            g.DrawText(text, "HouseScript", fontSize, new PointF(basePosition.X + plateWidth / 2 - textSize.Width / 2, basePosition.Y), color);
         }
     }
 }

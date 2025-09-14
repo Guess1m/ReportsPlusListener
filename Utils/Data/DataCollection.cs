@@ -1,10 +1,15 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using RAGENativeUI;
 using RAGENativeUI.Elements;
+using RAGENativeUI.PauseMenu;
+using ReportsPlus.Utils.ALPR;
 using ReportsPlus.Utils.Animation;
+using ReportsPlus.Utils.Menu;
 using static ReportsPlus.Utils.Menu.MenuProcessing;
 using static ReportsPlus.Utils.Data.UpdateUtils;
 using static ReportsPlus.Utils.Misc;
@@ -25,9 +30,9 @@ namespace ReportsPlus.Utils.Data
         private static string _lastPulledOverPlate = "";
         private static bool _giveTicketKeyWasPressed;
         private static bool _discardTicketKeyWasPressed;
+        private static bool _alprKeyWasPressed;
 
-        public static readonly string CitationSignalFilePath =
-            Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
+        public static readonly string CitationSignalFilePath = Path.Combine(Path.GetTempPath(), "ReportsPlusSignalFile.txt");
 
         public static void KeyCollection()
         {
@@ -35,19 +40,39 @@ namespace ReportsPlus.Utils.Data
             {
                 GameFiber.Yield();
 
-                if (Game.IsKeyDown(AnimationBind))
+                if (AnimationBind != Keys.None)
                 {
-                    if (!_giveTicketKeyWasPressed)
+                    if (Game.IsKeyDown(AnimationBind) && !TabView.IsAnyPauseMenuVisible && !UIMenu.IsAnyMenuVisible)
                     {
-                        AnimationUtils.PlayAnimation();
-                        _giveTicketKeyWasPressed = true;
+                        if (!_giveTicketKeyWasPressed)
+                        {
+                            AnimationUtils.PlayAnimation();
+                            _giveTicketKeyWasPressed = true;
+                        }
+                    }
+                    else
+                    {
+                        _giveTicketKeyWasPressed = false;
                     }
                 }
-                else
+
+                if (ALPRMenuBind != Keys.None)
                 {
-                    _giveTicketKeyWasPressed = false;
+                    if (Game.IsKeyDown(ALPRMenuBind))
+                    {
+                        if (!_alprKeyWasPressed)
+                        {
+                            ALPRUtils.ToggleAlpr();
+                            _alprKeyWasPressed = true;
+                        }
+                    }
+                    else
+                    {
+                        _alprKeyWasPressed = false;
+                    }
                 }
 
+                if (DiscardBind == Keys.None) continue;
                 if (Game.IsKeyDown(DiscardBind))
                 {
                     if (_discardTicketKeyWasPressed) continue;
@@ -115,15 +140,13 @@ namespace ReportsPlus.Utils.Data
 
                 _lastPulledOverPlate = stoppedCar.LicensePlate;
 
-                if (!pulledDriver.IsPersistent ||
-                    Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) != pulledDriver)
+                if (!pulledDriver.IsPersistent || Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) != pulledDriver)
                 {
                     IsPerformingPullover = false;
                     return;
                 }
 
-                Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName +
-                                " Plate: " + stoppedCar.LicensePlate);
+                Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + " Plate: " + stoppedCar.LicensePlate);
 
                 WorldDataUtils.CreateTrafficStopObj(stoppedCar);
             }
@@ -209,11 +232,7 @@ namespace ReportsPlus.Utils.Data
                                 CitationSignalFound = true;
                                 CitationSignalName = name;
                                 CitationSignalPlate = null;
-                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept",
-                                    "~w~ReportsPlus",
-                                    "~g~Created Citation",
-                                    "~y~Citation For: ~b~" + name +
-                                    "\n~w~Menu Keybind: ~y~" + MainMenuBind);
+                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Created Citation", "~y~Citation For: ~b~" + name + "\n~w~Menu Keybind: ~y~" + MainMenuBind);
                                 givecitdesc = "Citation for " + name;
                                 break;
 
@@ -222,11 +241,7 @@ namespace ReportsPlus.Utils.Data
                                 CitationSignalFound = true;
                                 CitationSignalName = null;
                                 CitationSignalPlate = plate;
-                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept",
-                                    "~w~ReportsPlus",
-                                    "~g~Created Parking Citation",
-                                    "~y~Citation For: ~b~" + plate +
-                                    "\n~w~Menu Keybind: ~y~" + MainMenuBind);
+                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Created Parking Citation", "~y~Citation For: ~b~" + plate + "\n~w~Menu Keybind: ~y~" + MainMenuBind);
                                 givecitdesc = "Citation for " + plate;
                                 break;
 
@@ -261,7 +276,7 @@ namespace ReportsPlus.Utils.Data
                     HighlightedForeColor = Color.FromArgb(34, 139, 34)
                 };
                 giveCitationMenuButton.Activated += (sender, args) => { AnimationUtils.PlayAnimation(); };
-                MainMenu.AddItem(giveCitationMenuButton);
+                MenuProcessing.MainMenu.AddItem(giveCitationMenuButton);
 
                 var discardCitationMenuButton = new UIMenuItem("Discard Citation")
                 {
@@ -269,17 +284,13 @@ namespace ReportsPlus.Utils.Data
                     HighlightedForeColor = Color.FromArgb(226, 82, 47)
                 };
                 discardCitationMenuButton.Activated += (sender, args) => { AnimationUtils.RunDiscardCitation(); };
-                MainMenu.AddItem(discardCitationMenuButton);
+                MenuProcessing.MainMenu.AddItem(discardCitationMenuButton);
             }
         }
 
         private static Vehicle GetStoppedCar(Vehicle playerCar)
         {
-            return (Vehicle)World.GetClosestEntity(
-                playerCar.GetOffsetPosition(Vector3.RelativeFront * 8f), 8f,
-                GetEntitiesFlags.ConsiderGroundVehicles | GetEntitiesFlags.ConsiderBoats |
-                GetEntitiesFlags.ExcludeEmptyVehicles |
-                GetEntitiesFlags.ExcludeEmergencyVehicles);
+            return (Vehicle)World.GetClosestEntity(playerCar.GetOffsetPosition(Vector3.RelativeFront * 8f), 8f, GetEntitiesFlags.ConsiderGroundVehicles | GetEntitiesFlags.ConsiderBoats | GetEntitiesFlags.ExcludeEmptyVehicles | GetEntitiesFlags.ExcludeEmergencyVehicles);
         }
 
         private static bool IsValidStoppedCar(Vehicle stoppedCar, Vehicle playerCar)
