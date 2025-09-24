@@ -4,7 +4,7 @@ using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
 using StopThePed.API;
 
-namespace ReportsPlus.Utils.Data
+namespace ReportsPlus.Utils
 {
     public static class GetValueMethods
     {
@@ -24,6 +24,12 @@ namespace ReportsPlus.Utils.Data
         {
             var vehicleData = car.GetVehicleData();
             return vehicleData?.Vin?.ToString() ?? "";
+        }
+
+        public static string GetOwnerType(Vehicle car)
+        {
+            var vehicleData = car.GetVehicleData();
+            return vehicleData?.OwnerType.ToString() ?? "";
         }
 
         public static string GetOwnerPr(Vehicle car)
@@ -64,14 +70,16 @@ namespace ReportsPlus.Utils.Data
             return vehicleData?.Owner?.Wanted.ToString() ?? "";
         }
 
-        public static string GetGenderPr(Ped ped)
+        public static string GetOwnerModelPr(Vehicle car)
         {
-            var pedData = ped.GetPedData();
-            return pedData?.Gender.ToString() ?? "";
+            var vehicleData = car.GetVehicleData();
+            var owner = vehicleData?.Owner?.Holder;
+            return Misc.FindPedModel(owner).ToLower() ?? "";
         }
 
         public static string GetFullNamePr(Ped ped)
         {
+            if (ped == null || !ped.Exists()) return "";
             var pedData = ped.GetPedData();
             return pedData?.FullName ?? "";
         }
@@ -80,24 +88,21 @@ namespace ReportsPlus.Utils.Data
         {
             var vehicleData = car.GetVehicleData();
             if (vehicleData == null) return "";
-            if (setValid) vehicleData.IsStolen = false;
-            return vehicleData.IsStolen.ToString();
+            return setValid ? "False" : vehicleData.IsStolen.ToString();
         }
 
         public static string GetRegistrationPr(Vehicle car, bool setValid = false)
         {
             var vehicleData = car.GetVehicleData();
             if (vehicleData?.Registration == null) return "";
-            if (setValid) vehicleData.Registration.Status = EDocumentStatus.Valid;
-            return vehicleData.Registration.Status.ToString();
+            return setValid ? EDocumentStatus.Valid.ToString() : vehicleData.Registration.Status.ToString();
         }
 
         public static string GetInsurancePr(Vehicle car, bool setValid = false)
         {
             var vehicleData = car.GetVehicleData();
             if (vehicleData?.Insurance == null) return "";
-            if (setValid) vehicleData.Insurance.Status = EDocumentStatus.Valid;
-            return vehicleData.Insurance.Status.ToString();
+            return setValid ? EDocumentStatus.Valid.ToString() : vehicleData.Insurance.Status.ToString();
         }
 
         public static string GetMakePr(Vehicle car)
@@ -112,22 +117,16 @@ namespace ReportsPlus.Utils.Data
             return vehicleData?.Model ?? "";
         }
 
-        public static string GetLicenseExpiration(Ped ped)
-        {
-            var pedData = ped.GetPedData();
-            return pedData?.DriversLicenseExpiration?.ToString("MM-dd-yyyy") ?? "";
-        }
-
         public static string GetRegistrationStp(Vehicle car, bool setValid = false)
         {
-            if (setValid) Functions.setVehicleRegistrationStatus(car, STPVehicleStatus.Valid);
-            return car == null ? "" : Functions.getVehicleRegistrationStatus(car).ToString();
+            if (car == null) return "";
+            return setValid ? STPVehicleStatus.Valid.ToString() : Functions.getVehicleRegistrationStatus(car).ToString();
         }
 
         public static string GetInsuranceStp(Vehicle car, bool setValid = false)
         {
-            if (setValid) Functions.setVehicleInsuranceStatus(car, STPVehicleStatus.Valid);
-            return car == null ? "" : Functions.getVehicleInsuranceStatus(car).ToString();
+            if (car == null) return "";
+            return setValid ? STPVehicleStatus.Valid.ToString() : Functions.getVehicleInsuranceStatus(car).ToString();
         }
 
         public static string GetRegistrationBg(string reg, bool setValid = false)

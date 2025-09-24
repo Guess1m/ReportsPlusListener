@@ -4,7 +4,7 @@ using System.IO;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
 using Rage.Native;
-using static ReportsPlus.Utils.Data.GetValueMethods;
+using static ReportsPlus.Utils.GetValueMethods;
 using static ReportsPlus.Main;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
@@ -40,6 +40,7 @@ namespace ReportsPlus.Utils.Data
             var regexp = "";
             var insexp = "";
             var insuranceCoverage = MathUtils.GenerateRandomCoverage();
+            var ownerModel = MathUtils.GenerateModelForPed(gender);
 
             var setValid = MathUtils.ShouldSetValid();
 
@@ -59,6 +60,7 @@ namespace ReportsPlus.Utils.Data
                 regexp = GetRegExpPr(car);
                 insexp = GetInsExpPr(car);
                 gender = GetOwnerGenderPr(car);
+                ownerModel = GetOwnerModelPr(car);
             }
             else if (HasStopThePed)
             {
@@ -71,12 +73,10 @@ namespace ReportsPlus.Utils.Data
                 insurance = GetInsuranceBg(insurance, setValid);
             }
 
-            var ownerModel = MathUtils.GenerateModelForPed(gender);
-
             return $"licenseplate={car.LicensePlate}&model={model}&make={make}&regexp={regexp}&insexp={insexp}&coverage={insuranceCoverage}&vin={vin}&isstolen={stolen}&ispolice={car.IsPoliceVehicle}&owner={owner}&ownermodel={ownerModel}&ownergender={gender}&owneraddress={ownerAddress}&ownerdob={ownerdob}&owneriswanted={ownerIsWanted}&ownerlicensenumber={ownerLicenseNumber}&ownerlicensestate={ownerLicenseState}&driver={driver}&registration={registration}&insurance={insurance}&color={color}&timescanned={DateTime.Now:o}";
         }
 
-        public static void CreateVehicleObj(Vehicle vehicle)
+        private static void CreateVehicleObj(Vehicle vehicle)
         {
             if (!vehicle.Exists()) return;
 
@@ -91,7 +91,7 @@ namespace ReportsPlus.Utils.Data
             File.WriteAllText($"{FileDataFolder}/worldCars.data", $"{oldFile}{delimiter}{data}");
         }
 
-        public static string GetPedDataPr(Ped ped)
+        private static string GetPedDataPr(Ped ped)
         {
             if (ped == null) return null;
 
@@ -99,8 +99,6 @@ namespace ReportsPlus.Utils.Data
             if (pedData == null) return null;
 
             var address = MathUtils.GetPedAddress(ped);
-            string licenseNum;
-            string weight;
             var isPolice = ped.RelationshipGroup == "COP" ? "true" : "false";
             var gender = pedData.Gender.ToString() ?? "";
 
@@ -110,37 +108,25 @@ namespace ReportsPlus.Utils.Data
                 Misc.PedExpirations.Add(pedData.FullName, licenseExp);
             }
 
-            if (!Misc.PedLicenseNumbers.TryGetValue(pedData.FullName, out var number))
+            if (!Misc.PedLicenseNumbers.TryGetValue(pedData.FullName, out var licenseNum))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
                 Misc.PedLicenseNumbers[pedData.FullName] = licenseNum;
             }
-            else
-            {
-                licenseNum = number;
-            }
 
-            if (!Misc.PedHeights.TryGetValue(pedData.FullName, out var height))
+            if (!Misc.PedHeights.TryGetValue(pedData.FullName, out var height) || !Misc.PedWeights.TryGetValue(pedData.FullName, out var weight))
             {
                 var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
                 height = heightAndWeight[0];
                 weight = heightAndWeight[1];
-                Misc.PedHeights.Add(pedData.FullName, height);
-                Misc.PedWeights.Add(pedData.FullName, weight);
-            }
-            else
-            {
-                if (Misc.PedWeights.TryGetValue(pedData.FullName, out weight))
-                    return $"name={pedData.FullName}" + $"&licensenumber={licenseNum}" + $"&pedmodel={Misc.FindPedModel(ped)}" + $"&birthday={pedData.Birthday.Month}/{pedData.Birthday.Day}/{pedData.Birthday.Year}" + $"&gender={gender}" + $"&height={height}" + $"&weight={weight}" + $"&ispolice={isPolice}" + $"&address={address}" + $"&iswanted={pedData.Wanted.ToString()}" + $"&licensestatus={pedData.DriversLicenseState.ToString() ?? ""}" + $"&licenseexpiration={licenseExp}" + $"&weaponpermittype={pedData.WeaponPermit?.PermitType.ToString() ?? ""}" + $"&weaponpermitstatus={pedData.WeaponPermit?.Status.ToString() ?? ""}" + $"&weaponpermitexpiration={pedData.WeaponPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" + $"&fishpermitstatus={pedData.FishingPermit?.Status.ToString() ?? ""}" + $"&timesstopped={pedData.TimesStopped.ToString()}" + $"&fishpermitexpiration={pedData.FishingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" + $"&huntpermitstatus={pedData.HuntingPermit?.Status.ToString() ?? ""}" + $"&huntpermitexpiration={pedData.HuntingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" + $"&isonparole={pedData.IsOnParole.ToString()}" + $"&isonprobation={pedData.IsOnProbation.ToString()}";
-                var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
-                weight = heightAndWeight[1];
-                Misc.PedWeights.Add(pedData.FullName, weight);
+                Misc.PedHeights[pedData.FullName] = height;
+                Misc.PedWeights[pedData.FullName] = weight;
             }
 
             return $"name={pedData.FullName}" + $"&licensenumber={licenseNum}" + $"&pedmodel={Misc.FindPedModel(ped)}" + $"&birthday={pedData.Birthday.Month}/{pedData.Birthday.Day}/{pedData.Birthday.Year}" + $"&gender={gender}" + $"&height={height}" + $"&weight={weight}" + $"&ispolice={isPolice}" + $"&address={address}" + $"&iswanted={pedData.Wanted.ToString()}" + $"&licensestatus={pedData.DriversLicenseState.ToString() ?? ""}" + $"&licenseexpiration={licenseExp}" + $"&weaponpermittype={pedData.WeaponPermit?.PermitType.ToString() ?? ""}" + $"&weaponpermitstatus={pedData.WeaponPermit?.Status.ToString() ?? ""}" + $"&weaponpermitexpiration={pedData.WeaponPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" + $"&fishpermitstatus={pedData.FishingPermit?.Status.ToString() ?? ""}" + $"&timesstopped={pedData.TimesStopped.ToString()}" + $"&fishpermitexpiration={pedData.FishingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" + $"&huntpermitstatus={pedData.HuntingPermit?.Status.ToString() ?? ""}" + $"&huntpermitexpiration={pedData.HuntingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? ""}" + $"&isonparole={pedData.IsOnParole.ToString()}" + $"&isonprobation={pedData.IsOnProbation.ToString()}";
         }
 
-        public static string GetPedData(Ped ped)
+        private static string GetPedData(Ped ped)
         {
             if (ped == null)
                 return null;
@@ -148,9 +134,6 @@ namespace ReportsPlus.Utils.Data
             var persona = Functions.GetPersonaForPed(ped);
             if (persona == null) return null;
 
-            string address;
-            string licenseNum;
-            string weight;
             var isPolice = ped.RelationshipGroup == "COP" ? "true" : "false";
             var gender = persona.Gender.ToString();
 
@@ -168,42 +151,25 @@ namespace ReportsPlus.Utils.Data
                 Misc.PedExpirations.Add(persona.FullName, licenseExp);
             }
 
-            if (!Misc.PedLicenseNumbers.TryGetValue(persona.FullName, out var number))
+            if (!Misc.PedLicenseNumbers.TryGetValue(persona.FullName, out var licenseNum))
             {
                 licenseNum = MathUtils.GenerateLicenseNumber();
                 Misc.PedLicenseNumbers.Add(persona.FullName, licenseNum);
             }
-            else
-            {
-                licenseNum = number;
-            }
 
-            if (!Misc.PedAddresses.TryGetValue(persona.FullName, out var pedAddress))
+            if (!Misc.PedAddresses.TryGetValue(persona.FullName, out var address))
             {
                 address = MathUtils.GetRandomAddress();
                 Misc.PedAddresses.Add(persona.FullName, address);
             }
-            else
-            {
-                address = pedAddress;
-            }
 
-            if (!Misc.PedHeights.TryGetValue(persona.FullName, out var height))
+            if (!Misc.PedHeights.TryGetValue(persona.FullName, out var height) || !Misc.PedWeights.TryGetValue(persona.FullName, out var weight))
             {
                 var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
                 height = heightAndWeight[0];
                 weight = heightAndWeight[1];
-                Misc.PedHeights.Add(persona.FullName, height);
-                Misc.PedWeights.Add(persona.FullName, weight);
-            }
-            else
-            {
-                if (!Misc.PedWeights.TryGetValue(persona.FullName, out weight))
-                {
-                    var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
-                    weight = heightAndWeight[1];
-                    Misc.PedWeights.Add(persona.FullName, weight);
-                }
+                Misc.PedHeights[persona.FullName] = height;
+                Misc.PedWeights[persona.FullName] = weight;
             }
 
             return $"name={persona.FullName}" + $"&licensenumber={licenseNum}" + $"&pedmodel={Misc.FindPedModel(ped)}" + $"&birthday={persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}" + $"&gender={gender}" + $"&height={height}" + $"&weight={weight}" + $"&address={address}" + $"&ispolice={isPolice}" + $"&iswanted={persona.Wanted.ToString()}" + $"&licensestatus={persona.ELicenseState.ToString()}" + $"&licenseexpiration={licenseExp}" + $"&timesstopped={persona.TimesStopped.ToString()}" + $"&isonparole={MathUtils.CheckProbability(30).ToString()}" + $"&isonprobation={MathUtils.CheckProbability(25).ToString()}";
@@ -239,10 +205,10 @@ namespace ReportsPlus.Utils.Data
             var vehicleDataEntry = $"licenseplate={plate}&model={model}&isstolen={isStolen}" + $"&owner={owner}&registration={registration}&insurance={insurance}&color={color}" + $"&street={street}&area={area}";
 
             File.WriteAllText(trafficStopFile, vehicleDataEntry);
-            Game.LogTrivial("ReportsPlusListener: TrafficStop DataFile Created");
+            Game.LogTrivial($"ReportsPlusListener: TrafficStop DataFile Created; [{vehicleDataEntry}]");
         }
 
-        private static Dictionary<string, string> GetVehicleDataFromWorldCars(string plate)
+        public static Dictionary<string, string> GetVehicleDataFromWorldCars(string plate)
         {
             var filePath = $"{FileDataFolder}/worldCars.data";
             if (!File.Exists(filePath)) return null;
@@ -257,7 +223,7 @@ namespace ReportsPlus.Utils.Data
             return null;
         }
 
-        private static Dictionary<string, string> ParseEntry(string entry)
+        public static Dictionary<string, string> ParseEntry(string entry)
         {
             var dict = new Dictionary<string, string>();
             foreach (var pair in entry.Split('&'))
@@ -310,7 +276,7 @@ namespace ReportsPlus.Utils.Data
             else
                 data = GetPedData(ped);
 
-            if (data == null) return;
+            if (string.IsNullOrEmpty(data)) return;
 
             // 2. Use AppendAllText for safer, more efficient writing that avoids race conditions.
             var filePath = $"{FileDataFolder}/worldPeds.data";

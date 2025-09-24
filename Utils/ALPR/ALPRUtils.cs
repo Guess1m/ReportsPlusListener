@@ -15,6 +15,9 @@ namespace ReportsPlus.Utils.ALPR
 {
     public static partial class ALPRUtils
     {
+        //BUG: when alpr is active the owner is being changed and isnt accurate to the driver even when config is set to 100% for the driver being the owner of the vehicle
+        //TODO: requires testing ^
+
         public static GameFiber AlprFiber;
         private static DateTime _lastEntityUpdate = DateTime.MinValue;
         private static List<VehicleData> _cachedVehicleData = new List<VehicleData>();
@@ -218,39 +221,39 @@ namespace ReportsPlus.Utils.ALPR
             var vehFlags = new StringBuilder();
             var cleanedFlags = "";
 
-            WorldDataUtils.CreateVehicleObj(targetVehicle);
+            var vehicleProperties = WorldDataUtils.GetVehicleDataFromWorldCars(targetVehicle.LicensePlate);
 
-            var vehicleData = MathUtils.ParseVehicleData(File.ReadAllText($"{FileDataFolder}/worldCars.data"));
-
-            foreach (var vehicle in vehicleData.Where(v => v["licenseplate"] == plate))
+            if (vehicleProperties == null)
             {
-                var registration = vehicle["registration"];
-                switch (registration.ToLower())
-                {
-                    case "expired":
-                        vehFlags.Append("~o~Expired Registration\n");
-                        break;
-                    case "none":
-                        vehFlags.Append("~r~No Registration\n");
-                        break;
-                }
+                var vehicleDataString = WorldDataUtils.GetWorldCarData(targetVehicle);
+                if (!string.IsNullOrEmpty(vehicleDataString)) vehicleProperties = WorldDataUtils.ParseEntry(vehicleDataString);
+            }
 
-                var insurance = vehicle["insurance"];
-                switch (insurance.ToLower())
-                {
-                    case "expired":
-                        vehFlags.Append("~o~Expired Insurance\n");
-                        break;
-                    case "none":
-                        vehFlags.Append("~r~No Insurance\n");
-                        break;
-                }
+            if (vehicleProperties != null)
+            {
+                if (vehicleProperties.TryGetValue("registration", out var registration))
+                    switch (registration.ToLower())
+                    {
+                        case "expired":
+                            vehFlags.Append("~o~Expired Registration\n");
+                            break;
+                        case "none":
+                            vehFlags.Append("~r~No Registration\n");
+                            break;
+                    }
 
-                var stolen = vehicle["isstolen"];
-                if (stolen.ToLower() == "true")
-                    vehFlags.Append("~r~Stolen Vehicle\n");
+                if (vehicleProperties.TryGetValue("insurance", out var insurance))
+                    switch (insurance.ToLower())
+                    {
+                        case "expired":
+                            vehFlags.Append("~o~Expired Insurance\n");
+                            break;
+                        case "none":
+                            vehFlags.Append("~r~No Insurance\n");
+                            break;
+                    }
 
-                break;
+                if (vehicleProperties.TryGetValue("isstolen", out var stolen) && stolen.ToLower() == "true") vehFlags.Append("~r~Stolen Vehicle\n");
             }
 
             cleanedFlags = Regex.Replace(vehFlags.ToString(), "~[^~]+~", "");

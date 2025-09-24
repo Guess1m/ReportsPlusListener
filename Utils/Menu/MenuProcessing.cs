@@ -6,6 +6,7 @@ using RAGENativeUI;
 using RAGENativeUI.Elements;
 using RAGENativeUI.PauseMenu;
 using ReportsPlus.Utils.ALPR;
+using ReportsPlus.Utils.Animation;
 using static ReportsPlus.Utils.ConfigUtils;
 using ALPRUtils = ReportsPlus.Utils.ALPR.ALPRUtils;
 
@@ -20,6 +21,8 @@ namespace ReportsPlus.Utils.Menu
 
         private static readonly MenuPool MainMenuPool = new MenuPool();
         public static UIMenu MainMenu;
+
+        //BUG: when giving a parking citation it makes the give citation button in the menu but that button never goes away
 
         public static bool ALPRActive { get; set; }
 
@@ -303,12 +306,33 @@ namespace ReportsPlus.Utils.Menu
             plateDisplayMenu.AddItems(enablePlateDisplay, bgScale, plateDisplayX, plateDisplayY, labelSize, labelOffset, plateSpacing, plateWidth, plateHeight, licensePlateVerticalOffset, plateNumberOffset, plateNumberFontSize, plateTextColor, placeholder, EnableDisplayOnFoot, resetDefaultsButton, savePlateDisplaySettings);
 
             var openALPRMenuButton = new UIMenuItem("ALPR Menu", "Open the ALPR settings menu");
-            MainMenu.AddItems(openALPRMenuButton);
+
+            if (Main.HasPolicingRedefined && Main.HasCommonDataFramework)
+            {
+                var discardCitationsButton = new UIMenuItem("Discard Citations", "Discards all pending citations.")
+                {
+                    ForeColor = Color.FromArgb(226, 82, 47),
+                    HighlightedForeColor = Color.FromArgb(226, 82, 47)
+                };
+                discardCitationsButton.Activated += (sender, args) => { AnimationUtils.ClearAllCitations(); };
+                MainMenu.AddItems(openALPRMenuButton, discardCitationsButton);
+            }
+            else
+            {
+                MainMenu.AddItems(openALPRMenuButton);
+            }
+
             MainMenu.BindMenuToItem(alprMenu, openALPRMenuButton);
 
             alprMenu.BindMenuToItem(plateDisplayMenu, openPlateSettingsMenuButton);
 
             MainMenuPool.Add(MainMenu, alprMenu, plateDisplayMenu);
+        }
+
+        public static void ClearCitationButtons()
+        {
+            MainMenu.MenuItems.RemoveAll(item => item.Text == "Give Citation" || item.Text == "Discard Citation");
+            MainMenu.RefreshIndex();
         }
 
         public static void ProcessMenus()

@@ -1,9 +1,11 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
-using CommonDataFramework.Modules.VehicleDatabase;
 using LSPD_First_Response.Mod.API;
+using PolicingRedefined.API;
+using PolicingRedefined.Interaction.Assets.PedAttributes;
 using Rage;
 using RAGENativeUI;
 using RAGENativeUI.Elements;
@@ -28,6 +30,9 @@ namespace ReportsPlus.Utils.Data
         public static string CitationSignalName;
         public static string CitationSignalPlate;
         public static string CitationSignalType;
+        public static string CitationSignalCharges;
+        public static string CitationSignalFine;
+        public static string CitationSignalArrestable;
         private static string _lastPulledOverPlate = "";
         private static bool _giveTicketKeyWasPressed;
         private static bool _discardTicketKeyWasPressed;
@@ -149,7 +154,7 @@ namespace ReportsPlus.Utils.Data
                 }
 
                 Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; Plate: " + stoppedCar.LicensePlate);
-                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework) Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; " + stoppedCar.GetVehicleData().OwnerType + " ; Plate: " + stoppedCar.LicensePlate);
+                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework) Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; " + GetValueMethods.GetOwnerType(stoppedCar) + " ; Plate: " + stoppedCar.LicensePlate);
 
                 WorldDataUtils.CreateTrafficStopObj(stoppedCar);
             }
@@ -195,10 +200,11 @@ namespace ReportsPlus.Utils.Data
                     if (string.IsNullOrEmpty(parts[0]))
                     {
                         Game.LogTrivial("ReportsPlusListener: CitationSignal is empty or invalid.");
+                        if (File.Exists(CitationSignalFilePath)) File.Delete(CitationSignalFilePath);
                         continue;
                     }
 
-                    string type = string.Empty, name = string.Empty, plate = string.Empty;
+                    string type = string.Empty, name = string.Empty, plate = string.Empty, charges = string.Empty, fine = string.Empty, arrestable = string.Empty;
 
                     foreach (var part in parts)
                     {
@@ -223,6 +229,15 @@ namespace ReportsPlus.Utils.Data
                             case "type":
                                 type = value;
                                 break;
+                            case "charges":
+                                charges = value;
+                                break;
+                            case "fine":
+                                fine = value;
+                                break;
+                            case "arrestable":
+                                arrestable = value;
+                                break;
                         }
                     }
 
@@ -231,12 +246,59 @@ namespace ReportsPlus.Utils.Data
                         switch (type)
                         {
                             case "2": // Printed citation
-                                Game.LogTrivial("ReportsPlusListener: Received PrintedCitation for: " + name);
-                                CitationSignalFound = true;
                                 CitationSignalName = name;
                                 CitationSignalPlate = null;
-                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Created Citation", "~y~Citation For: ~b~" + name + "\n~w~Menu Keybind: ~y~" + MainMenuBind);
-                                givecitdesc = "Citation for " + name;
+                                CitationSignalCharges = charges;
+                                CitationSignalFine = fine;
+                                CitationSignalArrestable = arrestable;
+                                CitationSignalType = type;
+
+                                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework)
+                                {
+                                    Game.LogTrivial("ReportsPlusListener: Using PolicingRedefined to handle citation.");
+                                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Created Printed Citation", "~y~Citation For: ~b~" + name);
+
+                                    var targetPed = Main.LocalPlayer.GetNearbyPeds(4).FirstOrDefault(p => p != null && p.Exists() && GetValueMethods.GetFullNamePr(p).Equals(name, StringComparison.OrdinalIgnoreCase));
+                                    if (targetPed != null && targetPed.Exists())
+                                    {
+                                        if (!int.TryParse(CitationSignalFine, out var fineAmount))
+                                        {
+                                            fineAmount = 0;
+                                            Game.LogTrivial($"ReportsPlusListener: Could not parse fine '{CitationSignalFine}'. Defaulting to 0.");
+                                        }
+
+                                        if (!bool.TryParse(CitationSignalArrestable, out var isArrestable))
+                                        {
+                                            isArrestable = false;
+                                            Game.LogTrivial($"ReportsPlusListener: Could not parse arrestable status '{CitationSignalArrestable}'. Defaulting to false.");
+                                        }
+
+                                        var citation = new Citation(targetPed, CitationSignalCharges, fineAmount, isArrestable);
+                                        PedAPI.GiveCitationToPed(targetPed, citation);
+                                        Game.LogTrivial($"ReportsPlusListener: Gave citation to {name} via PolicingRedefined API. Charges: {CitationSignalCharges}, Fine: {fineAmount}, Arrestable: {isArrestable}");
+                                    }
+                                    else
+                                    {
+                                        Game.LogTrivial($"ReportsPlusListener: Ped for PR citation '{name}' not found nearby.");
+                                    }
+
+                                    AnimationUtils.DiscardCitation();
+                                }
+                                else
+                                {
+                                    Game.LogTrivial("ReportsPlusListener: Using NativeFunctions to handle citation.");
+                                    CitationSignalFound = true;
+                                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Created Citation", "~y~Citation For: ~b~" + name + "\n~w~Menu Keybind: ~y~" + MainMenuBind);
+                                    givecitdesc = "Citation for " + name;
+                                    var giveCitationMenuButton = new UIMenuItem("Give Citation", givecitdesc)
+                                    {
+                                        ForeColor = Color.FromArgb(34, 139, 34),
+                                        HighlightedForeColor = Color.FromArgb(34, 139, 34)
+                                    };
+                                    giveCitationMenuButton.Activated += (sender, args) => { AnimationUtils.PlayAnimation(); };
+                                    MenuProcessing.MainMenu.AddItem(giveCitationMenuButton);
+                                }
+
                                 break;
 
                             case "3": // Parking citation
@@ -244,50 +306,53 @@ namespace ReportsPlus.Utils.Data
                                 CitationSignalFound = true;
                                 CitationSignalName = null;
                                 CitationSignalPlate = plate;
+                                CitationSignalType = type;
                                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Created Parking Citation", "~y~Citation For: ~b~" + plate + "\n~w~Menu Keybind: ~y~" + MainMenuBind);
                                 givecitdesc = "Citation for " + plate;
+
+                                var giveParkingCitationMenuButton = new UIMenuItem("Give Citation", givecitdesc)
+                                {
+                                    ForeColor = Color.FromArgb(34, 139, 34),
+                                    HighlightedForeColor = Color.FromArgb(34, 139, 34)
+                                };
+                                giveParkingCitationMenuButton.Activated += (sender, args) => { AnimationUtils.PlayAnimation(); };
+                                MenuProcessing.MainMenu.AddItem(giveParkingCitationMenuButton);
                                 break;
 
+                            case "1":
                             default: // Non-printed or invalid type
-                                Game.LogTrivial("ReportsPlusListener: Received Non-Printed Citation");
-                                CitationSignalFound = false;
+                                Game.LogTrivial("ReportsPlusListener: Received Non-Printed or unknown citation type. Processing and deleting signal file.");
+                                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Logged", "~y~A non-printed citation has been processed.");
+
+                                if (File.Exists(CitationSignalFilePath)) File.Delete(CitationSignalFilePath);
                                 break;
                         }
-
-                        CitationSignalType = type;
                     }
                     else
                     {
-                        Game.LogTrivial("ReportsPlusListener: Missing or invalid type");
-                        CitationSignalFound = false;
-                        CitationSignalName = null;
-                        CitationSignalType = null;
-                        CitationSignalPlate = null;
+                        Game.LogTrivial("ReportsPlusListener: Missing or invalid type in signal file. Deleting file.");
+                        if (File.Exists(CitationSignalFilePath)) File.Delete(CitationSignalFilePath);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Game.LogTrivial($"ReportsPlusListener: Error reading file - {ex}");
+                    Game.LogTrivial($"ReportsPlusListener: Error reading signal file - {ex}. Deleting to prevent loop.");
+                    if (File.Exists(CitationSignalFilePath)) File.Delete(CitationSignalFilePath);
                     continue;
                 }
 
                 if (!CitationSignalFound) continue;
 
-                var giveCitationMenuButton = new UIMenuItem("Give Citation", givecitdesc)
+                if (!Main.HasPolicingRedefined || !Main.HasCommonDataFramework)
                 {
-                    ForeColor = Color.FromArgb(34, 139, 34),
-                    HighlightedForeColor = Color.FromArgb(34, 139, 34)
-                };
-                giveCitationMenuButton.Activated += (sender, args) => { AnimationUtils.PlayAnimation(); };
-                MenuProcessing.MainMenu.AddItem(giveCitationMenuButton);
-
-                var discardCitationMenuButton = new UIMenuItem("Discard Citation")
-                {
-                    ForeColor = Color.FromArgb(226, 82, 47),
-                    HighlightedForeColor = Color.FromArgb(226, 82, 47)
-                };
-                discardCitationMenuButton.Activated += (sender, args) => { AnimationUtils.RunDiscardCitation(); };
-                MenuProcessing.MainMenu.AddItem(discardCitationMenuButton);
+                    var discardCitationMenuButton = new UIMenuItem("Discard Citation")
+                    {
+                        ForeColor = Color.FromArgb(226, 82, 47),
+                        HighlightedForeColor = Color.FromArgb(226, 82, 47)
+                    };
+                    discardCitationMenuButton.Activated += (sender, args) => { AnimationUtils.RunDiscardCitation(); };
+                    MenuProcessing.MainMenu.AddItem(discardCitationMenuButton);
+                }
             }
         }
 

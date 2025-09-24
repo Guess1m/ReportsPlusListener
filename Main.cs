@@ -96,7 +96,7 @@ namespace ReportsPlus
                 DataCollection.TrafficStopCollectionFiber = GameFiber.StartNew(DataCollection.TrafficStopCollection, "ReportsPlus-TrafficStopCollection");
                 DataCollection.KeyCollectionFiber = GameFiber.StartNew(DataCollection.KeyCollection, "ReportsPlus-KeyCollection");
                 MenuProcessing.MenuProcessingFiber = GameFiber.StartNew(MenuProcessing.ProcessMenus, "ReportsPlus-MenuProcessing");
-                DataCollection.WorldDataCollectionFiber = GameFiber.StartNew(DataCollection.WorldDataCollection, "DReportsPlus-ataCollection");
+                DataCollection.WorldDataCollectionFiber = GameFiber.StartNew(DataCollection.WorldDataCollection, "ReportsPlus-DataCollection");
                 DataCollection.SignalFileCheckFiber = GameFiber.StartNew(DataCollection.SignalFileCheck, "ReportsPlus-SignalFileCheck");
 
                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlusListener", "By: ~y~Guess1m", "~g~Version: " + Version + " Loaded!" + "\n" + "~w~Menu Keybind: ~y~" + MenuProcessing.MainMenuBind + "\n" + checksOutcome);

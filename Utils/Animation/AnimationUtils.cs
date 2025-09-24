@@ -110,8 +110,11 @@ namespace ReportsPlus.Utils.Animation
                         }
 
                         break;
+                    case "1":
                     default:
-                        Game.LogTrivial("ReportsPlusListener: non-printed citation type so returning");
+                        Game.LogTrivial("ReportsPlusListener: non-printed or unknown citation type received. Discarding signal file.");
+                        Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Logged", "~y~A non-printed citation has been processed.");
+                        DiscardCitation();
                         return;
                 }
 
@@ -147,7 +150,19 @@ namespace ReportsPlus.Utils.Animation
             DiscardCitation();
         }
 
-        private static void DiscardCitation()
+        public static void ClearAllCitations()
+        {
+            Game.LogTrivial("ReportsPlusListener: Discard Citations button pressed. Clearing all pending citations.");
+            if (DataCollection.CitationSignalFound)
+                DiscardCitation();
+            else
+                ClearCitationButtons();
+
+            Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citations Cleared", "All pending citations have been cleared.");
+            Game.LogTrivial("ReportsPlusListener: All pending citations cleared by user.");
+        }
+
+        public static void DiscardCitation()
         {
             DataCollection.CitationSignalFound = false;
             if (File.Exists(DataCollection.CitationSignalFilePath)) File.Delete(DataCollection.CitationSignalFilePath);
@@ -155,17 +170,13 @@ namespace ReportsPlus.Utils.Animation
             DataCollection.CitationSignalName = null;
             DataCollection.CitationSignalType = null;
             DataCollection.CitationSignalPlate = null;
+            DataCollection.CitationSignalCharges = null;
+            DataCollection.CitationSignalFine = null;
+            DataCollection.CitationSignalArrestable = null;
 
             Game.LogTrivial("ReportsPlusListener: Deleted CitationSignal File / Clearing Data");
 
-            // Remove second-to-last item if it exists
-            MainMenu.RefreshIndex();
-            if (MainMenu.MenuItems.Count > 0) MainMenu.MenuItems.RemoveAt(MainMenu.MenuItems.Count - 1);
-            MainMenu.RefreshIndex();
-
-            // Remove new last item if it exists
-            if (MainMenu.MenuItems.Count > 0) MainMenu.MenuItems.RemoveAt(MainMenu.MenuItems.Count - 1);
-            MainMenu.RefreshIndex();
+            ClearCitationButtons();
         }
 
         private static void AnimationFiber()
@@ -202,8 +213,10 @@ namespace ReportsPlus.Utils.Animation
                 Game.DisplaySubtitle("~g~Handed Citation, Return to Vehicle.");
                 Game.LogTrivial("ReportsPlusListener: Handed Citation, Ending Traffic Stop");
 
-                Game.LogTrivial("ReportsPlusListener: Enter Vehicle Fiber Started");
-                while (true)
+                /* TODO: Remove this, since you can cancel a stop with PR.
+
+                 Game.LogTrivial("ReportsPlusListener: Enter Vehicle Fiber Started");
+                 while (true)
                 {
                     if (!LocalPlayer.IsGettingIntoVehicle)
                     {
@@ -226,7 +239,7 @@ namespace ReportsPlus.Utils.Animation
 
                     Game.LogTrivial("ReportsPlusListener: Pullover Ended!");
                     break;
-                }
+                }*/
             }
         }
     }
