@@ -20,6 +20,8 @@ namespace ReportsPlus.Utils.Data
         public static string GetWorldCarData(Vehicle car)
         {
             var driver = car.Driver.Exists() ? Functions.GetPersonaForPed(car.Driver).FullName : "";
+            if (HasPolicingRedefined && HasCommonDataFramework) driver = GetFullNamePr(car.Driver);
+
             var color = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(car) != -1 ? "" : $"{car.PrimaryColor.R}-{car.PrimaryColor.G}-{car.PrimaryColor.B}";
 
             var insurance = MathUtils.GetRandomVehicleStatus(MathUtils.ExpiredProb, MathUtils.NoneProb, MathUtils.ValidProb, MathUtils.RevokedProb);
@@ -43,14 +45,14 @@ namespace ReportsPlus.Utils.Data
 
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
+                insurance = GetInsurancePr(car, setValid);
+                registration = GetRegistrationPr(car, setValid);
+                stolen = GetStolenPr(car, setValid);
                 make = GetMakePr(car);
                 model = GetModelPr(car);
                 ownerdob = GetOwnerDobPr(car);
                 ownerIsWanted = GetOwnerIsWantedPr(car);
                 ownerLicenseState = GetOwnerLicenseStatePr(car);
-                insurance = GetInsurancePr(car, setValid);
-                registration = GetRegistrationPr(car, setValid);
-                stolen = GetStolenPr(car, setValid);
                 ownerAddress = GetOwnerAddressPr(car);
                 owner = GetOwnerPr(car);
                 vin = GetVinPr(car);
@@ -268,13 +270,40 @@ namespace ReportsPlus.Utils.Data
             return dict;
         }
 
+        public static Dictionary<string, string> GetPedDataFromWorldPeds(string fullName)
+        {
+            var filePath = $"{FileDataFolder}/worldPeds.data";
+            if (!File.Exists(filePath)) return null;
+
+            var fileContent = File.ReadAllText(filePath);
+            var entries = fileContent.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var entry in entries)
+            {
+                var data = ParseEntry(entry);
+                if (data.TryGetValue("name", out var existingName) && existingName.Equals(fullName, StringComparison.OrdinalIgnoreCase)) return data;
+            }
+
+            return null;
+        }
+
         public static void CreatePedObj(Ped ped)
         {
             if (!ped.Exists()) return;
 
-            var oldFile = File.ReadAllText($"{FileDataFolder}/worldPeds.data");
-            if (oldFile.Contains(Functions.GetPersonaForPed(ped).FullName)) return;
+            var persona = Functions.GetPersonaForPed(ped);
+            var fullName = HasPolicingRedefined && HasCommonDataFramework ? GetFullNamePr(ped) : persona.FullName;
 
+            if (string.IsNullOrEmpty(fullName))
+            {
+                Game.LogTrivial("ReportsPlusListener: Attempted to create a ped object for a ped with no name. Aborting.");
+                return;
+            }
+
+            // 1. Use the more robust check to see if the ped already exists by exact name.
+            if (GetPedDataFromWorldPeds(fullName) != null) return;
+
+            // Ped does not exist, so generate their data.
             string data;
             if (HasPolicingRedefined && HasCommonDataFramework)
                 data = GetPedDataPr(ped);
@@ -283,9 +312,13 @@ namespace ReportsPlus.Utils.Data
 
             if (data == null) return;
 
-            var delimiter = oldFile.Length > 0 ? "|" : "";
+            // 2. Use AppendAllText for safer, more efficient writing that avoids race conditions.
+            var filePath = $"{FileDataFolder}/worldPeds.data";
+            var fileInfo = new FileInfo(filePath);
+            var delimiter = fileInfo.Exists && fileInfo.Length > 0 ? "|" : "";
 
-            File.WriteAllText($"{FileDataFolder}/worldPeds.data", $"{oldFile}{delimiter}{data}");
+            File.AppendAllText(filePath, $"{delimiter}{data}");
+            Game.LogTrivial($"ReportsPlusListener: Added new ped '{fullName}' to worldPeds.data.");
         }
     }
 }

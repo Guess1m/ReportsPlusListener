@@ -19,75 +19,33 @@ namespace ReportsPlus.Utils.Data
             if (!ped.Exists())
                 return;
 
-            var persona = Functions.GetPersonaForPed(ped);
-            var fullName = persona.FullName;
-            var pedModel = Misc.FindPedModel(ped);
-            var gender = persona.Gender.ToString();
-            string address;
-            string licenseExp;
-            string weight;
+            var fullName = HasPolicingRedefined && HasCommonDataFramework ? GetValueMethods.GetFullNamePr(ped) : Functions.GetPersonaForPed(ped).FullName;
 
-            if (HasPolicingRedefined && HasCommonDataFramework)
-            {
-                fullName = GetValueMethods.GetFullNamePr(ped);
-                gender = GetValueMethods.GetGenderPr(ped);
-                address = MathUtils.GetPedAddress(ped);
-                if (!Misc.PedExpirations.TryGetValue(fullName, out licenseExp))
-                {
-                    licenseExp = GetValueMethods.GetLicenseExpiration(ped);
-                    Misc.PedExpirations.Add(fullName, licenseExp);
-                }
-            }
-            else
-            {
-                address = Misc.PedAddresses[fullName];
-                if (!Misc.PedExpirations.TryGetValue(fullName, out licenseExp))
-                {
-                    var licenseStatus = persona.ELicenseState.ToString();
-                    licenseExp = licenseStatus.ToLower() switch
-                    {
-                        "valid" => MathUtils.GenerateValidLicenseExpirationDate(),
-                        "suspended" => MathUtils.GenerateValidLicenseExpirationDate(),
-                        "expired" => MathUtils.GenerateExpiredLicenseExpirationDate(3),
-                        _ => "N/A"
-                    };
+            var pedData = GetPedDataFromWorldPeds(fullName);
 
-                    Misc.PedExpirations.Add(fullName, licenseExp);
-                }
+            if (pedData == null)
+            {
+                Game.LogTrivial($"ReportsPlusListener: Could not find ped '{fullName}' in worldPeds.data. currentID.xml will not be updated.");
+                return;
             }
 
-            if (!Misc.PedLicenseNumbers.ContainsKey(fullName))
-                Misc.PedLicenseNumbers[fullName] = MathUtils.GenerateLicenseNumber();
-            if (!Misc.PedAddresses.ContainsKey(fullName))
-                Misc.PedAddresses[fullName] = MathUtils.GetRandomAddress();
+            pedData.TryGetValue("name", out var name);
+            pedData.TryGetValue("birthday", out var birthday);
+            pedData.TryGetValue("gender", out var gender);
+            pedData.TryGetValue("address", out var address);
+            pedData.TryGetValue("pedmodel", out var pedModel);
+            pedData.TryGetValue("licensenumber", out var licenseNumber);
+            pedData.TryGetValue("licenseexpiration", out var licenseExp);
+            pedData.TryGetValue("height", out var height);
+            pedData.TryGetValue("weight", out var weight);
 
-            var licenseNumber = Misc.PedLicenseNumbers[fullName];
-
-            if (!Misc.PedHeights.TryGetValue(fullName, out var height))
-            {
-                var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
-                height = heightAndWeight[0];
-                weight = heightAndWeight[1];
-                Misc.PedHeights.Add(fullName, height);
-                Misc.PedWeights.Add(fullName, weight);
-            }
-            else
-            {
-                if (!Misc.PedWeights.TryGetValue(fullName, out weight))
-                {
-                    var heightAndWeight = MathUtils.GenerateHeightAndWeight(gender);
-                    weight = heightAndWeight[1];
-                    Misc.PedWeights.Add(fullName, weight);
-                }
-            }
-
-            var newEntry = new XElement("ID", new XElement("Name", fullName), new XElement("Birthday", $"{persona.Birthday.Month}/{persona.Birthday.Day}/{persona.Birthday.Year}"), new XElement("Gender", gender), new XElement("Address", address), new XElement("PedModel", pedModel), new XElement("LicenseNumber", licenseNumber), new XElement("Expiration", licenseExp), new XElement("Height", height), new XElement("Weight", weight));
+            var newEntry = new XElement("ID", new XElement("Name", name ?? "N/A"), new XElement("Birthday", birthday ?? "N/A"), new XElement("Gender", gender ?? "N/A"), new XElement("Address", address ?? "N/A"), new XElement("PedModel", pedModel ?? "N/A"), new XElement("LicenseNumber", licenseNumber ?? "N/A"), new XElement("Expiration", licenseExp ?? "N/A"), new XElement("Height", height ?? "N/A"), new XElement("Weight", weight ?? "N/A"));
 
             var newDoc = new XDocument(new XElement("IDs"));
             newDoc.Root?.Add(newEntry);
 
             newDoc.Save(Path.Combine(FileDataFolder, "currentID.xml"));
-            Game.LogTrivial("ReportsPlusListener: Updated CurrentID DataFile");
+            Game.LogTrivial($"ReportsPlusListener: Updated CurrentID DataFile from worldPeds.data for {name}");
         }
 
         public static void RefreshVehs()
@@ -139,63 +97,42 @@ namespace ReportsPlus.Utils.Data
         {
             if (!LocalPlayer.Exists())
             {
-                Game.LogTrivial("ReportsPlusListener: Failed to update ped data; Invalid LocalPlayer");
+                Game.LogTrivial("ReportsPlusListener: Failed to refresh ped data; Invalid LocalPlayer");
                 return;
             }
 
             var filePath = $"{FileDataFolder}/worldPeds.data";
-            var existingPeds = new Dictionary<string, string>();
+            if (!File.Exists(filePath)) return;
 
-            if (File.Exists(filePath))
+            var fileContent = File.ReadAllText(filePath);
+            if (string.IsNullOrWhiteSpace(fileContent)) return;
+
+            // Get all peds currently in the world file, keyed by their full name.
+            var pedsInFile = fileContent.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Select(entry =>
             {
-                var existingContent = File.ReadAllText(filePath);
-                foreach (var entry in existingContent.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var pedIdMatch = Regex.Match(entry, "pedid=([^&]+)");
-                    if (!pedIdMatch.Success) continue;
-                    var pedId = pedIdMatch.Groups[1].Value;
-                    existingPeds[pedId] = entry;
-                }
-            }
+                var match = Regex.Match(entry, "name=([^&]+)");
+                return match.Success ? new { Name = match.Groups[1].Value, Entry = entry } : null;
+            }).Where(p => p != null && !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Entry, StringComparer.OrdinalIgnoreCase);
 
-            var allPeds = LocalPlayer.GetNearbyPeds(13);
-            var newEntries = new List<string>();
-
-            foreach (var ped in allPeds)
-            {
-                if (ped == null || !ped.Exists()) continue;
-
-                var pedId = $"ped_{ped.Handle}";
-
-                if (existingPeds.ContainsKey(pedId)) continue;
-
-                string pedData;
-                if (HasPolicingRedefined && HasCommonDataFramework)
-                    pedData = GetPedDataPr(ped);
-                else
-                    pedData = GetPedData(ped);
-
-                if (pedData == null) continue;
-
-                pedData = $"pedid={pedId}&{pedData}";
-
-                newEntries.Add(pedData);
-                existingPeds[pedId] = pedData;
-            }
+            // Get the names of all peds currently nearby the player.
+            var nearbyPedNames = LocalPlayer.GetNearbyPeds(15).Where(p => p != null && p.Exists()).Select(p => HasPolicingRedefined && HasCommonDataFramework ? GetValueMethods.GetFullNamePr(p) : Functions.GetPersonaForPed(p).FullName).Where(name => !string.IsNullOrEmpty(name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var removedCount = 0;
-            var activePedIds = allPeds.Where(p => p != null && p.Exists()).Select(p => $"ped_{p.Handle}").ToHashSet();
+            // Check which peds from the file are no longer nearby.
+            foreach (var pedNameInFile in pedsInFile.Keys.ToList())
+                if (!nearbyPedNames.Contains(pedNameInFile))
+                {
+                    pedsInFile.Remove(pedNameInFile);
+                    removedCount++;
+                }
 
-            foreach (var pedId in existingPeds.Keys.ToList().Where(pedId => !activePedIds.Contains(pedId)))
+            // Only rewrite the file if peds were actually removed.
+            if (removedCount > 0)
             {
-                existingPeds.Remove(pedId);
-                removedCount++;
+                var newContent = string.Join("|", pedsInFile.Values);
+                File.WriteAllText(filePath, newContent);
+                Game.LogTrivial($"ReportsPlusListener: Refreshed worldPeds.data. Peds no longer in world: [{removedCount}] removed.");
             }
-
-            var newContent = string.Join("|", existingPeds.Values);
-            File.WriteAllText(filePath, newContent);
-
-            Game.LogTrivial($"ReportsPlusListener: Added [{newEntries.Count}] new peds to worldPeds.data, peds no longer in world: [{removedCount}] removed");
         }
 
         public static void RefreshGameData()

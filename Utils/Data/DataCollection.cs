@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using CommonDataFramework.Modules.VehicleDatabase;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using RAGENativeUI;
@@ -135,6 +136,7 @@ namespace ReportsPlus.Utils.Data
 
                 var pulledDriver = stoppedCar.Driver;
                 var driverName = pulledDriver.Exists() ? Functions.GetPersonaForPed(pulledDriver).FullName : "";
+                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework) driverName = GetValueMethods.GetFullNamePr(pulledDriver);
 
                 if (stoppedCar.LicensePlate == _lastPulledOverPlate) return;
 
@@ -146,7 +148,8 @@ namespace ReportsPlus.Utils.Data
                     return;
                 }
 
-                Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + " Plate: " + stoppedCar.LicensePlate);
+                Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; Plate: " + stoppedCar.LicensePlate);
+                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework) Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; " + stoppedCar.GetVehicleData().OwnerType + " ; Plate: " + stoppedCar.LicensePlate);
 
                 WorldDataUtils.CreateTrafficStopObj(stoppedCar);
             }
