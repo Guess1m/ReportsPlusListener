@@ -2,7 +2,6 @@ using CommonDataFramework.Modules;
 using CommonDataFramework.Modules.PedDatabase;
 using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
-using StopThePed.API;
 
 namespace ReportsPlus.Utils
 {
@@ -115,28 +114,6 @@ namespace ReportsPlus.Utils
         {
             var vehicleData = car.GetVehicleData();
             return vehicleData?.Model ?? "";
-        }
-
-        public static string GetRegistrationStp(Vehicle car, bool setValid = false)
-        {
-            if (car == null) return "";
-            return setValid ? STPVehicleStatus.Valid.ToString() : Functions.getVehicleRegistrationStatus(car).ToString();
-        }
-
-        public static string GetInsuranceStp(Vehicle car, bool setValid = false)
-        {
-            if (car == null) return "";
-            return setValid ? STPVehicleStatus.Valid.ToString() : Functions.getVehicleInsuranceStatus(car).ToString();
-        }
-
-        public static string GetRegistrationBg(string reg, bool setValid = false)
-        {
-            return setValid ? "Valid" : reg;
-        }
-
-        public static string GetInsuranceBg(string ins, bool setValid = false)
-        {
-            return setValid ? "Valid" : ins;
         }
     }
 }
