@@ -42,13 +42,11 @@ namespace ReportsPlus.Utils.Data
             var insuranceCoverage = MathUtils.GenerateRandomCoverage();
             var ownerModel = MathUtils.GenerateModelForPed(gender);
 
-            var setValid = MathUtils.ShouldSetValid();
-
             if (HasPolicingRedefined && HasCommonDataFramework)
             {
-                insurance = GetInsurancePr(car, setValid);
-                registration = GetRegistrationPr(car, setValid);
-                stolen = GetStolenPr(car, setValid);
+                insurance = GetInsurancePr(car);
+                registration = GetRegistrationPr(car);
+                stolen = GetStolenPr(car);
                 make = GetMakePr(car);
                 model = GetModelPr(car);
                 ownerdob = GetOwnerDobPr(car);
@@ -64,13 +62,13 @@ namespace ReportsPlus.Utils.Data
             }
             else if (HasStopThePed)
             {
-                insurance = GetInsuranceStp(car, setValid);
-                registration = GetRegistrationStp(car, setValid);
+                insurance = GetInsuranceStp(car);
+                registration = GetRegistrationStp(car);
             }
             else
             {
-                registration = GetRegistrationBg(registration, setValid);
-                insurance = GetInsuranceBg(insurance, setValid);
+                registration = GetRegistrationBg(registration);
+                insurance = GetInsuranceBg(insurance);
             }
 
             return $"licenseplate={car.LicensePlate}&model={model}&make={make}&regexp={regexp}&insexp={insexp}&coverage={insuranceCoverage}&vin={vin}&isstolen={stolen}&ispolice={car.IsPoliceVehicle}&owner={owner}&ownermodel={ownerModel}&ownergender={gender}&owneraddress={ownerAddress}&ownerdob={ownerdob}&owneriswanted={ownerIsWanted}&ownerlicensenumber={ownerLicenseNumber}&ownerlicensestate={ownerLicenseState}&driver={driver}&registration={registration}&insurance={insurance}&color={color}&timescanned={DateTime.Now:o}";

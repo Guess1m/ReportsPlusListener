@@ -1,4 +1,3 @@
-using CommonDataFramework.Modules;
 using CommonDataFramework.Modules.PedDatabase;
 using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
@@ -84,25 +83,22 @@ namespace ReportsPlus.Utils
             return pedData?.FullName ?? "";
         }
 
-        public static string GetStolenPr(Vehicle car, bool setValid = false)
+        public static string GetStolenPr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            if (vehicleData == null) return "";
-            return setValid ? "False" : vehicleData.IsStolen.ToString();
+            return vehicleData?.IsStolen.ToString() ?? "";
         }
 
-        public static string GetRegistrationPr(Vehicle car, bool setValid = false)
+        public static string GetRegistrationPr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            if (vehicleData?.Registration == null) return "";
-            return setValid ? EDocumentStatus.Valid.ToString() : vehicleData.Registration.Status.ToString();
+            return vehicleData?.Registration?.Status.ToString() ?? "";
         }
 
-        public static string GetInsurancePr(Vehicle car, bool setValid = false)
+        public static string GetInsurancePr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            if (vehicleData?.Insurance == null) return "";
-            return setValid ? EDocumentStatus.Valid.ToString() : vehicleData.Insurance.Status.ToString();
+            return vehicleData?.Insurance?.Status.ToString() ?? "";
         }
 
         public static string GetMakePr(Vehicle car)
@@ -117,26 +113,24 @@ namespace ReportsPlus.Utils
             return vehicleData?.Model ?? "";
         }
 
-        public static string GetRegistrationStp(Vehicle car, bool setValid = false)
+        public static string GetRegistrationStp(Vehicle car)
         {
-            if (car == null) return "";
-            return setValid ? STPVehicleStatus.Valid.ToString() : Functions.getVehicleRegistrationStatus(car).ToString();
+            return car == null ? "" : Functions.getVehicleRegistrationStatus(car).ToString();
         }
 
-        public static string GetInsuranceStp(Vehicle car, bool setValid = false)
+        public static string GetInsuranceStp(Vehicle car)
         {
-            if (car == null) return "";
-            return setValid ? STPVehicleStatus.Valid.ToString() : Functions.getVehicleInsuranceStatus(car).ToString();
+            return car == null ? "" : Functions.getVehicleInsuranceStatus(car).ToString();
         }
 
-        public static string GetRegistrationBg(string reg, bool setValid = false)
+        public static string GetRegistrationBg(string reg)
         {
-            return setValid ? "Valid" : reg;
+            return reg;
         }
 
-        public static string GetInsuranceBg(string ins, bool setValid = false)
+        public static string GetInsuranceBg(string ins)
         {
-            return setValid ? "Valid" : ins;
+            return ins;
         }
     }
 }

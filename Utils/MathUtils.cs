@@ -8,8 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using CommonDataFramework.Modules.PedDatabase;
 using Rage;
-using ReportsPlus.Utils.Menu;
-using static ReportsPlus.Utils.ConfigUtils;
 
 namespace ReportsPlus.Utils
 {
@@ -219,16 +217,6 @@ namespace ReportsPlus.Utils
             }
 
             return vehicles;
-        }
-
-        public static bool ShouldSetValid()
-        {
-            if (!MenuProcessing.ALPRActive) return false;
-            if (ALPRSuccessfulScanProbability <= 100) return Rand.Next(0, 100) > ALPRSuccessfulScanProbability;
-            Game.LogTrivial("ReportsPlusListener: Error: successPercentage > 100; its: " + ALPRSuccessfulScanProbability);
-            ALPRSuccessfulScanProbability = 20;
-
-            return Rand.Next(0, 100) < ALPRSuccessfulScanProbability;
         }
 
         public static string GenerateDob(int minAge, int maxAge)
