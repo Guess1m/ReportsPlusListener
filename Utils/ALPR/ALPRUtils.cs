@@ -21,6 +21,7 @@ namespace ReportsPlus.Utils.ALPR
         public static GameFiber AlprFiber;
         private static DateTime _lastEntityUpdate = DateTime.MinValue;
         private static List<VehicleData> _cachedVehicleData = new List<VehicleData>();
+        public static readonly Dictionary<string, DateTime> RecentlyScannedPlates = new Dictionary<string, DateTime>();
 
         private static readonly List<Tuple<Blip, GameFiber>> ActiveBlipFibers = new List<Tuple<Blip, GameFiber>>();
         private static readonly object BlipLock = new object();
@@ -53,7 +54,12 @@ namespace ReportsPlus.Utils.ALPR
                 return;
             }
 
-            if (!ALPRActive) return;
+            if (!ALPRActive)
+            {
+                RecentlyScannedPlates.Clear();
+                return;
+            }
+
             AlprFiber = GameFiber.StartNew(() => AlprProcess(ConfigUtils.AlprSetupType), "AlprFiber");
 
             if (!LicensePlateDisplay.EnablePlateDisplay) return;
@@ -85,6 +91,10 @@ namespace ReportsPlus.Utils.ALPR
 
         private static void RunVehicleALPR(AlprSetupType setupType, Vehicle patrolCar)
         {
+            var now = DateTime.Now;
+            var platesToRemove = RecentlyScannedPlates.Where(kvp => (now - kvp.Value).TotalMilliseconds >= ReScanPlateInterval).Select(kvp => kvp.Key).ToList();
+            foreach (var plate in platesToRemove) RecentlyScannedPlates.Remove(plate);
+
             var scanners = GetScannerConfigurations(patrolCar, setupType);
             if (scanners.Count == 0) return;
 
@@ -155,38 +165,30 @@ namespace ReportsPlus.Utils.ALPR
             {
                 var distanceSq = Vector3.DistanceSquared(scannerPos, vd.Position);
                 if (distanceSq > radiusSq) continue;
-
                 if (vd.IsPolice || vd.LicensePlateLower == "46eek572") continue;
-
                 InsertClosestVehicle(nearbyVehicles, vd.Vehicle, distanceSq, 3);
             }
 
-            var alprFilePath = $"{FileDataFolder}/alpr.data";
-            var existingPlates = new HashSet<string>(File.ReadLines(alprFilePath).Where(line => line.Contains("licenseplate=")).Select(line => line.Split('=')[1].Split('&')[0]));
-
             foreach (var targetVehicle in nearbyVehicles.Select(v => v.Vehicle))
             {
-                if (existingPlates.Contains(targetVehicle.LicensePlate)) continue;
-
                 var platePositions = GetPlatePositions(targetVehicle);
                 var validPlates = new Dictionary<Vector3, VehiclePlateType>();
 
+                // This loop handles both the visual update and collecting scannable plates.
                 foreach (var plateInfo in platePositions)
                 {
                     var platePos = plateInfo.Key;
                     var plateType = plateInfo.Value;
-
                     var distance = Vector3.Distance(scanner.Position, platePos);
                     if (distance > scanner.Radius) continue;
-
                     var directionToPlate = (platePos - scanner.Position).ToNormalized();
                     var horizontalAngle = (float)(Math.Acos(Vector3.Dot(scanner.Forward.ToNormalized(), directionToPlate.ToNormalized())) * (180 / Math.PI));
                     if (horizontalAngle > MaxScanAngle) continue;
-
                     var hit = World.TraceLine(scanner.Position, platePos + new Vector3(0, 0, 0.5f), TraceFlags.IntersectEverything, scanner.Vehicle);
-
                     if (!hit.Hit || hit.HitEntity != targetVehicle) continue;
 
+                    // --- IMMEDIATE DISPLAY UPDATE ---
+                    // Update the UI display as soon as a plate is visible, regardless of other checks.
                     switch (plateType)
                     {
                         case VehiclePlateType.Front:
@@ -197,12 +199,23 @@ namespace ReportsPlus.Utils.ALPR
                             break;
                     }
 
+                    // Add the visible plate to a list for backend processing.
                     validPlates.Add(platePos, plateType);
                 }
 
+                // Now, if we found any visible plates, decide if we should process them for hits.
                 if (!validPlates.Any()) continue;
-                var closest = validPlates.OrderBy(p => Vector3.Distance(scanner.Position, p.Key)).First();
 
+                var plate = targetVehicle.LicensePlate;
+
+                // Check if the plate was already processed recently.
+                if (RecentlyScannedPlates.ContainsKey(plate)) continue;
+
+                // Apply the probability check.
+                if (MathUtils.Rand.Next(0, 100) >= ALPRSuccessfulScanProbability) continue;
+
+                // If all checks pass, find the closest plate and send it for hit detection.
+                var closest = validPlates.OrderBy(p => Vector3.Distance(scanner.Position, p.Key)).First();
                 ProcessPlateDetection(targetVehicle, closest.Key, closest.Value, scanner, showDebug);
             }
         }
@@ -211,16 +224,10 @@ namespace ReportsPlus.Utils.ALPR
         {
             var plate = targetVehicle.LicensePlate;
 
-            var alprFilePath = $"{FileDataFolder}/alpr.data";
-            var entries = MathUtils.ParseVehicleData(File.ReadAllText(alprFilePath));
-            var now = DateTimeOffset.Now;
-            var isAlreadyScanned = entries.Any(entry => entry.TryGetValue("licenseplate", out var existingPlate) && existingPlate == plate && entry.TryGetValue("timescanned", out var timeScannedStr) && DateTimeOffset.TryParse(timeScannedStr, out var timeScanned) && (now - timeScanned).TotalMilliseconds <= ReScanPlateInterval);
-
-            if (isAlreadyScanned) return;
+            // Add the plate to our in-memory cache to prevent it from being scanned again until the interval expires.
+            RecentlyScannedPlates[plate] = DateTime.Now;
 
             var vehFlags = new StringBuilder();
-            var cleanedFlags = "";
-
             var vehicleProperties = WorldDataUtils.GetVehicleDataFromWorldCars(targetVehicle.LicensePlate);
 
             if (vehicleProperties == null)
@@ -256,22 +263,21 @@ namespace ReportsPlus.Utils.ALPR
                 if (vehicleProperties.TryGetValue("isstolen", out var stolen) && stolen.ToLower() == "true") vehFlags.Append("~r~Stolen Vehicle\n");
             }
 
-            cleanedFlags = Regex.Replace(vehFlags.ToString(), "~[^~]+~", "");
-
-            var oldContent = File.ReadAllText(alprFilePath);
-            var delimiter = oldContent.Length > 0 ? "|" : "";
-            var data = $"licenseplate={plate}&plateType={plateType}&speed={targetVehicle.Speed:F}&distance={Vector3.Distance(scanner.Position, platePos):0.0}&scanner={scanner.ScanLocation}&flags={cleanedFlags}&timescanned={DateTime.Now:o}";
-            File.WriteAllText(alprFilePath, $"{oldContent}{delimiter}{data}");
-
+            // Only write to the data file and create a notification IF there are flags.
             if (!string.IsNullOrEmpty(vehFlags.ToString()))
             {
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", $"~b~ALPR Scan [{scanner.ScanLocation}]~s~\n", $"~y~Plate:~w~ {plate}\n" + $"~y~Plate Type:~w~ {plateType}\n" + $"~y~Distance:~w~ {Vector3.Distance(scanner.Position, platePos):0.0}\n" + $"{vehFlags}");
+                var cleanedFlags = Regex.Replace(vehFlags.ToString(), "~[^~]+~", "");
+                var alprFilePath = $"{FileDataFolder}/alpr.data";
+                var oldContent = File.ReadAllText(alprFilePath);
+                var delimiter = oldContent.Length > 0 ? "|" : "";
+                var data = $"licenseplate={plate}&plateType={plateType}&speed={targetVehicle.Speed:F}&distance={Vector3.Distance(scanner.Position, platePos):0.0}&scanner={scanner.ScanLocation}&flags={cleanedFlags}&timescanned={DateTime.Now:o}";
+                File.WriteAllText(alprFilePath, $"{oldContent}{delimiter}{data}");
 
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", $"~b~ALPR Scan [{scanner.ScanLocation}]~s~\n", $"~y~Plate:~w~ {plate}\n" + $"~y~Plate Type:~w~ {plateType}\n" + $"~y~Distance:~w~ {Vector3.Distance(scanner.Position, platePos):0.0}\n" + $"{vehFlags}");
                 CreateTemporaryBlip(targetVehicle);
             }
 
             MathUtils.RemoveOldPlates("alpr.data", ReScanPlateInterval);
-
             if (!showDebug) return;
             Debug.DrawLineDebug(scanner.Position, platePos, Color.Green);
             Debug.DrawSphere(platePos, 0.1f, Color.Green);

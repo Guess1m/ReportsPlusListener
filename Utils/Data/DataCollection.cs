@@ -154,7 +154,7 @@ namespace ReportsPlus.Utils.Data
                 }
 
                 Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; Plate: " + stoppedCar.LicensePlate);
-                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework) Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; " + GetValueMethods.GetOwnerType(stoppedCar) + " ; Plate: " + stoppedCar.LicensePlate);
+                if (Main.HasPolicingRedefined && Main.HasCommonDataFramework) Game.LogTrivial("ReportsPlusListener: Found pulled over vehicle, Driver name: " + driverName + "; OwnerType: " + GetValueMethods.GetOwnerType(stoppedCar) + " ; Plate: " + stoppedCar.LicensePlate);
 
                 WorldDataUtils.CreateTrafficStopObj(stoppedCar);
             }

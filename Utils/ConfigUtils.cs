@@ -72,7 +72,7 @@ namespace ReportsPlus.Utils
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRSuccessfulScanProbability"))
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRSuccessfulScanProbability Config setting didn't exist, creating");
-                IniFile.Write("ALPRSettings", "ALPRSuccessfulScanProbability", 20);
+                IniFile.Write("ALPRSettings", "ALPRSuccessfulScanProbability", 10);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ScanRadius"))
@@ -114,7 +114,7 @@ namespace ReportsPlus.Utils
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRUpdateDelay"))
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: ALPRUpdateDelay Config setting didn't exist, creating");
-                IniFile.Write("ALPRSettings", "ALPRUpdateDelay", 400);
+                IniFile.Write("ALPRSettings", "ALPRUpdateDelay", 5000);
             }
 
             if (!IniFile.DoesKeyExist("Keybinds", "GiveTicket"))
@@ -229,13 +229,13 @@ namespace ReportsPlus.Utils
             MenuProcessing.ALPRMenuBind = IniFile.ReadEnum("Settings", "ALPRKey", Keys.None);
             AlprSetupType = IniFile.ReadEnum("ALPRSettings", "ALPRType", ALPRUtils.AlprSetupType.Front);
             RefreshDelay = IniFile.ReadInt32("Settings", "DataRefreshInterval", 15000);
-            ALPRSuccessfulScanProbability = IniFile.ReadInt32("ALPRSettings", "ALPRSuccessfulScanProbability", 20);
+            ALPRSuccessfulScanProbability = IniFile.ReadInt32("ALPRSettings", "ALPRSuccessfulScanProbability", 10);
             ReScanPlateInterval = IniFile.ReadInt32("ALPRSettings", "RescanPlateInterval", 600000);
             BlipDisplayTime = IniFile.ReadInt32("ALPRSettings", "BlipDisplayTime", 15000);
             ScanRadius = IniFile.ReadSingle("ALPRSettings", "ScanRadius", 15f);
             MaxScanAngle = IniFile.ReadSingle("ALPRSettings", "MaxScanAngle", 40f);
             ShowAlprDebug = IniFile.ReadBoolean("ALPRSettings", "ShowAlprDebug");
-            ALPRUpdateDelay = IniFile.ReadInt32("ALPRSettings", "ALPRUpdateDelay", 400);
+            ALPRUpdateDelay = IniFile.ReadInt32("ALPRSettings", "ALPRUpdateDelay", 5000);
             AnimationBind = IniFile.ReadEnum("Keybinds", "GiveTicket", Keys.None);
             DiscardBind = IniFile.ReadEnum("Keybinds", "DiscardCitation", Keys.None);
             ExpiredProb = IniFile.ReadInt32("Probabilities", "ExpiredProbability", 20);

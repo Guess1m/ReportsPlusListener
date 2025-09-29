@@ -192,6 +192,7 @@ namespace ReportsPlus
             Misc.PedHeights?.Clear();
             Misc.PedWeights?.Clear();
             Misc.PedExpirations?.Clear();
+            ALPRUtils.RecentlyScannedPlates?.Clear();
 
             Game.LogTrivial("ReportsPlusListener: Cleaned Up.");
         }

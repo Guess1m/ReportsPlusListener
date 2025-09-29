@@ -37,7 +37,7 @@ namespace ReportsPlus.Utils.Menu
             };
 
             var alprMenu = new UIMenu("ALPR", "ALPR Menu");
-            var successfulScanProbability = new UIMenuNumericScrollerItem<int>("Success Percentage", "(RECOMMENDED) Percentage of a plate being scanned successfully. This is needed since STP/PR have very high rates for flags on vehicles.", 1, 100, 1)
+            var successfulScanProbability = new UIMenuNumericScrollerItem<int>("Scan Probability", "The chance (%) that a vehicle in range will be scanned by the ALPR.", 1, 100, 1)
             {
                 Value = ALPRSuccessfulScanProbability
             };
@@ -45,7 +45,7 @@ namespace ReportsPlus.Utils.Menu
             {
                 Value = ReScanPlateInterval / 1000
             };
-            var alprUpdateDelay = new UIMenuNumericScrollerItem<int>("ALPR Update Delay", "Interval for ALPR to update (ms). Lower values *can* impact fps (1000ms = 1sec)", 0, 1500, 50)
+            var alprUpdateDelay = new UIMenuNumericScrollerItem<int>("ALPR Update Delay", "Interval for ALPR to update (ms). Lower values *can* impact fps (1000ms = 1sec)", 0, 30000, 100)
             {
                 Value = ALPRUpdateDelay
             };
