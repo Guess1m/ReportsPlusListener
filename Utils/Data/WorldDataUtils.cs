@@ -221,6 +221,7 @@ namespace ReportsPlus.Utils.Data
             return null;
         }
 
+        // parse helper
         public static Dictionary<string, string> ParseEntry(string entry)
         {
             var dict = new Dictionary<string, string>();
@@ -234,6 +235,7 @@ namespace ReportsPlus.Utils.Data
             return dict;
         }
 
+        // parse from worldPeds
         public static Dictionary<string, string> GetPedDataFromWorldPeds(string fullName)
         {
             var filePath = $"{FileDataFolder}/worldPeds.data";
@@ -264,10 +266,8 @@ namespace ReportsPlus.Utils.Data
                 return;
             }
 
-            // 1. Use the more robust check to see if the ped already exists by exact name.
             if (GetPedDataFromWorldPeds(fullName) != null) return;
 
-            // Ped does not exist, so generate their data.
             string data;
             if (HasPolicingRedefined && HasCommonDataFramework)
                 data = GetPedDataPr(ped);
@@ -276,7 +276,6 @@ namespace ReportsPlus.Utils.Data
 
             if (string.IsNullOrEmpty(data)) return;
 
-            // 2. Use AppendAllText for safer, more efficient writing that avoids race conditions.
             var filePath = $"{FileDataFolder}/worldPeds.data";
             var fileInfo = new FileInfo(filePath);
             var delimiter = fileInfo.Exists && fileInfo.Length > 0 ? "|" : "";

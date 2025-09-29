@@ -26,6 +26,7 @@ namespace ReportsPlus.Utils
         public static float ScanRadius;
         public static float MaxScanAngle;
         public static int ALPRSuccessfulScanProbability;
+        public static bool BlipsEnabled;
 
         public static void LoadSettings()
         {
@@ -109,6 +110,12 @@ namespace ReportsPlus.Utils
             {
                 Game.LogTrivial("ReportsPlusListener {CONFIG}: BlipDisplayTime Config setting didn't exist, creating");
                 IniFile.Write("ALPRSettings", "BlipDisplayTime", 15000);
+            }
+
+            if (!IniFile.DoesKeyExist("ALPRSettings", "BlipsEnabled"))
+            {
+                Game.LogTrivial("ReportsPlusListener {CONFIG}: BlipsEnabled Config setting didn't exist, creating");
+                IniFile.Write("ALPRSettings", "BlipsEnabled", true);
             }
 
             if (!IniFile.DoesKeyExist("ALPRSettings", "ALPRUpdateDelay"))
@@ -232,6 +239,7 @@ namespace ReportsPlus.Utils
             ALPRSuccessfulScanProbability = IniFile.ReadInt32("ALPRSettings", "ALPRSuccessfulScanProbability", 10);
             ReScanPlateInterval = IniFile.ReadInt32("ALPRSettings", "RescanPlateInterval", 600000);
             BlipDisplayTime = IniFile.ReadInt32("ALPRSettings", "BlipDisplayTime", 15000);
+            BlipsEnabled = IniFile.ReadBoolean("ALPRSettings", "BlipsEnabled", true);
             ScanRadius = IniFile.ReadSingle("ALPRSettings", "ScanRadius", 15f);
             MaxScanAngle = IniFile.ReadSingle("ALPRSettings", "MaxScanAngle", 40f);
             ShowAlprDebug = IniFile.ReadBoolean("ALPRSettings", "ShowAlprDebug");
@@ -276,6 +284,7 @@ namespace ReportsPlus.Utils
             Game.LogTrivial("ReportsPlusListener {CONFIG}: ScanRadius- '" + ScanRadius + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: MaxScanAngle- '" + MaxScanAngle + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: ShowAlprDebug- '" + ShowAlprDebug + "'");
+            Game.LogTrivial("ReportsPlusListener {CONFIG}: BlipsEnabled- '" + BlipsEnabled + "'");
 
             Game.LogTrivial("ReportsPlusListener {CONFIG}: DataRefreshInterval- '" + RefreshDelay + "'");
             Game.LogTrivial("ReportsPlusListener {CONFIG}: RescanPlateInterval- '" + ReScanPlateInterval + "'");

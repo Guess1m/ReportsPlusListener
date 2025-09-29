@@ -38,12 +38,6 @@ namespace ReportsPlus
 
         internal static Ped LocalPlayer;
 
-        /*
-         * Thank you @HeyPalu, Creator of ExternalPoliceComputer, for the ideas for adding the GTA V integration.
-         */
-
-        //TODO: add check for nativeUI
-
         public override void Initialize()
         {
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;

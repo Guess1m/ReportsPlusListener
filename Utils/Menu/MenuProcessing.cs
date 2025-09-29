@@ -22,8 +22,6 @@ namespace ReportsPlus.Utils.Menu
         private static readonly MenuPool MainMenuPool = new MenuPool();
         public static UIMenu MainMenu;
 
-        //BUG: when giving a parking citation it makes the give citation button in the menu but that button never goes away
-
         public static bool ALPRActive { get; set; }
 
         public static void InitializeMenu()
@@ -62,6 +60,11 @@ namespace ReportsPlus.Utils.Menu
             {
                 Value = BlipDisplayTime / 1000
             };
+            var enableBlips = new UIMenuCheckboxItem("Enable Blips", BlipsEnabled, "Toggle blips for ALPR hits")
+            {
+                Style = UIMenuCheckboxStyle.Cross,
+                Checked = BlipsEnabled
+            };
             var showDebugLines = new UIMenuCheckboxItem("Show Debug", ShowAlprDebug, "Display debugging lines")
             {
                 Style = UIMenuCheckboxStyle.Cross,
@@ -89,6 +92,8 @@ namespace ReportsPlus.Utils.Menu
                 MaxScanAngle = maxScanAngle.Value;
                 IniFile.Write("ALPRSettings", "BlipDisplayTime", alprBlipDisplayTime.Value * 1000);
                 BlipDisplayTime = alprBlipDisplayTime.Value * 1000;
+                IniFile.Write("ALPRSettings", "BlipsEnabled", enableBlips.Checked);
+                BlipsEnabled = enableBlips.Checked;
                 IniFile.Write("ALPRSettings", "ALPRUpdateDelay", alprUpdateDelay.Value);
                 ALPRUpdateDelay = alprUpdateDelay.Value;
                 IniFile.Write("ALPRSettings", "ShowAlprDebug", showDebugLines.Checked);
@@ -99,7 +104,7 @@ namespace ReportsPlus.Utils.Menu
                 ALPRUtils.ToggleAlpr();
                 ALPRButton.Enabled = true;
             };
-            alprMenu.AddItems(ALPRButton, alprType, successfulScanProbability, rescanPlateInterval, scanRadius, maxScanAngle, alprBlipDisplayTime, alprUpdateDelay, showDebugLines, openPlateSettingsMenuButton);
+            alprMenu.AddItems(ALPRButton, alprType, successfulScanProbability, rescanPlateInterval, scanRadius, maxScanAngle, enableBlips, alprBlipDisplayTime, alprUpdateDelay, showDebugLines, openPlateSettingsMenuButton);
 
             var plateDisplayMenu = new UIMenu("Plate Display Menu", "Plate Display Settings");
             var enablePlateDisplay = new UIMenuCheckboxItem("Show Plate Display", LicensePlateDisplay.EnablePlateDisplay, "Toggle in-game plate display")

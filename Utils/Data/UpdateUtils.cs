@@ -107,18 +107,16 @@ namespace ReportsPlus.Utils.Data
             var fileContent = File.ReadAllText(filePath);
             if (string.IsNullOrWhiteSpace(fileContent)) return;
 
-            // Get all peds currently in the world file, keyed by their full name.
             var pedsInFile = fileContent.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Select(entry =>
             {
                 var match = Regex.Match(entry, "name=([^&]+)");
                 return match.Success ? new { Name = match.Groups[1].Value, Entry = entry } : null;
             }).Where(p => p != null && !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Entry, StringComparer.OrdinalIgnoreCase);
 
-            // Get the names of all peds currently nearby the player.
             var nearbyPedNames = LocalPlayer.GetNearbyPeds(15).Where(p => p != null && p.Exists()).Select(p => HasPolicingRedefined && HasCommonDataFramework ? GetValueMethods.GetFullNamePr(p) : Functions.GetPersonaForPed(p).FullName).Where(name => !string.IsNullOrEmpty(name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var removedCount = 0;
-            // Check which peds from the file are no longer nearby.
+
             foreach (var pedNameInFile in pedsInFile.Keys.ToList())
                 if (!nearbyPedNames.Contains(pedNameInFile))
                 {
@@ -126,7 +124,6 @@ namespace ReportsPlus.Utils.Data
                     removedCount++;
                 }
 
-            // Only rewrite the file if peds were actually removed.
             if (removedCount > 0)
             {
                 var newContent = string.Join("|", pedsInFile.Values);
