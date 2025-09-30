@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using LSPD_First_Response.Mod.API;
-using PolicingRedefined.API;
-using PolicingRedefined.Interaction.Assets.PedAttributes;
 using Rage;
 using RAGENativeUI;
 using RAGENativeUI.Elements;
@@ -124,13 +122,13 @@ namespace ReportsPlus.Utils.Data
                     return;
                 }
 
-                if (!Game.LocalPlayer.Character.IsInAnyVehicle(false))
+                if (!Main.LocalPlayer.IsInAnyVehicle(false))
                 {
                     IsPerformingPullover = false;
                     return;
                 }
 
-                var playerCar = Game.LocalPlayer.Character.CurrentVehicle;
+                var playerCar = Main.LocalPlayer.CurrentVehicle;
                 var stoppedCar = GetStoppedCar(playerCar);
 
                 if (stoppedCar == null || !IsValidStoppedCar(stoppedCar, playerCar))
@@ -273,8 +271,7 @@ namespace ReportsPlus.Utils.Data
                                             Game.LogTrivial($"ReportsPlusListener: Could not parse arrestable status '{CitationSignalArrestable}'. Defaulting to false.");
                                         }
 
-                                        var citation = new Citation(targetPed, CitationSignalCharges, fineAmount, isArrestable);
-                                        PedAPI.GiveCitationToPed(targetPed, citation);
+                                        GetValueMethods.PRGiveCitation(targetPed, CitationSignalCharges, fineAmount, isArrestable);
                                         Game.LogTrivial($"ReportsPlusListener: Gave citation to {name} via PolicingRedefined API. Charges: {CitationSignalCharges}, Fine: {fineAmount}, Arrestable: {isArrestable}");
                                     }
                                     else

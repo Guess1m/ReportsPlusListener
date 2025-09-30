@@ -1,5 +1,7 @@
 using CommonDataFramework.Modules.PedDatabase;
 using CommonDataFramework.Modules.VehicleDatabase;
+using PolicingRedefined.API;
+using PolicingRedefined.Interaction.Assets.PedAttributes;
 using Rage;
 using StopThePed.API;
 
@@ -111,6 +113,12 @@ namespace ReportsPlus.Utils
         {
             var vehicleData = car.GetVehicleData();
             return vehicleData?.Model ?? "";
+        }
+
+        public static void PRGiveCitation(Ped targetPed, string CitationSignalCharges, int fineAmount, bool isArrestable)
+        {
+            var citation = new Citation(targetPed, CitationSignalCharges, fineAmount, isArrestable);
+            PedAPI.GiveCitationToPed(targetPed, citation);
         }
 
         public static string GetRegistrationStp(Vehicle car)

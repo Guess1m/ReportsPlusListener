@@ -82,7 +82,7 @@ namespace ReportsPlus.Utils.ALPR
             {
                 GameFiber.Wait(ALPRUpdateDelay);
 
-                var patrolCar = Game.LocalPlayer.Character.CurrentVehicle;
+                var patrolCar = LocalPlayerVehicle;
                 if (patrolCar == null || !patrolCar.IsValid() || !LocalPlayer.IsInAnyVehicle(false)) continue;
 
                 RunVehicleALPR(currentAlprSetup, patrolCar);

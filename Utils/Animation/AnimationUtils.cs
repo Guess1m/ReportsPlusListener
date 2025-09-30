@@ -29,7 +29,7 @@ namespace ReportsPlus.Utils.Animation
             if (targetPed == null || !targetPed.Exists())
                 return false;
 
-            var playerPosition = Game.LocalPlayer.Character.Position;
+            var playerPosition = LocalPlayer.Position;
             var vehPos = targetPed.Position;
 
             var distance = Vector3.Distance(playerPosition, vehPos);
@@ -42,7 +42,7 @@ namespace ReportsPlus.Utils.Animation
             if (targetVehicle == null || !targetVehicle.Exists())
                 return false;
 
-            var playerPosition = Game.LocalPlayer.Character.Position;
+            var playerPosition = LocalPlayer.Position;
             var vehPos = targetVehicle.Position;
 
             var distance = Vector3.Distance(playerPosition, vehPos);
@@ -190,7 +190,7 @@ namespace ReportsPlus.Utils.Animation
                 Game.LogTrivial("ReportsPlusListener: Playing Animation: " + StartName);
                 LocalPlayer.Tasks.PlayAnimation(StartDict, StartName, 0.7f, AnimationFlags.None);
                 GameFiber.Wait(1600);
-                NativeFunction.Natives.x28004F88151E03E0(Game.LocalPlayer.Character, StartName, StartDict, 0.5f);
+                NativeFunction.Natives.x28004F88151E03E0(LocalPlayer, StartName, StartDict, 0.5f);
                 Game.LogTrivial("ReportsPlusListener: Animation Finished");
                 _isAnimationActive = false;
 

@@ -36,7 +36,8 @@ namespace ReportsPlus
         private static GameFiber _primaryFiber;
         private static GameFiber _playerStateCheckFiber;
 
-        internal static Ped LocalPlayer;
+        internal static Ped LocalPlayer => Game.LocalPlayer.Character;
+        internal static Vehicle LocalPlayerVehicle => LocalPlayer?.CurrentVehicle;
 
         public override void Initialize()
         {
@@ -53,8 +54,6 @@ namespace ReportsPlus
                 RunFullCleanup();
                 return;
             }
-
-            LocalPlayer = Game.LocalPlayer.Character;
 
             Misc.CalloutIds?.Clear();
             Misc.PedAddresses?.Clear();
@@ -157,7 +156,7 @@ namespace ReportsPlus
             while (IsOnDuty)
             {
                 GameFiber.Wait(2000);
-                CachedIsInVehicle = Game.LocalPlayer.Character?.IsInAnyVehicle(false) ?? false;
+                CachedIsInVehicle = LocalPlayer?.IsInAnyVehicle(false) ?? false;
             }
         }
 

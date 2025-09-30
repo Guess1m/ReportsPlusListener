@@ -14,7 +14,7 @@ namespace ReportsPlus.Utils.Data
     {
         public static string GetPedCurrentZoneName()
         {
-            return Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).RealAreaName;
+            return Functions.GetZoneAtPosition(LocalPlayer.Position).RealAreaName;
         }
 
         public static string GetWorldCarData(Vehicle car)
@@ -194,7 +194,7 @@ namespace ReportsPlus.Utils.Data
             vehicleData.TryGetValue("insurance", out var insurance);
             vehicleData.TryGetValue("color", out var color);
 
-            var street = World.GetStreetName(Game.LocalPlayer.Character.Position);
+            var street = World.GetStreetName(LocalPlayer.Position);
             var area = GetPedCurrentZoneName();
 
             var trafficStopFile = $"{FileDataFolder}/trafficStop.data";

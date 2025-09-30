@@ -28,7 +28,7 @@ namespace ReportsPlus.Utils.ALPR
                 Radius = radius;
                 ScanLocation = scanLocation;
                 ScannerPositionType = positionType;
-                Vehicle = Game.LocalPlayer.Character.CurrentVehicle;
+                Vehicle = Main.LocalPlayer.CurrentVehicle;
             }
 
             public Vector3 Position { get; }

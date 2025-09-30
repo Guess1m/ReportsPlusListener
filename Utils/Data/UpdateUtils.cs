@@ -142,7 +142,7 @@ namespace ReportsPlus.Utils.Data
 
             var currentStreet = World.GetStreetName(LocalPlayer.Position);
             var currentZone = GetPedCurrentZoneName();
-            var currentCounty = MathUtils.ParseCountyString(Functions.GetZoneAtPosition(Game.LocalPlayer.Character.Position).County.ToString());
+            var currentCounty = MathUtils.ParseCountyString(Functions.GetZoneAtPosition(LocalPlayer.Position).County.ToString());
 
             var fullLocation = currentStreet + ", " + currentZone + ", " + currentCounty;
 
