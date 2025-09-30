@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
-using ReportsPlus.Logging;
-using ReportsPlus.Messages;
-using ReportsPlus.WebSocket;
+using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Updates
+namespace ReportsPlus.Utils.WebSocket.Updates.EventDriven
 {
     public abstract class CalloutUpdate : IWebSocketAction
     {
         public string Name => "calloutupdate";
+        public bool IsContinuous => false;
 
         public void Execute(IncomingRequest request)
         {

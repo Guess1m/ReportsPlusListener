@@ -4,8 +4,8 @@ using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using Rage;
-using ReportsPlus.Logging;
-using ReportsPlus.Updates;
+using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.WebSocket.Updates.EventDriven;
 using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 

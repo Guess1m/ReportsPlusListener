@@ -1,17 +1,16 @@
 ﻿using Newtonsoft.Json.Linq;
-using Rage;
-using ReportsPlus.Messages;
-using ReportsPlus.WebSocket;
+using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Updates
+namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
 {
     public class PlayerLocationAction : IWebSocketAction
     {
         public string Name => "playerLocation";
+        public bool IsContinuous => true;
 
         public void Execute(IncomingRequest request)
         {
-            var playerPosition = Game.LocalPlayer.Character.Position;
+            var playerPosition = Main.LPC.Position;
 
             var locationData = new JObject
             {

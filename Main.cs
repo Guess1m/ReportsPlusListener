@@ -2,12 +2,13 @@
 using INIUtility;
 using LSPD_First_Response.Mod.API;
 using Rage;
-using ReportsPlus.Logging;
-using ReportsPlus.Updates;
 using ReportsPlus.Utils;
+using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.Config;
-using ReportsPlus.WebSocket;
-using Functions = LSPD_First_Response.Mod.API.Functions;
+using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.WebSocket;
+using ReportsPlus.Utils.WebSocket.Updates;
+using ReportsPlus.Utils.WebSocket.Updates.Continuous;
 
 namespace ReportsPlus
 {
@@ -19,15 +20,26 @@ namespace ReportsPlus
         private static GameClientSocket _client;
 
         private static ReportsPlusSettings Settings { get; set; }
-        public static Ped LocalPlayer => Game.LocalPlayer.Character;
+        public static Ped LPC => Game.LocalPlayer.Character;
+        public static Vehicle LPCV => Game.LocalPlayer.Character?.CurrentVehicle;
+
+        public override void Initialize()
+        {
+            Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
+            Logger.LogInfo("ReportsPlus Plugin Initialized. Version: [" + Version + "]");
+        }
 
         private void OnOnDutyStateChangedHandler(bool onDuty)
         {
             _isOnDuty = onDuty;
             Logger.LogInfo("IsOnDuty State Changed: '" + _isOnDuty + "'");
-            RunFullCleanup();
+
+            // Cleanup previous data
+            CleanupRegistry.RunCleanup();
 
             if (!_isOnDuty) return;
+
+            // On-Duty Initialization
             Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "By: ~y~Guess1m", "~g~Version: " + Version + " Loaded!" + "\n" + Misc.RunPluginChecks());
 
             ActionRegistry.Initialize();
@@ -35,15 +47,22 @@ namespace ReportsPlus
             Settings = ConfigLoader.LoadSettings<ReportsPlusSettings>("plugins/LSPDFR/ReportsPlus.ini");
 
             _primaryFiber = GameFiber.StartNew(GameLoop, "ReportsPlus-PrimaryFiber");
+
+            // Register Cleanup Actions
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_primaryFiber));
+            CleanupRegistry.Register(PoliceVehiclesAction.ClearTrackedPoliceVehicles);
         }
 
-        // Main loop for connecting and sending updates to the server
         private static void GameLoop()
         {
             try
             {
+                GameFiber.Yield();
                 Logger.LogInfo("Connecting to server...");
                 _client = new GameClientSocket(ReportsPlusSettings.ClientAddress, ReportsPlusSettings.ClientPort);
+
+                // Register client disconnect action AFTER client is instantiated.
+                CleanupRegistry.Register(() => _client?.Disconnect());
 
                 GameClientSocket.Connect();
 
@@ -55,12 +74,11 @@ namespace ReportsPlus
 
                 Logger.LogInfo("--- Connection Established ---");
 
-                // Keep sending updates while connected
                 while (GameClientSocket.IsConnected)
-                    /* TODO: add back
-                    ActionRegistry.ExecuteAction<PlayerLocationAction>();
-                    ActionRegistry.ExecuteAction<PoliceVehiclesAction>();*/
-                    GameFiber.Sleep(500);
+                {
+                    ActionRegistry.ExecuteContinuousActions();
+                    GameFiber.Sleep(ReportsPlusSettings.ContinuousUpdateInterval);
+                }
             }
             catch (Exception e)
             {
@@ -70,28 +88,14 @@ namespace ReportsPlus
             finally
             {
                 Logger.LogWarning("Client disconnected or fiber ended.");
-                _client?.Disconnect();
             }
-        }
-
-        public override void Initialize()
-        {
-            Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
-            Logger.LogInfo("ReportsPlus Plugin Initialized. Version: [" + Version + "]");
         }
 
         public override void Finally()
         {
             Functions.OnOnDutyStateChanged -= OnOnDutyStateChangedHandler;
-            RunFullCleanup();
-        }
-
-        private static void RunFullCleanup()
-        {
-            Logger.LogDebug("Cleanup Running..");
-            _client?.Disconnect();
-            Misc.CleanupFiber(_primaryFiber);
-            Logger.LogInfo("Cleaned Up.");
+            // Final cleanup on plugin unload.
+            CleanupRegistry.RunCleanup();
         }
     }
 }

@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ReportsPlus.Logging;
-using ReportsPlus.WebSocket;
-using RPWebSocketPlugin.WebSocket.Messages;
+using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Messages
+namespace ReportsPlus.Utils.WebSocket.Messages
 {
     public class OutboundMessage : IMessage
     {

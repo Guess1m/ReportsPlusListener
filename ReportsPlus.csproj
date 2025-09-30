@@ -101,32 +101,28 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Logging\Logger.cs"/>
         <Compile Include="Main.cs"/>
-        <Compile Include="Messages\IMessage.cs"/>
-        <Compile Include="Messages\IncomingRequest.cs"/>
-        <Compile Include="Messages\OutboundMessage.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="Updates\CalloutUpdate.cs"/>
-        <Compile Include="Updates\ContinuousUpdates.cs"/>
-        <Compile Include="Updates\GameTimeAction.cs"/>
-        <Compile Include="Updates\IWebSocketAction.cs"/>
-        <Compile Include="Updates\PlayerLocationAction.cs"/>
-        <Compile Include="Updates\PoliceVehiclesAction.cs"/>
-        <Compile Include="Updates\UpdateActionRegister.cs"/>
+        <Compile Include="Utils\Cleanup\CleanupRegistry.cs"/>
         <Compile Include="Utils\Config\ReportsPlusSettings.cs"/>
         <Compile Include="Utils\EventUtils.cs"/>
         <Compile Include="Utils\GetValueMethods.cs"/>
+        <Compile Include="Utils\Logging\Logger.cs"/>
         <Compile Include="Utils\Misc.cs"/>
-        <Compile Include="WebSocket\GameClientSocket.cs"/>
+        <Compile Include="Utils\WebSocket\GameClientSocket.cs"/>
+        <Compile Include="Utils\WebSocket\Messages\IMessage.cs"/>
+        <Compile Include="Utils\WebSocket\Messages\IncomingRequest.cs"/>
+        <Compile Include="Utils\WebSocket\Messages\OutboundMessage.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\Continuous\PlayerLocationAction.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\Continuous\PoliceVehiclesAction.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\EventDriven\CalloutUpdate.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\IWebSocketAction.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\OnRequest\GameTimeAction.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\UpdateActionRegister.cs"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="App.config"/>
         <None Include="packages.config"/>
-    </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Include="Resources\images\ALPRBackground.png"/>
-        <EmbeddedResource Include="Resources\images\LicensePlate.png"/>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

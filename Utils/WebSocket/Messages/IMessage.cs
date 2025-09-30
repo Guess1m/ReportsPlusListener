@@ -1,4 +1,4 @@
-﻿namespace RPWebSocketPlugin.WebSocket.Messages
+﻿namespace ReportsPlus.Utils.WebSocket.Messages
 {
     // Interface for all messages
     public interface IMessage

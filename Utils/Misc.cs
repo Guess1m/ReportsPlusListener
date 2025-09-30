@@ -2,7 +2,7 @@ using System.Linq;
 using System.Text;
 using LSPD_First_Response.Mod.API;
 using Rage;
-using ReportsPlus.Logging;
+using ReportsPlus.Utils.Logging;
 
 namespace ReportsPlus.Utils
 {

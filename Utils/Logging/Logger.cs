@@ -1,6 +1,6 @@
 using Rage;
 
-namespace ReportsPlus.Logging
+namespace ReportsPlus.Utils.Logging
 {
     internal sealed class Logger
     {

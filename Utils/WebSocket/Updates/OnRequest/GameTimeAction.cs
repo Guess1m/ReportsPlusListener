@@ -1,12 +1,12 @@
 ﻿using System;
-using ReportsPlus.Messages;
-using ReportsPlus.WebSocket;
+using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Updates
+namespace ReportsPlus.Utils.WebSocket.Updates.OnRequest
 {
     public class GameTimeAction : IWebSocketAction
     {
         public string Name => "gametime";
+        public bool IsContinuous => false;
 
         public void Execute(IncomingRequest request)
         {

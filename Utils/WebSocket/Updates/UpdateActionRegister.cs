@@ -1,31 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using ReportsPlus.Logging;
-using ReportsPlus.Messages;
+using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.WebSocket.Messages;
+using ReportsPlus.Utils.WebSocket.Updates.Continuous;
+using ReportsPlus.Utils.WebSocket.Updates.OnRequest;
 
-namespace ReportsPlus.Updates
+namespace ReportsPlus.Utils.WebSocket.Updates
 {
     public static class ActionRegistry
     {
-        // Stores actions by name (string key)
         private static readonly Dictionary<string, IWebSocketAction> ActionsByName = new Dictionary<string, IWebSocketAction>();
-
-        // Stores actions by their type
         private static readonly Dictionary<Type, IWebSocketAction> ActionsByType = new Dictionary<Type, IWebSocketAction>();
+        private static readonly List<IWebSocketAction> ContinuousActions = new List<IWebSocketAction>(); // List for continuous actions
 
-        // Initializes and registers all actions
         public static void Initialize()
         {
             ActionsByName.Clear();
             ActionsByType.Clear();
+            ContinuousActions.Clear(); // Clear the new list on initialization
 
+            // Register all your actions here
             Register(new GameTimeAction());
             Register(new PlayerLocationAction());
             Register(new PoliceVehiclesAction());
-            Logger.LogInfo($"ActionRegistry initialized. {ActionsByName.Count} actions registered.");
+            // Register other actions like CalloutUpdate if needed, their IsContinuous property will handle the rest.
+
+            Logger.LogInfo($"ActionRegistry initialized. {ActionsByName.Count} actions registered. {ContinuousActions.Count} continuous actions found.");
         }
 
-        // Registers an action in both dictionaries
         private static void Register(IWebSocketAction action)
         {
             if (action == null || string.IsNullOrEmpty(action.Name)) return;
@@ -34,11 +36,20 @@ namespace ReportsPlus.Updates
 
             if (ActionsByName.ContainsKey(action.Name) || ActionsByType.ContainsKey(actionType)) Logger.LogWarning($"Action '{action.Name}' or type '{actionType.Name}' is already registered. Overwriting.");
 
+            // Register in dictionaries
             ActionsByName[action.Name] = action;
             ActionsByType[actionType] = action;
+
+            // If the action is continuous, add it to our dedicated list
+            if (action.IsContinuous) ContinuousActions.Add(action);
         }
 
-        // Handles incoming requests from the server
+        // New method to execute all registered continuous actions
+        public static void ExecuteContinuousActions()
+        {
+            foreach (var action in ContinuousActions) action.Execute(null);
+        }
+
         public static void HandleRequest(IncomingRequest request)
         {
             if (request.Type != "request") return;
@@ -54,7 +65,6 @@ namespace ReportsPlus.Updates
             }
         }
 
-        // Executes a proactive action by type (without waiting for a request)
         public static void ExecuteAction<T>() where T : IWebSocketAction
         {
             if (ActionsByType.TryGetValue(typeof(T), out var action))

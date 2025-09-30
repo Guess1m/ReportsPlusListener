@@ -2,12 +2,12 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rage;
-using ReportsPlus.Messages;
-using ReportsPlus.Updates;
+using ReportsPlus.Utils.WebSocket.Messages;
+using ReportsPlus.Utils.WebSocket.Updates;
 using WebSocketSharp;
-using Logger = ReportsPlus.Logging.Logger;
+using Logger = ReportsPlus.Utils.Logging.Logger;
 
-namespace ReportsPlus.WebSocket
+namespace ReportsPlus.Utils.WebSocket
 {
     public class GameClientSocket
     {
