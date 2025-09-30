@@ -2,9 +2,10 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rage;
+using ReportsPlus.Messages;
 using ReportsPlus.Updates;
-using RPWebSocketPlugin.Messages;
 using WebSocketSharp;
+using Logger = ReportsPlus.Logging.Logger;
 
 namespace ReportsPlus.WebSocket
 {
@@ -32,7 +33,7 @@ namespace ReportsPlus.WebSocket
 
         private void SetupEvents()
         {
-            ClientSocket.OnOpen += (sender, e) => { Game.LogTrivial("[STATUS] Connected successfully."); };
+            ClientSocket.OnOpen += (sender, e) => { Logger.LogInfo("Connected successfully."); };
             ClientSocket.OnMessage += (client, e) =>
             {
                 try
@@ -41,18 +42,18 @@ namespace ReportsPlus.WebSocket
                 }
                 catch (Exception ex)
                 {
-                    Game.LogTrivial($"[ERROR] Could not parse message from server: {ex.Message}");
+                    Logger.LogError($"Could not parse message from server: {ex.Message}");
                 }
             };
 
-            ClientSocket.OnError += (sender, e) => { Game.LogTrivial($"[ERROR] WebSocket error: {e.Message}"); };
+            ClientSocket.OnError += (sender, e) => { Logger.LogError($"WebSocket error: {e.Message}"); };
 
-            ClientSocket.OnClose += (sender, e) => { Game.LogTrivial($"[STATUS] Disconnected. Code: {e.Code}, Reason: {e.Reason}"); };
+            ClientSocket.OnClose += (sender, e) => { Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}"); };
         }
 
         public static void Connect()
         {
-            Game.LogTrivial($"[STATUS] Connecting to {ClientSocket.Url}...");
+            Logger.LogDebug($"Connecting to {ClientSocket.Url}...");
             ClientSocket.Connect();
         }
 
@@ -60,7 +61,7 @@ namespace ReportsPlus.WebSocket
         {
             if (!IsConnected)
             {
-                Game.LogTrivial("[ERROR] Cannot send message: not connected.");
+                Logger.LogError("Cannot send message: not connected.");
                 return;
             }
 
@@ -73,7 +74,7 @@ namespace ReportsPlus.WebSocket
             }
             catch (Exception ex)
             {
-                Game.LogTrivial($"[ERROR] Failed to send message: {ex.Message}");
+                Logger.LogError($"Failed to send message: {ex.Message}");
             }
         }
 
@@ -81,7 +82,7 @@ namespace ReportsPlus.WebSocket
         {
             if (!IsConnected)
             {
-                Game.LogTrivial("[ERROR] Cannot send message: not connected.");
+                Logger.LogError("Cannot send message: not connected.");
                 return;
             }
 
@@ -101,7 +102,7 @@ namespace ReportsPlus.WebSocket
             }
             catch (Exception ex)
             {
-                Game.LogTrivial($"[ERROR] Failed to send message: {ex.Message}");
+                Logger.LogError($"Failed to send message: {ex.Message}");
             }
         }
 
@@ -109,7 +110,7 @@ namespace ReportsPlus.WebSocket
         {
             if (!IsConnected)
             {
-                Game.LogTrivial("[ERROR] Cannot send message: not connected.");
+                Logger.LogError("Cannot send message: not connected.");
                 return;
             }
 
@@ -126,7 +127,7 @@ namespace ReportsPlus.WebSocket
             }
             catch (Exception ex)
             {
-                Game.LogTrivial($"[ERROR] Failed to send message: {ex.Message}");
+                Logger.LogError($"Failed to send message: {ex.Message}");
             }
         }
 

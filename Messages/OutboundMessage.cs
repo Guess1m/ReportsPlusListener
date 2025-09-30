@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Rage;
+using ReportsPlus.Logging;
 using ReportsPlus.WebSocket;
 using RPWebSocketPlugin.WebSocket.Messages;
 
@@ -16,9 +16,9 @@ namespace ReportsPlus.Messages
             Sender = GameClientSocket.ClientSocket.Url.ToString(); //BUG: this may be accessing wrong socket
 
             if (type == null || data == null || args == null)
-                Game.LogTrivial("Error, null value(s) in OutboundMessage: " + ToString());
+                Logger.LogError("Null value(s) in OutboundMessage: " + ToString());
             else
-                Game.LogTrivial("OutboundMessage: " + ToString());
+                Logger.LogDebug("OutboundMessage: " + ToString());
         }
 
         public string Type { get; } // "request"

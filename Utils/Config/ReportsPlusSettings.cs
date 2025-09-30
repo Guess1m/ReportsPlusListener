@@ -1,8 +1,9 @@
 using System.Text;
+using INIUtility;
 
 namespace ReportsPlus.Utils.Config
 {
-    public sealed class AppSettings
+    public sealed class ReportsPlusSettings
     {
         [ConfigOption("Settings", "ClientAddress", "The network address for the websocket server (e.g., localhost, 127.0.0.1).")]
         public static string ClientAddress { get; set; } = "localhost";
@@ -16,7 +17,7 @@ namespace ReportsPlus.Utils.Config
             sb.AppendLine("--- ReportsPlus Loaded Settings ---");
             foreach (var prop in GetType().GetProperties())
                 if (prop.GetCustomAttributes(typeof(ConfigOptionAttribute), false).Length > 0)
-                    sb.AppendLine($"  {prop.Name}: '{prop.GetValue(this)}'");
+                    sb.AppendLine($" {prop.Name}: '{prop.GetValue(this)}'");
 
             sb.AppendLine("-----------------------------------");
             return sb.ToString();

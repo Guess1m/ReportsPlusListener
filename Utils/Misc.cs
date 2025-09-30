@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using ReportsPlus.Logging;
 
 namespace ReportsPlus.Utils
 {
@@ -14,14 +15,14 @@ namespace ReportsPlus.Utils
         {
             var plugins = Functions.GetAllUserPlugins();
             var isInstalled = plugins.Any(x => x.GetName().Name.Equals(pluginName));
-            Game.LogTrivial($"ReportsPlusListener: Plugin '{pluginName}' is installed: {isInstalled}");
+            Logger.LogDebug($"ReportsPlusListener: Plugin '{pluginName}' is installed: {isInstalled}");
 
             return isInstalled;
         }
 
         public static StringBuilder RunPluginChecks()
         {
-            Game.LogTrivial("ReportsPlus: Running Plugin Checks..");
+            Logger.LogInfo("Running Plugin Checks..");
             var missingPluginsMessageBuilder = new StringBuilder();
 
             _usingCi = IsPluginInstalled("CalloutInterface");
@@ -29,30 +30,30 @@ namespace ReportsPlus.Utils
             var hasCommonDataFramework = IsPluginInstalled("CommonDataFramework");
             _usingPrFunctions = hasPolicingRedefined && hasCommonDataFramework;
 
-            Game.LogTrivial("ReportsPlus: UsingCI: " + _usingCi);
-            Game.LogTrivial("ReportsPlus: hasPolicingRedefined: " + hasPolicingRedefined);
-            Game.LogTrivial("ReportsPlus: hasCommonDataFramework: " + hasCommonDataFramework);
-            Game.LogTrivial("ReportsPlus: UsingPRFunctions: " + _usingPrFunctions);
+            Logger.LogDebug("UsingCI: " + _usingCi);
+            Logger.LogDebug("hasPolicingRedefined: " + hasPolicingRedefined);
+            Logger.LogDebug("hasCommonDataFramework: " + hasCommonDataFramework);
+            Logger.LogDebug("UsingPRFunctions: " + _usingPrFunctions);
 
             if (_usingCi)
             {
+                Logger.LogInfo("CalloutInterface found. Establishing Events..");
                 EventUtils.EstablishCiEvent();
-                Game.LogTrivial("ReportsPlus: Found Callout Interface");
             }
             else
             {
-                Game.LogTrivial("ReportsPlus: CalloutInterface not found. Required for Callout Functions.");
+                Logger.LogWarning("CalloutInterface not found. Required for Callout Functions.");
                 missingPluginsMessageBuilder.Append("~r~CalloutInterface Not Found\n~o~- Required for Callout Functions.\n");
             }
 
             if (hasPolicingRedefined && hasCommonDataFramework)
             {
+                Logger.LogInfo("Policing Redefined and Common Data Framework found. Establishing Events..");
                 EventUtils.EstablishEventsPr();
-                Game.LogTrivial("ReportsPlus: Found Policing Redefined and Common Data Framework");
             }
             else
             {
-                Game.LogTrivial("ReportsPlus: Policing Redefined/CDF not found");
+                Logger.LogWarning("Policing Redefined/CDF not found");
                 missingPluginsMessageBuilder.Append("~r~PR Not Found\n~o~- Using base game functions.");
             }
 
@@ -69,7 +70,7 @@ namespace ReportsPlus.Utils
             }
             catch
             {
-                Game.LogTrivial("ReportsPlusListener: Error fetching model for ped: " + ped);
+                Logger.LogError("ReportsPlusListener: Error fetching model for ped: " + ped);
                 return "";
             }
         }

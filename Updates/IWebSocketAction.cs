@@ -1,4 +1,4 @@
-﻿using RPWebSocketPlugin.Messages;
+﻿using ReportsPlus.Messages;
 
 namespace ReportsPlus.Updates
 {

@@ -1,6 +1,8 @@
 ﻿using System;
+using INIUtility;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using ReportsPlus.Logging;
 using ReportsPlus.Updates;
 using ReportsPlus.Utils;
 using ReportsPlus.Utils.Config;
@@ -12,18 +14,17 @@ namespace ReportsPlus
     public class Main : Plugin
     {
         private const string Version = "v2.0.0";
+        private static bool _isOnDuty;
         private static GameFiber _primaryFiber;
         private static GameClientSocket _client;
 
-        private static bool _isOnDuty;
-        public static AppSettings Settings { get; private set; }
-
+        private static ReportsPlusSettings Settings { get; set; }
         public static Ped LocalPlayer => Game.LocalPlayer.Character;
 
         private void OnOnDutyStateChangedHandler(bool onDuty)
         {
             _isOnDuty = onDuty;
-            Game.LogTrivial("ReportsPlus: IsOnDuty State Changed: '" + _isOnDuty + "'");
+            Logger.LogInfo("IsOnDuty State Changed: '" + _isOnDuty + "'");
             RunFullCleanup();
 
             if (!_isOnDuty) return;
@@ -31,7 +32,7 @@ namespace ReportsPlus
 
             ActionRegistry.Initialize();
 
-            Settings = ConfigLoader.LoadSettings();
+            Settings = ConfigLoader.LoadSettings<ReportsPlusSettings>("plugins/LSPDFR/ReportsPlus.ini");
 
             _primaryFiber = GameFiber.StartNew(GameLoop, "ReportsPlus-PrimaryFiber");
         }
@@ -41,18 +42,18 @@ namespace ReportsPlus
         {
             try
             {
-                Game.LogTrivial("Connecting to server...");
-                _client = new GameClientSocket(AppSettings.ClientAddress, AppSettings.ClientPort);
+                Logger.LogInfo("Connecting to server...");
+                _client = new GameClientSocket(ReportsPlusSettings.ClientAddress, ReportsPlusSettings.ClientPort);
 
                 GameClientSocket.Connect();
 
                 if (!GameClientSocket.IsConnected)
                 {
-                    Game.LogTrivial("Connection failed.");
+                    Logger.LogError("Connection failed.");
                     return;
                 }
 
-                Game.LogTrivial("--- Connection Established ---");
+                Logger.LogInfo("--- Connection Established ---");
 
                 // Keep sending updates while connected
                 while (GameClientSocket.IsConnected)
@@ -63,12 +64,12 @@ namespace ReportsPlus
             }
             catch (Exception e)
             {
-                Game.LogTrivial($"[ERROR] An exception occurred in the GameLoop: {e.Message}");
-                Game.LogTrivial($"[ERROR] StackTrace: {e.StackTrace}");
+                Logger.LogError($"An exception occurred in the GameLoop: {e.Message}");
+                Logger.LogError($"StackTrace: {e.StackTrace}");
             }
             finally
             {
-                Game.LogTrivial("Client disconnected or fiber ended.");
+                Logger.LogWarning("Client disconnected or fiber ended.");
                 _client?.Disconnect();
             }
         }
@@ -76,7 +77,7 @@ namespace ReportsPlus
         public override void Initialize()
         {
             Functions.OnOnDutyStateChanged += OnOnDutyStateChangedHandler;
-            Game.LogTrivial("ReportsPlus Plugin Initialized. Version: [" + Version + "]");
+            Logger.LogInfo("ReportsPlus Plugin Initialized. Version: [" + Version + "]");
         }
 
         public override void Finally()
@@ -87,10 +88,10 @@ namespace ReportsPlus
 
         private static void RunFullCleanup()
         {
-            Game.LogTrivial("ReportsPlus: Cleanup Running..");
+            Logger.LogDebug("Cleanup Running..");
             _client?.Disconnect();
             Misc.CleanupFiber(_primaryFiber);
-            Game.LogTrivial("ReportsPlus: Cleaned Up.");
+            Logger.LogInfo("Cleaned Up.");
         }
     }
 }

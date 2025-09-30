@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
-using Rage;
+using ReportsPlus.Logging;
+using ReportsPlus.Messages;
 using ReportsPlus.WebSocket;
-using RPWebSocketPlugin.Messages;
 
 namespace ReportsPlus.Updates
 {
@@ -11,7 +11,7 @@ namespace ReportsPlus.Updates
 
         public void Execute(IncomingRequest request)
         {
-            Game.LogTrivial("[INFO] CalloutUpdate.Execute called, but this action is driven by game events.");
+            Logger.LogWarning("CalloutUpdate.Execute called, but this action is driven by game events.");
         }
 
         public static void SendCalloutData(JObject data)

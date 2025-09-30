@@ -1,6 +1,6 @@
 ﻿using System;
+using ReportsPlus.Messages;
 using ReportsPlus.WebSocket;
-using RPWebSocketPlugin.Messages;
 
 namespace ReportsPlus.Updates
 {

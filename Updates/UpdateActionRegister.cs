@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Rage;
-using RPWebSocketPlugin.Messages;
+using ReportsPlus.Logging;
+using ReportsPlus.Messages;
 
 namespace ReportsPlus.Updates
 {
@@ -22,7 +22,7 @@ namespace ReportsPlus.Updates
             Register(new GameTimeAction());
             Register(new PlayerLocationAction());
             Register(new PoliceVehiclesAction());
-            Game.LogTrivial($"ActionRegistry initialized. {ActionsByName.Count} actions registered.");
+            Logger.LogInfo($"ActionRegistry initialized. {ActionsByName.Count} actions registered.");
         }
 
         // Registers an action in both dictionaries
@@ -32,7 +32,7 @@ namespace ReportsPlus.Updates
 
             var actionType = action.GetType();
 
-            if (ActionsByName.ContainsKey(action.Name) || ActionsByType.ContainsKey(actionType)) Game.LogTrivial($"[WARNING] Action '{action.Name}' or type '{actionType.Name}' is already registered. Overwriting.");
+            if (ActionsByName.ContainsKey(action.Name) || ActionsByType.ContainsKey(actionType)) Logger.LogWarning($"Action '{action.Name}' or type '{actionType.Name}' is already registered. Overwriting.");
 
             ActionsByName[action.Name] = action;
             ActionsByType[actionType] = action;
@@ -45,12 +45,12 @@ namespace ReportsPlus.Updates
 
             if (ActionsByName.TryGetValue(request.Data, out var action))
             {
-                Game.LogTrivial($"Executing action for request: '{request.Data}'");
+                Logger.LogDebug($"Executing action for request: '{request.Data}'");
                 action.Execute(request);
             }
             else
             {
-                Game.LogTrivial($"[WARNING] No action found for request type: '{request.Data}'");
+                Logger.LogWarning($" No action found for request type: '{request.Data}'");
             }
         }
 
@@ -60,7 +60,7 @@ namespace ReportsPlus.Updates
             if (ActionsByType.TryGetValue(typeof(T), out var action))
                 action.Execute(null);
             else
-                Game.LogTrivial($"[WARNING] Could not execute proactive action. No action found with type: '{typeof(T).Name}'");
+                Logger.LogWarning($" Could not execute proactive action. No action found with type: '{typeof(T).Name}'");
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
-using Rage;
+using ReportsPlus.Logging;
 using RPWebSocketPlugin.WebSocket.Messages;
 
-namespace RPWebSocketPlugin.Messages
+namespace ReportsPlus.Messages
 {
     public class IncomingRequest : IMessage
     {
@@ -18,7 +18,10 @@ namespace RPWebSocketPlugin.Messages
 
             HasErrors = Type == "error" || Data == "error" || Sender == "error";
 
-            Game.LogTrivial(HasErrors ? "Error, null value(s) in request: " + ToString() : "IncomingRequest: " + ToString());
+            if (HasErrors)
+                Logger.LogError("Error, null value(s) in request: " + ToString());
+            else
+                Logger.LogInfo("IncomingRequest: " + ToString());
         }
 
         private bool HasErrors { get; }

@@ -4,6 +4,7 @@ using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using Rage;
+using ReportsPlus.Logging;
 using ReportsPlus.Updates;
 using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
@@ -32,52 +33,52 @@ namespace ReportsPlus.Utils
 
         private static void PR_OnPedStopped(Ped ped)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnPedStopped");
+            Logger.LogDebug("Running PR OnPedStopped");
         }
 
         private static void PR_OnOccupantIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnOccupantIdentificationGiven");
+            Logger.LogDebug("Running PR OnOccupantIdentificationGiven");
         }
 
         private static void PR_OnDriverIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnDriverIdentificationGiven");
+            Logger.LogDebug("Running PR OnDriverIdentificationGiven");
         }
 
         private static void PR_OnPedPatDown(Ped ped)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnPedPatDown");
+            Logger.LogDebug("Running PR OnPedPatDown");
         }
 
         private static void PR_OnPedArrested(Ped ped, Ped officer, bool frontcuffs)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnPedArrested");
+            Logger.LogDebug("Running PR OnPedArrested");
         }
 
         private static void PR_OnIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnIdentificationGiven");
+            Logger.LogDebug("Running PR OnIdentificationGiven");
         }
 
         private static void PR_OnDeadPedPatDown(Ped ped)
         {
-            Game.LogTrivial("ReportsPlus: Running PR OnDeadPedPatDown");
+            Logger.LogDebug("Running PR OnDeadPedPatDown");
         }
 
         private static void PR_OnVehicleCheck(Vehicle vehicle, bool isVinCheck)
         {
-            Game.LogTrivial("ReportsPlus: Updated Lookup File (vehicle); ");
+            Logger.LogDebug("Updated Lookup File (vehicle); ");
         }
 
         private static void PR_OnPedCheck(Ped ped)
         {
-            Game.LogTrivial("ReportsPlus: Updated Lookup File (ped); ");
+            Logger.LogDebug("Updated Lookup File (ped); ");
         }
 
         private static void EventsOnCalloutDisplayed(LHandle handle)
         {
-            Game.LogTrivial("ReportsPlus: Running EventsOnCalloutDisplayed");
+            Logger.LogDebug("Running EventsOnCalloutDisplayed");
             var callout = CalloutInterface.API.Functions.GetCalloutFromHandle(handle);
             var identifier = new Random().Next(10000, 100000);
 
@@ -118,7 +119,7 @@ namespace ReportsPlus.Utils
 
             CalloutUpdate.SendCalloutData(calloutData);
 
-            Game.LogTrivial($"ReportsPlus: Callout {identifier} DataFile Updated");
+            Logger.LogDebug($"Callout {identifier} DataFile Updated");
         }
     }
 }
