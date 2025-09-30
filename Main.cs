@@ -18,7 +18,7 @@ namespace ReportsPlus
         /*
          UPDATE: Update Version
         */
-        private const string Version = "v1.5.2-alpha";
+        private const string Version = "v1.5.3-alpha";
         public const string FileDataFolder = "ReportsPlus/data";
         public const string FileResourcesFolder = "Plugins/lspdfr/ReportsPlus/";
 
@@ -31,8 +31,8 @@ namespace ReportsPlus
         public static bool HasStopThePed;
         public static bool HasPolicingRedefined;
         public static bool HasCommonDataFramework;
-        private static bool _hasCalloutInterface;
 
+        private static bool _hasCalloutInterface;
         private static GameFiber _primaryFiber;
         private static GameFiber _playerStateCheckFiber;
 
