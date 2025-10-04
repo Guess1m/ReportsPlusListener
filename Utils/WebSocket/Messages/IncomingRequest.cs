@@ -3,19 +3,16 @@ using ReportsPlus.Utils.Logging;
 
 namespace ReportsPlus.Utils.WebSocket.Messages
 {
-    public class IncomingRequest : IMessage
+    public class IncomingRequest
     {
-        // Handles incoming messages
-        public IncomingRequest(string json)
+        public IncomingRequest(JObject jsonObject)
         {
-            var jsonObject = JObject.Parse(json);
-
             Type = jsonObject["type"]?.ToString() ?? "error";
-            Data = jsonObject["data"]?.ToString() ?? "error";
+            Data = jsonObject["data"];
             Args = jsonObject["args"]?.ToString() ?? "error";
             Sender = jsonObject["sender"]?.ToString() ?? "error";
 
-            HasErrors = Type == "error" || Data == "error" || Sender == "error";
+            HasErrors = Type == "error" || Data == null || Sender == "error";
 
             if (HasErrors)
                 Logger.LogError("Error, null value(s) in request: " + ToString());
@@ -25,7 +22,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages
 
         private bool HasErrors { get; }
         public string Type { get; }
-        public string Data { get; }
+        public JToken Data { get; }
         public string Args { get; }
         public string Sender { get; }
 

@@ -11,7 +11,7 @@ namespace ReportsPlus.Utils.WebSocket
 {
     public class GameClientSocket
     {
-        public static WebSocketSharp.WebSocket ClientSocket;
+        public WebSocketSharp.WebSocket ClientSocket;
 
         public GameClientSocket(string hostname = "localhost", int port = 6969)
         {
@@ -22,7 +22,7 @@ namespace ReportsPlus.Utils.WebSocket
             OnMessageReceived += HandleServerMessage;
         }
 
-        public static bool IsConnected => ClientSocket is { ReadyState: WebSocketState.Open };
+        public bool IsConnected => ClientSocket is { ReadyState: WebSocketState.Open };
 
         private static void HandleServerMessage(IncomingRequest message)
         {
@@ -38,7 +38,8 @@ namespace ReportsPlus.Utils.WebSocket
             {
                 try
                 {
-                    OnMessageReceived?.Invoke(new IncomingRequest(JObject.Parse(e.Data).ToString()));
+                    var jsonObject = JObject.Parse(e.Data);
+                    OnMessageReceived?.Invoke(new IncomingRequest(jsonObject));
                 }
                 catch (Exception ex)
                 {
@@ -51,34 +52,13 @@ namespace ReportsPlus.Utils.WebSocket
             ClientSocket.OnClose += (sender, e) => { Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}"); };
         }
 
-        public static void Connect()
+        public void Connect()
         {
             Logger.LogDebug($"Connecting to {ClientSocket.Url}...");
             ClientSocket.Connect();
         }
 
-        public static void Send(string type, string data)
-        {
-            if (!IsConnected)
-            {
-                Logger.LogError("Cannot send message: not connected.");
-                return;
-            }
-
-            try
-            {
-                var messageObject = new JObject { ["type"] = type, ["data"] = data };
-                var messageJson = messageObject.ToString(Formatting.None);
-
-                ClientSocket.Send(messageJson);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Failed to send message: {ex.Message}");
-            }
-        }
-
-        public static void Send(string type, string data, string args = "")
+        public void Send(string type, JToken data, string args = "")
         {
             if (!IsConnected)
             {
@@ -91,36 +71,13 @@ namespace ReportsPlus.Utils.WebSocket
                 var messageObject = new JObject
                 {
                     ["type"] = type,
-                    ["data"] = data
+                    ["data"] = data,
+                    // Add the sender here, where it belongs
+                    ["sender"] = ClientSocket.Url.ToString()
                 };
 
                 if (!string.IsNullOrEmpty(args)) messageObject["args"] = args;
 
-                var messageJson = messageObject.ToString(Formatting.None);
-
-                ClientSocket.Send(messageJson);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Failed to send message: {ex.Message}");
-            }
-        }
-
-        public static void Send(string type, JObject data)
-        {
-            if (!IsConnected)
-            {
-                Logger.LogError("Cannot send message: not connected.");
-                return;
-            }
-
-            try
-            {
-                var messageObject = new JObject
-                {
-                    ["type"] = type,
-                    ["data"] = data
-                };
                 var messageJson = messageObject.ToString(Formatting.None);
 
                 ClientSocket.Send(messageJson);

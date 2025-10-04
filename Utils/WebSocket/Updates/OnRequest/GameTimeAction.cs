@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.WebSocket.Messages;
 
 namespace ReportsPlus.Utils.WebSocket.Updates.OnRequest
@@ -10,8 +11,12 @@ namespace ReportsPlus.Utils.WebSocket.Updates.OnRequest
 
         public void Execute(IncomingRequest request)
         {
-            var currentTime = DateTime.Now.ToString("h:mm tt");
-            GameClientSocket.Send(Name, currentTime);
+            var timeData = new JObject
+            {
+                ["time"] = DateTime.Now.ToString("h:mm tt")
+            };
+
+            Main.Client.Send(Name, timeData);
         }
     }
 }

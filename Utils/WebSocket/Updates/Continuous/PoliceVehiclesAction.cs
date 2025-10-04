@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rage;
 using ReportsPlus.Utils.WebSocket.Messages;
@@ -17,9 +16,11 @@ namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
         {
             UpdateTrackedVehicleLocations();
 
-            var vehiclesJson = GetTrackedVehiclesAsJson();
+            // This now returns a JArray
+            var vehiclesData = GetTrackedVehiclesAsJson();
 
-            GameClientSocket.Send(Name, vehiclesJson);
+            // This will call the new Send(string, JArray) overload
+            Main.Client.Send(Name, vehiclesData);
         }
 
         // for each vehicle in the world, check if it is a police vehicle and if it is valid, if so add to tracked vehicles
@@ -36,7 +37,7 @@ namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
         }
 
         // get all tracked vehicles as JSON
-        private string GetTrackedVehiclesAsJson()
+        private JArray GetTrackedVehiclesAsJson()
         {
             var vehiclesArray = new JArray();
             foreach (var vehicle in TrackedVehicles.Where(vehicle => vehicle.Exists()))
@@ -47,7 +48,7 @@ namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
                     ["y"] = vehicle.Position.Y
                 });
 
-            return vehiclesArray.ToString(Formatting.None);
+            return vehiclesArray;
         }
 
         // Used in Program.cs for cleanup

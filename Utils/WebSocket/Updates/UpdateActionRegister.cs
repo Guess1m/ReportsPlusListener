@@ -52,16 +52,19 @@ namespace ReportsPlus.Utils.WebSocket.Updates
 
         public static void HandleRequest(IncomingRequest request)
         {
+            // The server sends "request" in the 'type' field
             if (request.Type != "request") return;
 
-            if (ActionsByName.TryGetValue(request.Data, out var action))
+            // The 'data' field contains the name of the action to run
+            var actionName = request.Data.ToString();
+            if (ActionsByName.TryGetValue(actionName, out var action))
             {
-                Logger.LogDebug($"Executing action for request: '{request.Data}'");
+                Logger.LogDebug($"Executing action for request: '{actionName}'");
                 action.Execute(request);
             }
             else
             {
-                Logger.LogWarning($" No action found for request type: '{request.Data}'");
+                Logger.LogWarning($" No action found for request type: '{actionName}'");
             }
         }
 

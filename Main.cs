@@ -19,6 +19,9 @@ namespace ReportsPlus
         private static GameFiber _primaryFiber;
         private static GameClientSocket _client;
 
+        // Add this static property to hold the client instance
+        public static GameClientSocket Client { get; private set; }
+
         private static ReportsPlusSettings Settings { get; set; }
         public static Ped LPC => Game.LocalPlayer.Character;
         public static Vehicle LPCV => Game.LocalPlayer.Character?.CurrentVehicle;
@@ -36,6 +39,7 @@ namespace ReportsPlus
 
             // Cleanup previous data
             CleanupRegistry.RunCleanup();
+            Client = null; // Clear the client when going off-duty
 
             if (!_isOnDuty) return;
 
@@ -60,13 +64,14 @@ namespace ReportsPlus
                 GameFiber.Yield();
                 Logger.LogInfo("Connecting to server...");
                 _client = new GameClientSocket(ReportsPlusSettings.ClientAddress, ReportsPlusSettings.ClientPort);
+                Client = _client; // Assign the instance to our static property
 
                 // Register client disconnect action AFTER client is instantiated.
                 CleanupRegistry.Register(() => _client?.Disconnect());
 
-                GameClientSocket.Connect();
+                Client.Connect(); // Use the instance property
 
-                if (!GameClientSocket.IsConnected)
+                if (!Client.IsConnected) // Use the instance property
                 {
                     Logger.LogError("Connection failed.");
                     return;
@@ -74,7 +79,7 @@ namespace ReportsPlus
 
                 Logger.LogInfo("--- Connection Established ---");
 
-                while (GameClientSocket.IsConnected)
+                while (Client.IsConnected) // Use the instance property
                 {
                     ActionRegistry.ExecuteContinuousActions();
                     GameFiber.Sleep(ReportsPlusSettings.ContinuousUpdateInterval);

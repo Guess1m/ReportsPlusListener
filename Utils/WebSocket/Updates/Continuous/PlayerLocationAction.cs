@@ -18,7 +18,7 @@ namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
                 ["y"] = playerPosition.Y
             };
 
-            GameClientSocket.Send(Name, locationData.ToString());
+            Main.Client.Send(Name, locationData);
         }
     }
 }

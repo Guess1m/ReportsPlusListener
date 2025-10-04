@@ -16,7 +16,7 @@ namespace ReportsPlus.Utils.WebSocket.Updates.EventDriven
 
         public static void SendCalloutData(JObject data)
         {
-            GameClientSocket.Send("calloutupdate", data);
+            Main.Client.Send("calloutupdate", data);
         }
     }
 }
