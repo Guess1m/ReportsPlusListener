@@ -1,15 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.WebSocket.Messages
-{
-    public class IncomingRequest
-    {
+namespace ReportsPlus.Utils.WebSocket.Messages{
+    public class IncomingRequest{
         public IncomingRequest(JObject jsonObject)
         {
-            Type = jsonObject["type"]?.ToString() ?? "error";
-            Data = jsonObject["data"];
-            Args = jsonObject["args"]?.ToString() ?? "error";
+            Type   = jsonObject["type"]?.ToString() ?? "error";
+            Data   = jsonObject["data"];
+            Args   = jsonObject["args"]?.ToString() ?? "error";
             Sender = jsonObject["sender"]?.ToString() ?? "error";
 
             HasErrors = Type == "error" || Data == null || Sender == "error";
@@ -20,11 +18,11 @@ namespace ReportsPlus.Utils.WebSocket.Messages
                 Logger.LogInfo("IncomingRequest: " + ToString());
         }
 
-        private bool HasErrors { get; }
-        public string Type { get; }
-        public JToken Data { get; }
-        public string Args { get; }
-        public string Sender { get; }
+        private bool   HasErrors { get; }
+        public  string Type      { get; }
+        public  JToken Data      { get; }
+        public  string Args      { get; }
+        private string Sender    { get; }
 
         public sealed override string ToString()
         {

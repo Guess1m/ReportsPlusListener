@@ -1,40 +1,52 @@
 using System;
+using System.Collections.Concurrent;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rage;
+using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.WebSocket.Messages;
 using ReportsPlus.Utils.WebSocket.Updates;
 using WebSocketSharp;
 using Logger = ReportsPlus.Utils.Logging.Logger;
 
-namespace ReportsPlus.Utils.WebSocket
-{
-    public class GameClientSocket
-    {
-        public WebSocketSharp.WebSocket ClientSocket;
+namespace ReportsPlus.Utils.WebSocket{
+    public class GameClientSocket{
+        private readonly WebSocketSharp.WebSocket _clientSocket;
+
+        private readonly ConcurrentQueue<string> _sendQueue = new ConcurrentQueue<string>();
+
+        private GameFiber _senderFiber;
 
         public GameClientSocket(string hostname = "localhost", int port = 6969)
         {
             var url = $"ws://{hostname}:{port}/ws/game-client";
-            ClientSocket = new WebSocketSharp.WebSocket(url);
+            _clientSocket = new WebSocketSharp.WebSocket(url);
             SetupEvents();
 
-            OnMessageReceived += HandleServerMessage;
+            OnMessageReceived += message => HandleServerMessage(this, message);
         }
 
-        public bool IsConnected => ClientSocket is { ReadyState: WebSocketState.Open };
+        public bool IsConnected => _clientSocket is { ReadyState: WebSocketState.Open };
 
-        private static void HandleServerMessage(IncomingRequest message)
+        private static void HandleServerMessage(GameClientSocket client, IncomingRequest message)
         {
-            GameFiber.StartNew(() => { ActionRegistry.HandleRequest(message); });
+            ActionRegistry.HandleRequest(client, message);
+            ActionRegistry.HandleKeybinding(message);
         }
 
         public event Action<IncomingRequest> OnMessageReceived;
 
         private void SetupEvents()
         {
-            ClientSocket.OnOpen += (sender, e) => { Logger.LogInfo("Connected successfully."); };
-            ClientSocket.OnMessage += (client, e) =>
+            _clientSocket.OnOpen += (sender, e) =>
+            {
+                Logger.LogInfo("Connected successfully.");
+                _senderFiber = GameFiber.StartNew(SenderLoop, "ReportsPlus-SenderFiber");
+
+                CleanupRegistry.Register(() => Misc.CleanupFiber(_senderFiber));
+            };
+
+            _clientSocket.OnMessage += (client, e) =>
             {
                 try
                 {
@@ -47,22 +59,42 @@ namespace ReportsPlus.Utils.WebSocket
                 }
             };
 
-            ClientSocket.OnError += (sender, e) => { Logger.LogError($"WebSocket error: {e.Message}"); };
+            _clientSocket.OnError += (sender, e) => { Logger.LogError($"WebSocket error: {e.Message}"); };
+            _clientSocket.OnClose += (sender, e) => { Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}"); };
+        }
 
-            ClientSocket.OnClose += (sender, e) => { Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}"); };
+        private void SenderLoop()
+        {
+            Logger.LogDebug("SenderLoop has started.");
+            try
+            {
+                while (IsConnected)
+                    if (_sendQueue.TryDequeue(out var message))
+                        _clientSocket.Send(message);
+                    else
+                        GameFiber.Sleep(10);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"An exception occurred in the SenderLoop: {ex.Message}");
+            }
+            finally
+            {
+                Logger.LogWarning("SenderLoop has ended.");
+            }
         }
 
         public void Connect()
         {
-            Logger.LogDebug($"Connecting to {ClientSocket.Url}...");
-            ClientSocket.Connect();
+            Logger.LogDebug($"Connecting to {_clientSocket.Url}...");
+            _clientSocket.Connect();
         }
 
         public void Send(string type, JToken data, string args = "")
         {
             if (!IsConnected)
             {
-                Logger.LogError("Cannot send message: not connected.");
+                Logger.LogWarning("Cannot send message: not connected.");
                 return;
             }
 
@@ -70,27 +102,32 @@ namespace ReportsPlus.Utils.WebSocket
             {
                 var messageObject = new JObject
                 {
-                    ["type"] = type,
-                    ["data"] = data,
-                    // Add the sender here, where it belongs
-                    ["sender"] = ClientSocket.Url.ToString()
+                    ["type"]   = type,
+                    ["data"]   = data,
+                    ["sender"] = _clientSocket.Url.ToString()
                 };
 
                 if (!string.IsNullOrEmpty(args)) messageObject["args"] = args;
 
                 var messageJson = messageObject.ToString(Formatting.None);
 
-                ClientSocket.Send(messageJson);
+                _sendQueue.Enqueue(messageJson);
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to send message: {ex.Message}");
+                Logger.LogError($"Failed to serialize or enqueue message: {ex.Message}");
             }
         }
 
         public void Disconnect()
         {
-            if (ClientSocket != null && IsConnected) ClientSocket.Close(CloseStatusCode.Normal);
+            if (_senderFiber is { IsAlive: true })
+            {
+                _senderFiber.Abort();
+                _senderFiber = null;
+            }
+
+            if (_clientSocket != null && IsConnected) _clientSocket.Close(CloseStatusCode.Normal);
         }
     }
 }

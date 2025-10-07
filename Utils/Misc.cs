@@ -4,16 +4,14 @@ using LSPD_First_Response.Mod.API;
 using Rage;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils
-{
-    public static class Misc
-    {
+namespace ReportsPlus.Utils{
+    public static class Misc{
         private static bool _usingPrFunctions;
         private static bool _usingCi;
 
         private static bool IsPluginInstalled(string pluginName)
         {
-            var plugins = Functions.GetAllUserPlugins();
+            var plugins     = Functions.GetAllUserPlugins();
             var isInstalled = plugins.Any(x => x.GetName().Name.Equals(pluginName));
             Logger.LogDebug($"ReportsPlusListener: Plugin '{pluginName}' is installed: {isInstalled}");
 
@@ -26,7 +24,7 @@ namespace ReportsPlus.Utils
             var missingPluginsMessageBuilder = new StringBuilder();
 
             _usingCi = IsPluginInstalled("CalloutInterface");
-            var hasPolicingRedefined = IsPluginInstalled("PolicingRedefined");
+            var hasPolicingRedefined   = IsPluginInstalled("PolicingRedefined");
             var hasCommonDataFramework = IsPluginInstalled("CommonDataFramework");
             _usingPrFunctions = hasPolicingRedefined && hasCommonDataFramework;
 
@@ -79,6 +77,7 @@ namespace ReportsPlus.Utils
         {
             if (!(fiber is { IsAlive: true })) return;
             fiber.Abort();
+            Logger.LogDebug($"Fiber {fiber} was cleaned up.");
         }
     }
 }

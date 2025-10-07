@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.Cleanup
-{
-    public static class CleanupRegistry
-    {
+namespace ReportsPlus.Utils.Cleanup{
+    public static class CleanupRegistry{
         private static readonly List<Action> CleanupActions = new List<Action>();
-        private static readonly object LockObject = new object();
+        private static readonly object       LockObject     = new object();
 
         /// <summary>
         ///     Registers a cleanup action to be executed later.

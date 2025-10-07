@@ -1,9 +1,7 @@
 using Rage;
 
-namespace ReportsPlus.Utils.Logging
-{
-    internal sealed class Logger
-    {
+namespace ReportsPlus.Utils.Logging{
+    internal sealed class Logger{
         private static void Log(string message, Severity severity)
         {
             Game.LogTrivial($"ReportsPlus [{severity}]: {message}");
@@ -29,8 +27,7 @@ namespace ReportsPlus.Utils.Logging
             Log(message, Severity.Error);
         }
 
-        private enum Severity
-        {
+        private enum Severity{
             Info,
             Warning,
             Debug,

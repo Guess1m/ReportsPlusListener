@@ -1,14 +1,12 @@
 ﻿using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
-{
-    public class PlayerLocationAction : IWebSocketAction
-    {
-        public string Name => "playerLocation";
-        public bool IsContinuous => true;
+namespace ReportsPlus.Utils.WebSocket.Updates.Continuous{
+    public class PlayerLocationAction : IWebSocketAction{
+        public string Name         => "playerLocation";
+        public bool   IsContinuous => true;
 
-        public void Execute(IncomingRequest request)
+        public void Execute(GameClientSocket client, IncomingRequest request)
         {
             var playerPosition = Main.LPC.Position;
 
@@ -18,7 +16,7 @@ namespace ReportsPlus.Utils.WebSocket.Updates.Continuous
                 ["y"] = playerPosition.Y
             };
 
-            Main.Client.Send(Name, locationData);
+            client.Send(Name, locationData);
         }
     }
 }

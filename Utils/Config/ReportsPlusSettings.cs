@@ -1,10 +1,8 @@
 using System.Text;
 using INIUtility;
 
-namespace ReportsPlus.Utils.Config
-{
-    public sealed class ReportsPlusSettings
-    {
+namespace ReportsPlus.Utils.Config{
+    public sealed class ReportsPlusSettings{
         // Register Settings
 
         [ConfigOption("Settings", "ClientAddress", "The network address for the websocket server (e.g., localhost, 127.0.0.1).")]

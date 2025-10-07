@@ -10,21 +10,18 @@ using ReportsPlus.Utils.WebSocket;
 using ReportsPlus.Utils.WebSocket.Updates;
 using ReportsPlus.Utils.WebSocket.Updates.Continuous;
 
-namespace ReportsPlus
-{
-    public class Main : Plugin
-    {
-        private const string Version = "v2.0.0";
-        private static bool _isOnDuty;
-        private static GameFiber _primaryFiber;
+namespace ReportsPlus{
+    public class Main : Plugin{
+        private const  string           Version = "v2.0.0";
+        private static bool             _isOnDuty;
+        private static GameFiber        _primaryFiber;
         private static GameClientSocket _client;
 
-        // Add this static property to hold the client instance
         public static GameClientSocket Client { get; private set; }
 
         private static ReportsPlusSettings Settings { get; set; }
-        public static Ped LPC => Game.LocalPlayer.Character;
-        public static Vehicle LPCV => Game.LocalPlayer.Character?.CurrentVehicle;
+        public static  Ped                 LPC      => Game.LocalPlayer.Character;
+        public static  Vehicle             LPCV     => Game.LocalPlayer.Character?.CurrentVehicle;
 
         public override void Initialize()
         {
@@ -64,24 +61,25 @@ namespace ReportsPlus
                 GameFiber.Yield();
                 Logger.LogInfo("Connecting to server...");
                 _client = new GameClientSocket(ReportsPlusSettings.ClientAddress, ReportsPlusSettings.ClientPort);
-                Client = _client; // Assign the instance to our static property
+                Client  = _client;
 
-                // Register client disconnect action AFTER client is instantiated.
-                CleanupRegistry.Register(() => _client?.Disconnect());
+                Client.Connect();
 
-                Client.Connect(); // Use the instance property
-
-                if (!Client.IsConnected) // Use the instance property
+                if (!Client.IsConnected)
                 {
                     Logger.LogError("Connection failed.");
+                    _client = null; // Ensure the client is null if connection failed
+                    Client  = null;
                     return;
                 }
 
+                // Only register the disconnect cleanup action AFTER a successful connection
+                CleanupRegistry.Register(() => _client?.Disconnect());
                 Logger.LogInfo("--- Connection Established ---");
 
-                while (Client.IsConnected) // Use the instance property
+                while (Client.IsConnected)
                 {
-                    ActionRegistry.ExecuteContinuousActions();
+                    ActionRegistry.ExecuteContinuousActions(Client); // You'd pass Client here if you did the DI refactor
                     GameFiber.Sleep(ReportsPlusSettings.ContinuousUpdateInterval);
                 }
             }

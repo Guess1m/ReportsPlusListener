@@ -113,7 +113,7 @@
         <Compile Include="Utils\WebSocket\Messages\IncomingRequest.cs"/>
         <Compile Include="Utils\WebSocket\Updates\Continuous\PlayerLocationAction.cs"/>
         <Compile Include="Utils\WebSocket\Updates\Continuous\PoliceVehiclesAction.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\EventDriven\CalloutUpdate.cs"/>
+        <Compile Include="Utils\WebSocket\Updates\EventDriven\CalloutUpdater.cs"/>
         <Compile Include="Utils\WebSocket\Updates\IWebSocketAction.cs"/>
         <Compile Include="Utils\WebSocket\Updates\OnRequest\GameTimeAction.cs"/>
         <Compile Include="Utils\WebSocket\Updates\UpdateActionRegister.cs"/>
