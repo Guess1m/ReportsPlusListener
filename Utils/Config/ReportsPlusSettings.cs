@@ -1,4 +1,5 @@
 using System.Text;
+using System.Windows.Forms;
 using INIUtility;
 
 namespace ReportsPlus.Utils.Config{
@@ -6,13 +7,17 @@ namespace ReportsPlus.Utils.Config{
         // Register Settings
 
         [ConfigOption("Settings", "ClientAddress", "The network address for the websocket server (e.g., localhost, 127.0.0.1).")]
-        public static string ClientAddress { get; set; } = "localhost";
+        public string ClientAddress { get; set; } = "localhost";
 
         [ConfigOption("Settings", "ClientPort", "Port to use for websocket server (must be 1-65535).")]
-        public static int ClientPort { get; set; } = 6969;
+        public int ClientPort { get; set; } = 6969;
 
         [ConfigOption("Intervals", "ContinuousUpdateInterval", "Interval (ms) for sending continuous updates to server (e.g. PlayerLocation, PoliceVehiclesLocation).")]
-        public static int ContinuousUpdateInterval { get; set; } = 5000;
+        public int ContinuousUpdateInterval { get; set; } = 5000;
+
+        // keybinding for input-lock
+        [ConfigOption("Keybindings", "InputLockKey", "Key to toggle input lock (e.g. F9). Must be capitalized.")]
+        public Keys InputLockKey { get; set; } = Keys.F9;
 
         public override string ToString()
         {

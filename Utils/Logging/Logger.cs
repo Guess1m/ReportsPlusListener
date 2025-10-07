@@ -1,10 +1,29 @@
 using Rage;
 
 namespace ReportsPlus.Utils.Logging{
-    internal sealed class Logger{
+    internal static class Logger{
         private static void Log(string message, Severity severity)
         {
-            Game.LogTrivial($"ReportsPlus [{severity}]: {message}");
+            var prefix = $"ReportsPlus [{severity.ToString().ToUpperInvariant()}]: ";
+
+            switch (severity)
+            {
+                case Severity.Debug:
+                    Game.LogVeryVerboseDebug(prefix + message);
+                    break;
+                case Severity.Info:
+                    Game.LogTrivial(prefix + message);
+                    break;
+                case Severity.Warning:
+                    Game.LogVerbose(prefix + message);
+                    break;
+                case Severity.Error:
+                    Game.LogVeryVerbose(prefix + message);
+                    break;
+                default:
+                    Game.LogTrivial($"ReportsPlus [FATAL/UNKNOWN]: {message}");
+                    break;
+            }
         }
 
         public static void LogDebug(string message)

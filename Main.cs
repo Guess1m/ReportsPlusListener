@@ -2,26 +2,27 @@
 using INIUtility;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using Rage.Native;
 using ReportsPlus.Utils;
 using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.Config;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket;
-using ReportsPlus.Utils.WebSocket.Updates;
-using ReportsPlus.Utils.WebSocket.Updates.Continuous;
 
 namespace ReportsPlus{
     public class Main : Plugin{
-        private const  string           Version = "v2.0.0";
-        private static bool             _isOnDuty;
-        private static GameFiber        _primaryFiber;
-        private static GameClientSocket _client;
-
-        public static GameClientSocket Client { get; private set; }
-
+        private const  string              Version = "v2.0.0";
+        private static bool                _isOnDuty;
+        private static GameFiber           _primaryFiber;
+        private static GameFiber           _inputLockFiber;
+        private static GameClientSocket    _client;
+        public static  bool                IsInputDisabled;
         private static ReportsPlusSettings Settings { get; set; }
-        public static  Ped                 LPC      => Game.LocalPlayer.Character;
-        public static  Vehicle             LPCV     => Game.LocalPlayer.Character?.CurrentVehicle;
+
+        private static GameClientSocket Client { get; set; }
+
+        public static Ped     LPC  => Game.LocalPlayer.Character;
+        public static Vehicle LPCV => Game.LocalPlayer.Character?.CurrentVehicle;
 
         public override void Initialize()
         {
@@ -43,32 +44,36 @@ namespace ReportsPlus{
             // On-Duty Initialization
             Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "By: ~y~Guess1m", "~g~Version: " + Version + " Loaded!" + "\n" + Misc.RunPluginChecks());
 
-            ActionRegistry.Initialize();
-
+            // Load settings before starting the fiber that uses them
             Settings = ConfigLoader.LoadSettings<ReportsPlusSettings>("plugins/LSPDFR/ReportsPlus.ini");
 
-            _primaryFiber = GameFiber.StartNew(GameLoop, "ReportsPlus-PrimaryFiber");
+            MessageHandler.Initialize();
+
+            _primaryFiber   = GameFiber.StartNew(GameLoop, "ReportsPlus-PrimaryFiber");
+            _inputLockFiber = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
 
             // Register Cleanup Actions
             CleanupRegistry.Register(() => Misc.CleanupFiber(_primaryFiber));
-            CleanupRegistry.Register(PoliceVehiclesAction.ClearTrackedPoliceVehicles);
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_inputLockFiber));
         }
 
-        private static void GameLoop()
+        private void GameLoop()
         {
             try
             {
                 GameFiber.Yield();
                 Logger.LogInfo("Connecting to server...");
-                _client = new GameClientSocket(ReportsPlusSettings.ClientAddress, ReportsPlusSettings.ClientPort);
+                _client = new GameClientSocket(Settings.ClientAddress, Settings.ClientPort);
                 Client  = _client;
+                EventManager.SetClient(Client);
+                CleanupRegistry.Register(() => EventManager.SetClient(null));
 
                 Client.Connect();
 
                 if (!Client.IsConnected)
                 {
                     Logger.LogError("Connection failed.");
-                    _client = null; // Ensure the client is null if connection failed
+                    _client = null;
                     Client  = null;
                     return;
                 }
@@ -79,8 +84,9 @@ namespace ReportsPlus{
 
                 while (Client.IsConnected)
                 {
-                    ActionRegistry.ExecuteContinuousActions(Client); // You'd pass Client here if you did the DI refactor
-                    GameFiber.Sleep(ReportsPlusSettings.ContinuousUpdateInterval);
+                    GameFiber.Yield();
+                    MessageHandler.ExecuteContinuousActions(Client);
+                    GameFiber.Sleep(Settings.ContinuousUpdateInterval);
                 }
             }
             catch (Exception e)
@@ -91,6 +97,23 @@ namespace ReportsPlus{
             finally
             {
                 Logger.LogWarning("Client disconnected or fiber ended.");
+            }
+        }
+
+        private static void CheckForInputLock()
+        {
+            while (_isOnDuty)
+            {
+                GameFiber.Yield();
+
+                if (Game.IsKeyDown(Settings.InputLockKey))
+                {
+                    IsInputDisabled = !IsInputDisabled;
+                    Logger.LogDebug($"InputLock Key Pressed. Is input disabled: [{IsInputDisabled}]");
+                    Game.DisplayNotification(IsInputDisabled ? "All input DISABLED via keybind." : "All input ENABLED via keybind.");
+                }
+
+                if (IsInputDisabled) NativeFunction.CallByHash<int>(0x5F4B6931816E599B, 0);
             }
         }
 

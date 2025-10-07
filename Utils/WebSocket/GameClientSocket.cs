@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 using Rage;
 using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.WebSocket.Messages;
-using ReportsPlus.Utils.WebSocket.Updates;
 using WebSocketSharp;
 using Logger = ReportsPlus.Utils.Logging.Logger;
 
@@ -30,8 +29,7 @@ namespace ReportsPlus.Utils.WebSocket{
 
         private static void HandleServerMessage(GameClientSocket client, IncomingRequest message)
         {
-            ActionRegistry.HandleRequest(client, message);
-            ActionRegistry.HandleKeybinding(message);
+            MessageHandler.ProcessMessage(client, message);
         }
 
         public event Action<IncomingRequest> OnMessageReceived;

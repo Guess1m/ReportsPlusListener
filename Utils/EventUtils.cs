@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using Rage;
 using ReportsPlus.Utils.Logging;
-using ReportsPlus.Utils.WebSocket.Updates.EventDriven;
+using ReportsPlus.Utils.WebSocket.Actions.Events;
 using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
@@ -74,6 +74,7 @@ namespace ReportsPlus.Utils{
             Logger.LogDebug("Updated Lookup File (ped); ");
         }
 
+        // BUG: this will cause issues when calloutinterface isnt downloaded
         private static void EventsOnCalloutDisplayed(LHandle handle)
         {
             Logger.LogDebug("Running EventsOnCalloutDisplayed");
@@ -115,7 +116,7 @@ namespace ReportsPlus.Utils{
                 ["y"]           = callout.CalloutPosition.Y
             };
 
-            CalloutUpdater.SendCalloutData(calloutData);
+            CalloutHandler.SendCalloutData(calloutData);
 
             Logger.LogDebug($"Callout {identifier} DataFile Updated");
         }

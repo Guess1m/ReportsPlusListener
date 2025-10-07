@@ -109,18 +109,26 @@
         <Compile Include="Utils\GetValueMethods.cs"/>
         <Compile Include="Utils\Logging\Logger.cs"/>
         <Compile Include="Utils\Misc.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Continuous\HeartbeatAction.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Continuous\PlayerLocationAction.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Continuous\PoliceVehiclesAction.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Events\CalloutHandler.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Interfaces\IContinuousAction.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Interfaces\IKeybindingAction.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Keybindings\KeybindingActions.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\OnRequest\GameTimeAction.cs"/>
+        <Compile Include="Utils\WebSocket\EventManager.cs"/>
         <Compile Include="Utils\WebSocket\GameClientSocket.cs"/>
+        <Compile Include="Utils\WebSocket\MessageHandler.cs"/>
         <Compile Include="Utils\WebSocket\Messages\IncomingRequest.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\Continuous\PlayerLocationAction.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\Continuous\PoliceVehiclesAction.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\EventDriven\CalloutUpdater.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\IWebSocketAction.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\OnRequest\GameTimeAction.cs"/>
-        <Compile Include="Utils\WebSocket\Updates\UpdateActionRegister.cs"/>
+        <Compile Include="Utils\WebSocket\Messages\IRequestAction.cs"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="App.config"/>
         <None Include="packages.config"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Utils\WebSocket\Actions\"/>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
