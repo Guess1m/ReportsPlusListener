@@ -26,11 +26,6 @@ namespace ReportsPlus.Utils.Logging{
             }
         }
 
-        public static void LogDebug(string message)
-        {
-            Log(message, Severity.Debug);
-        }
-
         public static void LogInfo(string message)
         {
             Log(message, Severity.Info);

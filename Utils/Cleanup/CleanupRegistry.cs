@@ -21,7 +21,7 @@ namespace ReportsPlus.Utils.Cleanup{
 
             lock (LockObject)
             {
-                Logger.LogDebug($"Registering cleanup action: {cleanupAction.Method.Name}");
+                Logger.LogInfo($"Registering cleanup action: {cleanupAction.Method.Name}");
                 CleanupActions.Add(cleanupAction);
             }
         }
@@ -44,7 +44,7 @@ namespace ReportsPlus.Utils.Cleanup{
             foreach (var action in actionsToRun)
                 try
                 {
-                    Logger.LogDebug($"Executing cleanup action: {action.Method.Name}");
+                    Logger.LogInfo($"Executing cleanup action: {action.Method.Name}");
                     action.Invoke();
                 }
                 catch (Exception ex)

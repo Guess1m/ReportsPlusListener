@@ -19,12 +19,14 @@ namespace ReportsPlus.Utils.WebSocket{
             KeybindingActions.Clear();
 
             // Register Continuous Actions
-            ContinuousActions.Add(new PlayerLocationAction());
-            ContinuousActions.Add(new PoliceVehiclesAction());
+            ContinuousActions.Add(new EntityTrackingAction());
 
             // Register On-Request Actions
+            RegisterRequestAction(new PlayerLocationAction());
             RegisterRequestAction(new GameTimeAction());
             RegisterRequestAction(new HeartbeatAction());
+            RegisterRequestAction(new FindPedByNameAction());
+            RegisterRequestAction(new PoliceVehiclesAction());
 
             // Register Keybinding Actions
             RegisterKeybindingAction(new SirenKeybinding());

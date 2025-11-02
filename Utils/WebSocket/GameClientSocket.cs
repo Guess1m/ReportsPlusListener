@@ -63,7 +63,7 @@ namespace ReportsPlus.Utils.WebSocket{
 
         private void SenderLoop()
         {
-            Logger.LogDebug("SenderLoop has started.");
+            Logger.LogInfo("SenderLoop has started.");
             try
             {
                 while (IsConnected)
@@ -84,7 +84,7 @@ namespace ReportsPlus.Utils.WebSocket{
 
         public void Connect()
         {
-            Logger.LogDebug($"Connecting to {_clientSocket.Url}...");
+            Logger.LogInfo($"Connecting to {_clientSocket.Url}...");
             _clientSocket.Connect();
         }
 

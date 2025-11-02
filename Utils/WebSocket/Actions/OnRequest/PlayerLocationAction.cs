@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
-using ReportsPlus.Utils.WebSocket.Actions.Interfaces;
+using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
-    public class PlayerLocationAction : IContinuousAction{
-        public void Execute(GameClientSocket client)
+namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
+    public class PlayerLocationAction : IRequestAction{
+        public string Name => "playerLocation";
+
+        public void Execute(GameClientSocket client, IncomingRequest request)
         {
             var playerPosition = Main.LPC.Position;
             var locationData = new JObject

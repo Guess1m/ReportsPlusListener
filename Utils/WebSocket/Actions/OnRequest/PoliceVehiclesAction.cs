@@ -2,17 +2,17 @@
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Rage;
-using ReportsPlus.Utils.WebSocket.Actions.Interfaces;
+using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
-    public class PoliceVehiclesAction : IContinuousAction{
-        private const    string           Name             = "policeVehicles";
+namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
+    public class PoliceVehiclesAction : IRequestAction{
         private readonly HashSet<Vehicle> _trackedVehicles = new HashSet<Vehicle>();
+        public           string           Name => "policeVehicles";
 
-        public void Execute(GameClientSocket client)
+        public void Execute(GameClientSocket client, IncomingRequest request)
         {
             UpdateTrackedVehicleLocations();
-            var vehiclesData = GetTrackedVehlesAsJson();
+            var vehiclesData = GetTrackedVehiclesAsJson();
             client.Send(Name, vehiclesData);
         }
 
@@ -26,7 +26,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
                     _trackedVehicles.Add(vehicle);
         }
 
-        private JArray GetTrackedVehlesAsJson()
+        private JArray GetTrackedVehiclesAsJson()
         {
             var vehiclesArray = new JArray();
             foreach (var vehicle in _trackedVehicles.Where(vehicle => vehicle.Exists()))
