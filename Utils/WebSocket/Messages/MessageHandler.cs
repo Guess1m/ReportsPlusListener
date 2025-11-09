@@ -27,6 +27,7 @@ namespace ReportsPlus.Utils.WebSocket{
             RegisterRequestAction(new HeartbeatAction());
             RegisterRequestAction(new FindPedByNameAction());
             RegisterRequestAction(new PoliceVehiclesAction());
+            RegisterRequestAction(new FindPedByNameAction());
 
             // Register Keybinding Actions
             RegisterKeybindingAction(new SirenKeybinding());

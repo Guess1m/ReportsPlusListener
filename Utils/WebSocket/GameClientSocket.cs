@@ -41,7 +41,7 @@ namespace ReportsPlus.Utils.WebSocket{
                 Logger.LogInfo("Connected successfully.");
                 _senderFiber = GameFiber.StartNew(SenderLoop, "ReportsPlus-SenderFiber");
 
-                CleanupRegistry.Register(() => Misc.CleanupFiber(_senderFiber));
+                CleanupRegistry.Register(() => Misc.Misc.CleanupFiber(_senderFiber));
             };
 
             _clientSocket.OnMessage += (client, e) =>

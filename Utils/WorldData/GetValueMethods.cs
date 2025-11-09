@@ -3,7 +3,7 @@ using CommonDataFramework.Modules.PedDatabase;
 using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
 
-namespace ReportsPlus.Utils{
+namespace ReportsPlus.Utils.WorldData{
     public static class GetValueMethods{
         public static string GetInsExpPr(Vehicle car)
         {
@@ -71,7 +71,7 @@ namespace ReportsPlus.Utils{
         {
             var vehicleData = car.GetVehicleData();
             var owner       = vehicleData?.Owner?.Holder;
-            return Misc.FindPedModel(owner).ToLower() ?? "";
+            return Misc.Misc.FindPedModel(owner).ToLower() ?? "";
         }
 
         public static string GetFullNamePr(Ped ped)

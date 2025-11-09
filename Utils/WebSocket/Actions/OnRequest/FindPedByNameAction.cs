@@ -1,6 +1,9 @@
 using CommonDataFramework.Modules.PedDatabase;
+using Newtonsoft.Json.Linq;
 using Rage;
+using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Messages;
+using ReportsPlus.Utils.WorldData;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
     public class FindPedByNameAction : IRequestAction{
@@ -8,6 +11,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
 
         public void Execute(GameClientSocket client, IncomingRequest request)
         {
+            Logger.LogInfo("Running FindPedByNameAction ...");
+            Logger.LogInfo("Args: " + request.Args);
             var nameToFind = request.Args;
             if (string.IsNullOrEmpty(nameToFind)) return;
 
@@ -32,6 +37,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 client.Send("pedUpdated", pedDataJson);
                 return;
             }
+
+            client.Send("pedNotFound", new JValue(nameToFind));
         }
     }
 }

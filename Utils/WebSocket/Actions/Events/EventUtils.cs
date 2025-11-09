@@ -5,11 +5,9 @@ using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using Rage;
 using ReportsPlus.Utils.Logging;
-using ReportsPlus.Utils.WebSocket.Actions.Events;
-using Events = LSPD_First_Response.Mod.API.Events;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
-namespace ReportsPlus.Utils{
+namespace ReportsPlus.Utils.WebSocket.Actions.Events{
     public static class EventUtils{
         public static void EstablishEventsPr()
         {
@@ -26,7 +24,7 @@ namespace ReportsPlus.Utils{
 
         public static void EstablishCiEvent()
         {
-            Events.OnCalloutDisplayed += EventsOnCalloutDisplayed;
+            LSPD_First_Response.Mod.API.Events.OnCalloutDisplayed += EventsOnCalloutDisplayed;
         }
 
         private static void PR_OnPedStopped(Ped ped)
@@ -136,7 +134,7 @@ namespace ReportsPlus.Utils{
 
         public static void CleanupCiEvent()
         {
-            Events.OnCalloutDisplayed -= EventsOnCalloutDisplayed;
+            LSPD_First_Response.Mod.API.Events.OnCalloutDisplayed -= EventsOnCalloutDisplayed;
         }
     }
 }

@@ -105,14 +105,12 @@
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="Utils\Cleanup\CleanupRegistry.cs"/>
         <Compile Include="Utils\Config\ReportsPlusSettings.cs"/>
-        <Compile Include="Utils\EventUtils.cs"/>
-        <Compile Include="Utils\GetValueMethods.cs"/>
         <Compile Include="Utils\Logging\Logger.cs"/>
-        <Compile Include="Utils\Misc.cs"/>
-        <Compile Include="Utils\PedDataHelper.cs"/>
+        <Compile Include="Utils\Misc\Misc.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\EntityTrackingAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\HeartbeatAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Events\CalloutHandler.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Events\EventUtils.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Interfaces\IContinuousAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Interfaces\IKeybindingAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Keybindings\KeybindingActions.cs"/>
@@ -122,9 +120,11 @@
         <Compile Include="Utils\WebSocket\Actions\OnRequest\PoliceVehiclesAction.cs"/>
         <Compile Include="Utils\WebSocket\EventManager.cs"/>
         <Compile Include="Utils\WebSocket\GameClientSocket.cs"/>
-        <Compile Include="Utils\WebSocket\MessageHandler.cs"/>
         <Compile Include="Utils\WebSocket\Messages\IncomingRequest.cs"/>
         <Compile Include="Utils\WebSocket\Messages\IRequestAction.cs"/>
+        <Compile Include="Utils\WebSocket\Messages\MessageHandler.cs"/>
+        <Compile Include="Utils\WorldData\GetValueMethods.cs"/>
+        <Compile Include="Utils\WorldData\PedDataHelper.cs"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="App.config"/>

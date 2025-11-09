@@ -12,7 +12,7 @@ namespace ReportsPlus.Utils.Config{
         public int ClientPort { get; set; } = 6969;
 
         [ConfigOption("Intervals", "ContinuousUpdateInterval", "Interval (ms) for sending continuous updates to server (e.g. PlayerLocation, PoliceVehiclesLocation).")]
-        public int ContinuousUpdateInterval { get; set; } = 5000;
+        public int ContinuousUpdateInterval { get; set; } = 15000;
 
         // keybinding for input-lock
         [ConfigOption("Keybindings", "InputLockKey", "Key to toggle input lock (e.g. F9). Must be capitalized.")]

@@ -3,6 +3,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using Rage;
 using ReportsPlus.Utils.WebSocket.Actions.Interfaces;
+using ReportsPlus.Utils.WorldData;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
     public class EntityTrackingAction : IContinuousAction{

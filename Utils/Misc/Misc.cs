@@ -7,8 +7,9 @@ using CommonDataFramework.Modules.PedDatabase;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.WebSocket.Actions.Events;
 
-namespace ReportsPlus.Utils{
+namespace ReportsPlus.Utils.Misc{
     public static class Misc{
         public static  bool UsingPrFunctions;
         private static bool _usingCi;
