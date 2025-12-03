@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Continuous;
-using ReportsPlus.Utils.WebSocket.Actions.Interfaces;
 using ReportsPlus.Utils.WebSocket.Actions.Keybindings;
 using ReportsPlus.Utils.WebSocket.Actions.OnRequest;
-using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Utils.WebSocket{
+namespace ReportsPlus.Utils.WebSocket.Messages{
     public static class MessageHandler{
         private static readonly List<IContinuousAction>               ContinuousActions = new List<IContinuousAction>();
         private static readonly Dictionary<string, IRequestAction>    RequestActions    = new Dictionary<string, IRequestAction>();
@@ -22,19 +20,20 @@ namespace ReportsPlus.Utils.WebSocket{
             ContinuousActions.Add(new EntityTrackingAction());
 
             // Register On-Request Actions
-            RegisterRequestAction(new PlayerLocationAction());
-            RegisterRequestAction(new GameTimeAction());
-            RegisterRequestAction(new HeartbeatAction());
-            RegisterRequestAction(new FindPedByNameAction());
-            RegisterRequestAction(new PoliceVehiclesAction());
-            RegisterRequestAction(new FindPedByNameAction());
+            RegisterRequestAction(new RequestActions.PlayerLocationAction());
+            RegisterRequestAction(new RequestActions.GameTimeAction());
+            RegisterRequestAction(new RequestActions.HeartbeatAction());
+            RegisterRequestAction(new RequestActions.FindPedByNameAction());
+            RegisterRequestAction(new RequestActions.PoliceVehiclesAction());
+            RegisterRequestAction(new RequestActions.FindPedByNameAction());
 
             // Register Keybinding Actions
-            RegisterKeybindingAction(new SirenKeybinding());
-            RegisterKeybindingAction(new RepairKeybinding());
-            RegisterKeybindingAction(new TimeKeybinding());
-            RegisterKeybindingAction(new WeatherKeybinding());
-            RegisterKeybindingAction(new InputLockKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.SirenKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.RepairKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.TimeKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.WeatherKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.InputLockKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.PanicKeybinding());
 
             Logger.LogInfo("MessageHandler initialized.");
         }

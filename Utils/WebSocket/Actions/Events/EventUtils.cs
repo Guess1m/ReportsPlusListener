@@ -114,7 +114,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
                 ["y"]           = callout.CalloutPosition.Y
             };
 
-            CalloutHandler.SendCalloutData(calloutData);
+            EventManager.SendCalloutUpdate(calloutData);
 
             Logger.LogInfo($"Callout {identifier} DataFile Updated");
         }

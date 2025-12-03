@@ -9,6 +9,8 @@ using ReportsPlus.Utils.Config;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.Misc;
 using ReportsPlus.Utils.WebSocket;
+using ReportsPlus.Utils.WebSocket.Actions.Events;
+using ReportsPlus.Utils.WebSocket.Messages;
 
 namespace ReportsPlus{
     public class Main : Plugin{
