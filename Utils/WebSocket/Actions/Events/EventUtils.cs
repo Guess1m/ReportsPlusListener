@@ -84,6 +84,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
             var message     = "";
             var name        = callout.FriendlyName;
 
+            var status = "No Status";
+
+            var comments = "none";
+
             if (callout.ScriptInfo is CalloutInterfaceAttribute calloutInterfaceInfo)
             {
                 priority    = calloutInterfaceInfo.Priority.Length > 0 ? calloutInterfaceInfo.Priority : "";
@@ -100,6 +104,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
             var calloutData = new JObject
             {
                 ["Identifier"]  = identifier,
+                ["Status"]      = status,
                 ["Name"]        = name,
                 ["Description"] = description,
                 ["Message"]     = message,
@@ -108,10 +113,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
                 ["Area"]        = zone.RealAreaName,
                 ["County"]      = zone.County.ToString(),
                 ["Postal"]      = CalloutInterface.API.Functions.GetPostalCode(callout.CalloutPosition),
+                ["Comments"]    = comments,
                 ["StartTime"]   = currentTime,
                 ["StartDate"]   = currentDate,
-                ["x"]           = callout.CalloutPosition.X,
-                ["y"]           = callout.CalloutPosition.Y
+                ["X"]           = callout.CalloutPosition.X,
+                ["Y"]           = callout.CalloutPosition.Y
             };
 
             EventManager.SendCalloutUpdate(calloutData);

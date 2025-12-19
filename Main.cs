@@ -54,6 +54,7 @@ namespace ReportsPlus{
 
             // Load settings before starting the fiber that uses them
             Settings = ConfigLoader.LoadSettings<ReportsPlusSettings>("plugins/LSPDFR/ReportsPlus.ini");
+
             MessageHandler.Initialize();
 
             _primaryFiber   = GameFiber.StartNew(GameLoop, "ReportsPlus-PrimaryFiber");

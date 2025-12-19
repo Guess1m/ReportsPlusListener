@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using Rage;
+using ReportsPlus.Utils.CustomEvents;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Continuous;
 using ReportsPlus.Utils.WebSocket.Actions.Keybindings;
@@ -63,6 +65,13 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
 
                 case "keybinding":
                     if (KeybindingActions.TryGetValue(request.Data.ToString(), out var keybindingAction)) keybindingAction.Execute(request);
+                    break;
+                case "custom_action":
+                    var actionName = request.Data.ToString();
+                    if (CustomActionRegistry.TryGetAction(actionName, out var customAction))
+                        GameFiber.StartNew(() => ActionExecutor.ExecuteTarget(customAction));
+                    else
+                        Logger.LogWarning($"Received unknown custom_action: {actionName}");
                     break;
             }
         }
