@@ -17,25 +17,36 @@ namespace ReportsPlus.Utils.WorldData{
                 ["entityId"] = (int)ped.Handle.Value,
                 ["identification"] = new JObject
                 {
-                    ["name"]              = pedData.FullName ?? string.Empty,
-                    ["address"]           = Misc.Misc.GetPedAddress(ped) ?? string.Empty,
-                    ["pedModel"]          = Misc.Misc.FindPedModel(ped) ?? string.Empty,
-                    ["birthday"]          = pedData.Birthday.Month + "/" + pedData.Birthday.Day + "/" + pedData.Birthday.Year,
-                    ["gender"]            = pedData.Gender.ToString() ?? string.Empty,
-                    ["height"]            = string.Empty, // Empty
-                    ["weight"]            = string.Empty, // Empty
-                    ["eyeColor"]          = string.Empty, // Empty
-                    ["knownAliases"]      = string.Empty, // Empty
-                    ["citizenshipStatus"] = string.Empty, // Empty
-                    ["maritalStatus"]     = string.Empty, // Empty
-                    ["disabilityStatus"]  = string.Empty, // Empty, often top-level for immediate view
-                    ["isPolice"]          = ped.RelationshipGroup == "COP" ? "true" : "false"
+                    ["name"]                = pedData.FullName ?? string.Empty,
+                    ["address"]             = Misc.Misc.GetPedAddress(ped) ?? string.Empty,
+                    ["pedModel"]            = Misc.Misc.FindPedModel(ped) ?? string.Empty,
+                    ["birthday"]            = pedData.Birthday.Month.ToString("D2") + "/" + pedData.Birthday.Day.ToString("D2") + "/" + pedData.Birthday.Year,
+                    ["gender"]              = pedData.Gender.ToString() ?? string.Empty,
+                    ["height"]              = string.Empty, // Empty
+                    ["weight"]              = string.Empty, // Empty
+                    ["eyeColor"]            = string.Empty, // Empty
+                    ["hairColor"]           = string.Empty,
+                    ["knownAliases"]        = string.Empty, // Empty
+                    ["ethnicity"]           = string.Empty,
+                    ["distinguishingMarks"] = string.Empty,
+                    ["citizenshipStatus"]   = string.Empty, // Empty
+                    ["maritalStatus"]       = string.Empty, // Empty
+                    ["disabilityStatus"]    = string.Empty, // Empty
+                    ["isPolice"]            = ped.RelationshipGroup == "COP" ? "true" : "false"
                 },
 
                 // -- Criminal History --
                 ["judicialStatus"] = new JObject
                 {
                     ["isWanted"] = pedData.Wanted.ToString() ?? string.Empty,
+                    ["warrantInfo"] = new JObject
+                    {
+                        ["warrantNumber"] = string.Empty,
+                        ["dateIssued"]    = string.Empty,
+                        ["issuingAgency"] = string.Empty,
+                        ["warrantCharge"] = string.Empty,
+                        ["bailAmount"]    = string.Empty
+                    },
                     ["paroleInfo"] = new JObject
                     {
                         ["isOnParole"]         = pedData.IsOnParole.ToString() ?? string.Empty,
