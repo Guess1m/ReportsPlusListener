@@ -20,6 +20,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
 
             // Register Continuous Actions
             ContinuousActions.Add(new EntityTrackingAction());
+            ContinuousActions.Add(new VehicleTrackingAction());
 
             // Register On-Request Actions
             RegisterRequestAction(new RequestActions.PlayerLocationAction());

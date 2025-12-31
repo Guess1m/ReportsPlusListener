@@ -112,6 +112,7 @@
         <Compile Include="Utils\Misc\Misc.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\EntityTrackingAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\IContinuousAction.cs"/>
+        <Compile Include="Utils\WebSocket\Actions\Continuous\VehicleTrackingAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Events\DynamicEvent.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Events\DynamicEvents.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Events\EventManager.cs"/>
@@ -125,6 +126,7 @@
         <Compile Include="Utils\WebSocket\Messages\MessageHandler.cs"/>
         <Compile Include="Utils\WorldData\GetValueMethods.cs"/>
         <Compile Include="Utils\WorldData\PedDataHelper.cs"/>
+        <Compile Include="Utils\WorldData\VehicleDataHelper.cs"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="App.config"/>

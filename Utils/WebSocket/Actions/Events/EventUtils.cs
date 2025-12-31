@@ -79,20 +79,20 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
             var callout    = CalloutInterface.API.Functions.GetCalloutFromHandle(handle);
             var identifier = new Random().Next(10000, 100000);
 
-            var priority    = "";
-            var description = "";
-            var message     = "";
+            var priority    = string.Empty;
+            var description = string.Empty;
+            var message     = string.Empty;
             var name        = callout.FriendlyName;
 
-            var status = "No Status";
+            const string status = "New";
 
-            var comments = "none";
+            var comments = string.Empty;
 
             if (callout.ScriptInfo is CalloutInterfaceAttribute calloutInterfaceInfo)
             {
-                priority    = calloutInterfaceInfo.Priority.Length > 0 ? calloutInterfaceInfo.Priority : "";
-                description = calloutInterfaceInfo.Description.Length > 0 ? calloutInterfaceInfo.Description : "";
-                message     = callout.CalloutMessage.Length > 0 ? callout.CalloutMessage : "";
+                priority    = calloutInterfaceInfo.Priority.Length > 0 ? calloutInterfaceInfo.Priority : string.Empty;
+                description = calloutInterfaceInfo.Description.Length > 0 ? calloutInterfaceInfo.Description : string.Empty;
+                message     = callout.CalloutMessage.Length > 0 ? callout.CalloutMessage : string.Empty;
                 name        = calloutInterfaceInfo.Name.Length > 0 ? calloutInterfaceInfo.Name : callout.FriendlyName;
             }
 
@@ -121,8 +121,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
             };
 
             EventManager.SendCalloutUpdate(calloutData);
-
-            Logger.LogInfo($"Callout {identifier} DataFile Updated");
+            Logger.LogInfo($"Callout {identifier} Updated");
         }
 
         public static void CleanupEventsPr()
