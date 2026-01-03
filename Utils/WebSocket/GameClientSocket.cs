@@ -25,7 +25,26 @@ namespace ReportsPlus.Utils.WebSocket{
             OnMessageReceived += message => HandleServerMessage(this, message);
         }
 
-        public bool IsConnected => _clientSocket is { ReadyState: WebSocketState.Open };
+        /**
+         * Gets a value indicating whether the WebSocket connection is currently open and ready for communication.
+         * This property safely checks for null references and handles potential disposal race conditions.
+         * 
+         * @return True if the socket is initialized and the ready state is Open; otherwise, false.
+         */
+        public bool IsConnected
+        {
+            get
+            {
+                try
+                {
+                    return _clientSocket is { ReadyState: WebSocketState.Open };
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
 
         private static void HandleServerMessage(GameClientSocket client, IncomingRequest message)
         {

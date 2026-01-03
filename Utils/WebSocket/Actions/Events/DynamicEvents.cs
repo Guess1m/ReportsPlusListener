@@ -1,7 +1,7 @@
 using Rage;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Events{
-    public class DynamicEvents{
+    public static class DynamicEvents{
         public class PanicButtonEvent : DynamicEvent{
             private readonly string _location;
 

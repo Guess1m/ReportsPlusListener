@@ -65,6 +65,10 @@ namespace ReportsPlus{
             CleanupRegistry.Register(() => Misc.CleanupFiber(_inputLockFiber));
         }
 
+        /**
+         * Executes the primary game loop logic, managing the connection lifecycle and continuous updates.
+         * Handles connection establishment, continuous message processing, and safe disconnection cleanup.
+         */
         private void GameLoop()
         {
             try
@@ -78,7 +82,7 @@ namespace ReportsPlus{
                 CleanupRegistry.Register(() => EventManager.SetClient(null));
                 Client.Connect();
 
-                if (!Client.IsConnected)
+                if (!(Client is { IsConnected: true }))
                 {
                     Logger.LogError("Connection failed.");
                     _client = null;
@@ -91,7 +95,7 @@ namespace ReportsPlus{
                 Logger.LogInfo("--- Connection Established ---");
                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Connection ESTABLISHED", $"~y~Client Info: ~b~{Settings.ClientAddress}~y~:~b~{Settings.ClientPort}");
 
-                while (Client.IsConnected)
+                while (Client is { IsConnected: true })
                 {
                     GameFiber.Yield();
                     MessageHandler.ExecuteContinuousActions(Client);
