@@ -26,6 +26,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             // Register On-Request Actions
             RegisterRequestAction(new RequestActions.PlayerLocationAction());
             RegisterRequestAction(new RequestActions.GameTimeAction());
+            RegisterRequestAction(new RequestActions.FindLocationAction());
             RegisterRequestAction(new RequestActions.HeartbeatAction());
             RegisterRequestAction(new RequestActions.FindPedByNameAction());
             RegisterRequestAction(new RequestActions.PoliceVehiclesAction());

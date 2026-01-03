@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using CommonDataFramework.Modules.PedDatabase;
+using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using PolicingRedefined.Interaction.Assets.PedAttributes;
@@ -51,6 +53,46 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
+        /**
+         * ^^^^^^^^^
+         * //TODO:
+         * This will be changed to:
+         *
+         * public class FindVehicleByPlateAction : IRequestAction
+         * {
+         * public string Name => "findVehicleByPlate";
+         *
+         * public void Execute(GameClientSocket client, IncomingRequest request)
+         * {
+         * Logger.LogInfo("Running FindVehicleByPlateAction ...");
+         * var plateToFind = request.Args;
+         * if (string.IsNullOrEmpty(plateToFind)) return;
+         *
+         * // Normalize search
+         * var searchClean = plateToFind.Replace(" ", "").ToLower();
+         *
+         * foreach (var veh in World.GetAllVehicles())
+         * {
+         * if (!veh || !veh.Exists()) continue;
+         *
+         * var plate = veh.LicensePlate ?? "";
+         * if (plate.Replace(" ", "").ToLower().Contains(searchClean))
+         * {
+         * var vehData = VehicleDataHelper.GenerateVehicleData(veh);
+         * if (vehData != null)
+         * {
+         * client.Send("vehicleUpdated", vehData); // Re-use vehicleUpdated topic
+         * return;
+         * }
+         * }
+         * }
+         *
+         * client.Send("vehicleNotFound", new JValue(plateToFind));
+         * }
+         * }
+         *
+         * In the actual implementation
+         */
         public class PoliceVehiclesAction : IRequestAction{
             private readonly HashSet<Vehicle> _trackedVehicles = new HashSet<Vehicle>();
             public           string           Name => "policeVehicles";
@@ -109,6 +151,33 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 var timeString = World.DateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
                 var timeData   = new JObject { ["time"] = timeString };
                 client.Send(Name, timeData);
+            }
+        }
+
+        public class FindLocationAction : IRequestAction{
+            public string Name => "locationData";
+
+            /**
+             * Executes the location data request.
+             * Simulates the C# client retrieving the current street, area, and county.
+             *
+             * @param client  The mock socket client.
+             * @param request The incoming request envelope.
+             */
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                var currentStreet = World.GetStreetName(Main.LPC.Position);
+                var currentZone   = Functions.GetZoneAtPosition(Main.LPC.Position).RealAreaName;
+                var currentCounty = Regex.Replace(Functions.GetZoneAtPosition(Main.LPC.Position).County.ToString(), "(?<!^)([A-Z])", " $1");
+
+                var locationData = new JObject
+                {
+                    ["street"] = currentStreet ?? string.Empty,
+                    ["area"]   = currentZone ?? string.Empty,
+                    ["county"] = currentCounty ?? string.Empty
+                };
+
+                client.Send("locationData", locationData);
             }
         }
 
