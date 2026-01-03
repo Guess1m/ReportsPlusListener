@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using CommonDataFramework.Modules.PedDatabase;
 using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
@@ -283,12 +282,12 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                         return;
                     }
 
-                    // TODO: Add key customization for these
-                    const Keys giveKey    = Keys.Y;
-                    const Keys discardKey = Keys.Delete;
+                    var giveKey    = Main.Settings.GiveParkingCitationKey;
+                    var discardKey = Main.Settings.DiscardParkingCitationKey;
 
-                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{vehiclePlate}~w~: {infraction}\nPress ~g~Y~w~ to Issue, ~r~DEL~w~ to Discard");
-                    Game.DisplaySubtitle($"~b~{vehiclePlate}~w~: Press ~g~Y ~w~to Issue | ~r~DEL ~w~to Discard");
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{vehiclePlate}~w~: {infraction}\nPress ~g~{giveKey}~w~ to Issue, ~r~{discardKey}~w~ to Discard");
+                    Game.DisplaySubtitle($"~b~{vehiclePlate}~w~: Press ~g~{giveKey} ~w~to Issue | ~r~{discardKey} ~w~to Discard");
+                    Logger.LogInfo($"Citation Request: {vehiclePlate}: {infraction}, Keys are Give:[{giveKey}] - Discard:[{discardKey}]");
 
                     while (true)
                     {
@@ -313,8 +312,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
 
                         if (distance > 3.0f)
                         {
-                            Game.DisplaySubtitle($"~r~Too far! ~w~Move closer (~y~{distance:F1}m~w~) and press ~g~Y~w~ again.");
-                            Logger.LogInfo($"Too far! Move closer ({distance:F1}m) and press Y again.");
+                            Game.DisplaySubtitle($"~r~Too far! ~w~Move closer (~y~{distance:F1}m~w~) and press ~g~{giveKey}~w~ again.");
+                            Logger.LogInfo($"Too far! Move closer ({distance:F1}m) and press {giveKey} again.");
                             GameFiber.Sleep(500);
                             continue;
                         }

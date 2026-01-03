@@ -99,40 +99,17 @@ namespace ReportsPlus.Utils.Misc{
             }
         }
 
-        public static string GetPedAddress(Ped ped)
+        public static string GetPedAddress(PedData pedData)
         {
-            if (ped == null) return null;
-            if (ped.GetPedData() == null) return null;
+            if (pedData == null) return null;
 
             var addressBuilder = new StringBuilder();
-            addressBuilder.Append(ped.GetPedData().Address.AddressPostal.Number).Append(" ");
-            addressBuilder.Append(ped.GetPedData().Address.StreetName).Append(", ");
-            addressBuilder.Append(ped.GetPedData().Address.Zone.RealAreaName).Append(", ");
-            addressBuilder.Append(Regex.Replace(ped.GetPedData().Address.Zone.County.ToString(), "(?<!^)([A-Z])", " $1"));
+            addressBuilder.Append(pedData.Address.AddressPostal.Number).Append(" ");
+            addressBuilder.Append(pedData.Address.StreetName).Append(", ");
+            addressBuilder.Append(pedData.Address.Zone.RealAreaName).Append(", ");
+            addressBuilder.Append(Regex.Replace(pedData.Address.Zone.County.ToString(), "(?<!^)([A-Z])", " $1"));
 
             return addressBuilder.ToString();
-        }
-
-        public static string GenerateValidLicenseExpirationDate()
-        {
-            var maxYears       = 4;
-            var currentDate    = DateTime.Now;
-            var expirationDate = currentDate.AddYears(maxYears).AddDays(Rand.Next(0, 365));
-            return expirationDate.ToString("MM-dd-yyyy");
-        }
-
-        public static string GenerateExpiredLicenseExpirationDate(int maxYears)
-        {
-            var maxYearsAgo = maxYears;
-            var currentDate = DateTime.Now;
-
-            long minDaysAgo    = 1;
-            var  maxDaysAgo    = maxYearsAgo * 365L + maxYearsAgo / 4;
-            long randomDaysAgo = Rand.Next((int)minDaysAgo, (int)maxDaysAgo + 1);
-
-            var expirationDate = currentDate.AddDays(-randomDaysAgo);
-
-            return expirationDate.ToString("MM-dd-yyyy");
         }
 
         public static void CleanupFiber(GameFiber fiber)

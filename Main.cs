@@ -20,7 +20,7 @@ namespace ReportsPlus{
         private static          GameClientSocket _client;
 
         public static  bool                IsInputDisabled;
-        private static ReportsPlusSettings Settings { get; set; }
+        public static  ReportsPlusSettings Settings { get; set; }
         private static GameClientSocket    Client   { get; set; }
 
         public static Ped     LPC  => Game.LocalPlayer.Character;

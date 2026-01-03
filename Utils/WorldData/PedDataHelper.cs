@@ -42,7 +42,7 @@ namespace ReportsPlus.Utils.WorldData{
                 ["identification"] = new JObject
                 {
                     ["name"]                = pedData.FullName ?? string.Empty,
-                    ["address"]             = physicalPed != null ? Misc.Misc.GetPedAddress(physicalPed) ?? string.Empty : string.Empty,
+                    ["address"]             = Misc.Misc.GetPedAddress(pedData) ?? string.Empty,
                     ["pedModel"]            = physicalPed != null ? Misc.Misc.FindPedModel(physicalPed) ?? string.Empty : string.Empty,
                     ["birthday"]            = pedData.Birthday.Month.ToString("D2") + "/" + pedData.Birthday.Day.ToString("D2") + "/" + pedData.Birthday.Year,
                     ["gender"]              = pedData.Gender.ToString() ?? string.Empty,

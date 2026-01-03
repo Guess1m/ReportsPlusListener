@@ -18,6 +18,14 @@ namespace ReportsPlus.Utils.Config{
         [ConfigOption("Keybindings", "InputLockKey", "Key to toggle input lock (e.g. F9). Must be capitalized.")]
         public Keys InputLockKey { get; set; } = Keys.F9;
 
+        // keybinding for give parking citation
+        [ConfigOption("Keybindings", "GiveParkingCitationKey", "Key to give out a parking citation (e.g. F3). Must be capitalized.")]
+        public Keys GiveParkingCitationKey { get; set; } = Keys.F3;
+
+        // keybinding for discarding vehicle citation
+        [ConfigOption("Keybindings", "DiscardParkingCitationKey", "Key to discard a parking citation (e.g. Delete). Must be capitalized.")]
+        public Keys DiscardParkingCitationKey { get; set; } = Keys.Delete;
+
         public override string ToString()
         {
             var sb = new StringBuilder();

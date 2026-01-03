@@ -39,9 +39,6 @@ namespace ReportsPlus.Utils.WorldData{
             if (vehData.Owner != null)
             {
                 ownerName = vehData.Owner.FullName ?? string.Empty;
-
-                // Generate the full owner JSON using the helper, passing null for handle/phys-ped
-                // because the owner might not be physically present.
                 ownerJson = PedDataHelper.GeneratePedDataFromObject(vehData.Owner, null);
             }
 
@@ -50,14 +47,14 @@ namespace ReportsPlus.Utils.WorldData{
                 ["entityId"] = (int)vehicle.Handle.Value,
                 ["basics"] = new JObject
                 {
-                    ["plate"]    = vehicle.LicensePlate ?? string.Empty,
-                    ["model"]    = vehicle.Model.Name ?? string.Empty,
-                    ["make"]     = Game.GetLocalizedString(NativeFunction.Natives.xF7AF4F159FF99F97<string>(vehicle.Model.Hash)) ?? string.Empty,
-                    ["color"]    = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1 ? string.Empty : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}",
-                    ["vin"]      = string.Empty,
-                    ["isPolice"] = vehicle.IsPoliceVehicle ? "true" : "false",
-                    ["isStolen"] = vehicle.IsStolen ? "true" : "false",
-                    ["driver"]   = driverName
+                    ["plate"]         = vehicle.LicensePlate ?? string.Empty,
+                    ["model"]         = vehicle.Model.Name ?? string.Empty,
+                    ["make"]          = Game.GetLocalizedString(NativeFunction.Natives.xF7AF4F159FF99F97<string>(vehicle.Model.Hash)) ?? string.Empty,
+                    ["colorSpecific"] = vehData.PrimaryColor ?? string.Empty,
+                    ["color"]         = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1 ? string.Empty : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}",
+                    ["vin"]           = vehData.Vin.ToString() ?? string.Empty,
+                    ["isPolice"]      = vehicle.IsPoliceVehicle ? "true" : "false",
+                    ["driver"]        = driverName
                 },
                 ["ownership"] = new JObject
                 {
@@ -66,14 +63,35 @@ namespace ReportsPlus.Utils.WorldData{
                 },
                 ["registration"] = new JObject
                 {
-                    ["status"]     = GetValueMethods.GetRegistrationPr(vehicle) ?? string.Empty,
-                    ["expiration"] = GetValueMethods.GetRegExpPr(vehicle) ?? string.Empty
+                    ["status"]             = GetValueMethods.GetRegistrationPr(vehicle) ?? string.Empty,
+                    ["expiration"]         = GetValueMethods.GetRegExpPr(vehicle) ?? string.Empty,
+                    ["registrationNumber"] = string.Empty,
+                    ["class"]              = string.Empty
                 },
                 ["insurance"] = new JObject
                 {
-                    ["status"]     = GetValueMethods.GetInsurancePr(vehicle) ?? string.Empty,
-                    ["expiration"] = GetValueMethods.GetInsExpPr(vehicle) ?? string.Empty,
-                    ["coverage"]   = string.Empty
+                    ["status"]       = GetValueMethods.GetInsurancePr(vehicle) ?? string.Empty,
+                    ["expiration"]   = GetValueMethods.GetInsExpPr(vehicle) ?? string.Empty,
+                    ["coverage"]     = string.Empty,
+                    ["policyNumber"] = string.Empty,
+                    ["provider"]     = string.Empty
+                },
+                ["legalStatus"] = new JObject
+                {
+                    ["isStolen"] = vehData.IsStolen ? "true" : "false",
+                    ["impounds"] = new JObject
+                    {
+                        ["count"]   = string.Empty,
+                        ["history"] = string.Empty
+                    },
+                    ["flags"] = string.Empty,
+                    ["stolenInfo"] = new JObject
+                    {
+                        ["dateReported"]    = string.Empty,
+                        ["reportingAgency"] = string.Empty,
+                        ["caseNumber"]      = string.Empty,
+                        ["notes"]           = string.Empty
+                    }
                 }
             };
 
