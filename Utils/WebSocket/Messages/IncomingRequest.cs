@@ -14,8 +14,6 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
 
             if (HasErrors)
                 Logger.LogError("Error, null value(s) in request: " + ToString());
-            else
-                Logger.LogInfo("IncomingRequest: " + ToString()); // TODO: remove on release
         }
 
         private bool   HasErrors { get; }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Rage;
 using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.CustomEvents;
@@ -29,6 +30,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             RegisterRequestAction(new RequestActions.FindLocationAction());
             RegisterRequestAction(new RequestActions.HeartbeatAction());
             RegisterRequestAction(new RequestActions.FindPedByNameAction());
+            RegisterRequestAction(new RequestActions.FindVehicleByPlateAction());
             RegisterRequestAction(new RequestActions.PoliceVehiclesAction());
             RegisterRequestAction(new RequestActions.FindPedByNameAction());
             RegisterRequestAction(new RequestActions.GiveCitationAction());
@@ -60,31 +62,64 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             foreach (var action in ContinuousActions) action.Execute(client);
         }
 
+        /**
+         * Processes an incoming request by routing it to the appropriate action handler.
+         * Wraps execution in a GameFiber to ensure thread safety when calling RAGE API natives.
+         * * @param client The socket client instance.
+         * @param request The parsed incoming request object.
+         */
         public static void ProcessMessage(GameClientSocket client, IncomingRequest request)
         {
-            switch (request.Type)
+            var fiber = GameFiber.StartNew(() =>
             {
-                case "request":
-                    if (RequestActions.TryGetValue(request.Data.ToString(), out var requestAction)) requestAction.Execute(client, request);
-                    break;
+                try
+                {
+                    if (request == null) return;
 
-                case "keybinding":
-                    if (KeybindingActions.TryGetValue(request.Data.ToString(), out var keybindingAction)) keybindingAction.Execute(request);
-                    break;
-                case "custom_action":
-                    var actionName = request.Data.ToString();
-                    if (CustomActionRegistry.TryGetAction(actionName, out var customAction))
+                    switch (request.Type)
                     {
-                        var customActionFiber = GameFiber.StartNew(() => ActionExecutor.ExecuteTarget(customAction), "ReportsPlus-CustomActionFiber");
-                        CleanupRegistry.Register(() => Misc.Misc.CleanupFiber(customActionFiber));
-                    }
-                    else
-                    {
-                        Logger.LogWarning($"Received unknown custom_action: {actionName}");
-                    }
+                        case "request":
+                            if (request.Data != null && RequestActions.TryGetValue(request.Data.ToString(), out var requestAction))
+                                requestAction.Execute(client, request);
+                            else
+                                Logger.LogWarning($"Unknown or invalid request action: {request.Data}");
 
-                    break;
-            }
+                            break;
+
+                        case "keybinding":
+                            if (request.Data != null && KeybindingActions.TryGetValue(request.Data.ToString(), out var keybindingAction))
+                                keybindingAction.Execute(request);
+                            else
+                                Logger.LogWarning($"Unknown or invalid keybinding action: {request.Data}");
+
+                            break;
+
+                        case "custom_action":
+                            var actionName = request.Data?.ToString();
+                            if (!string.IsNullOrEmpty(actionName) && CustomActionRegistry.TryGetAction(actionName, out var customAction))
+                            {
+                                var customActionFiber = GameFiber.StartNew(() => ActionExecutor.ExecuteTarget(customAction), "ReportsPlus-CustomActionFiber");
+                                CleanupRegistry.Register(() => Misc.Misc.CleanupFiber(customActionFiber));
+                            }
+                            else
+                            {
+                                Logger.LogWarning($"Received unknown or invalid custom_action: {actionName}");
+                            }
+
+                            break;
+
+                        default:
+                            Logger.LogWarning($"Unknown message type received: {request.Type}");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Exception occurred while processing message of type '{request?.Type}': {ex.Message}");
+                }
+            }, "ReportsPlus-ProcessMessage");
+
+            CleanupRegistry.Register(() => Misc.Misc.CleanupFiber(fiber));
         }
     }
 }

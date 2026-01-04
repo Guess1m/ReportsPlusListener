@@ -20,6 +20,12 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class FindPedByNameAction : IRequestAction{
             public string Name => "findPedByName";
 
+            /**
+             * Executes the search for a ped by name.
+             * Optimization: Searches nearby peds first to avoid iterating the entire world if the target is close.
+             * * @param client The socket client.
+             * @param request The incoming request containing the name to find.
+             */
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 Logger.LogInfo("Running FindPedByNameAction ...");
@@ -27,72 +33,92 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 var nameToFind = request.Args;
                 if (string.IsNullOrEmpty(nameToFind)) return;
 
+                if (Main.LPC.Exists())
+                {
+                    var nearbyPeds = Main.LPC.GetNearbyPeds(10);
+                    if (nearbyPeds != null)
+                        foreach (var ped in nearbyPeds)
+                            if (TryProcessPed(client, ped, nameToFind))
+                                return;
+                }
+
                 foreach (var ped in World.GetAllPeds())
                 {
-                    if (!ped || !ped.Exists()) continue;
-
-                    var isMatch = false;
-
-                    var pedData = ped.GetPedData();
-                    if (pedData == null) continue;
-
-                    var pedName = pedData.FullName ?? null;
-                    if (pedName == null) continue;
-
-                    if (pedName.ToLower().Contains(nameToFind.ToLower())) isMatch = true;
-
-                    if (!isMatch) continue;
-                    var pedDataJson = PedDataHelper.GeneratePedData(ped);
-                    if (pedDataJson == null) continue;
-
-                    client.Send("pedUpdated", pedDataJson);
-                    return;
+                    if (TryProcessPed(client, ped, nameToFind)) return;
                 }
 
                 client.Send("pedNotFound", new JValue(nameToFind));
             }
+
+            private bool TryProcessPed(GameClientSocket client, Ped ped, string nameToFind)
+            {
+                if (!ped || !ped.Exists()) return false;
+
+                var pedData = ped.GetPedData();
+                if (pedData == null) return false;
+
+                var pedName = pedData.FullName;
+                if (string.IsNullOrEmpty(pedName)) return false;
+
+                if (!pedName.ToLower().Contains(nameToFind.ToLower())) return false;
+
+                var pedDataJson = PedDataHelper.GeneratePedData(ped);
+                if (pedDataJson == null) return false;
+
+                client.Send("pedUpdated", pedDataJson);
+                return true;
+            }
         }
 
-        /**
-         * ^^^^^^^^^
-         * //TODO:
-         * This will be changed to:
-         *
-         * public class FindVehicleByPlateAction : IRequestAction
-         * {
-         * public string Name => "findVehicleByPlate";
-         *
-         * public void Execute(GameClientSocket client, IncomingRequest request)
-         * {
-         * Logger.LogInfo("Running FindVehicleByPlateAction ...");
-         * var plateToFind = request.Args;
-         * if (string.IsNullOrEmpty(plateToFind)) return;
-         *
-         * // Normalize search
-         * var searchClean = plateToFind.Replace(" ", "").ToLower();
-         *
-         * foreach (var veh in World.GetAllVehicles())
-         * {
-         * if (!veh || !veh.Exists()) continue;
-         *
-         * var plate = veh.LicensePlate ?? "";
-         * if (plate.Replace(" ", "").ToLower().Contains(searchClean))
-         * {
-         * var vehData = VehicleDataHelper.GenerateVehicleData(veh);
-         * if (vehData != null)
-         * {
-         * client.Send("vehicleUpdated", vehData); // Re-use vehicleUpdated topic
-         * return;
-         * }
-         * }
-         * }
-         *
-         * client.Send("vehicleNotFound", new JValue(plateToFind));
-         * }
-         * }
-         *
-         * In the actual implementation
-         */
+        public class FindVehicleByPlateAction : IRequestAction{
+            public string Name => "findVehicleByPlate";
+
+            /**
+             * Executes the search for a vehicle by plate.
+             * Optimization: Searches nearby vehicles first to avoid iterating the entire world if the target is close.
+             * * @param client The socket client.
+             * @param request The incoming request containing the plate to find.
+             */
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                Logger.LogInfo("Running FindVehicleByPlateAction ...");
+                var plateToFind = request.Args;
+                if (string.IsNullOrEmpty(plateToFind)) return;
+
+                var searchClean = plateToFind.Replace(" ", "").ToLower();
+
+                if (Main.LPC.Exists())
+                {
+                    var nearbyVehicles = Main.LPC.GetNearbyVehicles(10);
+                    if (nearbyVehicles != null)
+                        foreach (var veh in nearbyVehicles)
+                            if (TryProcessVehicle(client, veh, searchClean))
+                                return;
+                }
+
+                foreach (var veh in World.GetAllVehicles())
+                    if (TryProcessVehicle(client, veh, searchClean))
+                        return;
+
+                client.Send("vehicleNotFound", new JValue(plateToFind));
+            }
+
+            private bool TryProcessVehicle(GameClientSocket client, Vehicle veh, string searchClean)
+            {
+                if (!veh || !veh.Exists()) return false;
+
+                var plate = veh.LicensePlate ?? "";
+
+                if (!plate.Replace(" ", "").ToLower().Contains(searchClean)) return false;
+
+                var vehData = VehicleDataHelper.GenerateVehicleData(veh);
+                if (vehData == null) return false;
+
+                client.Send("vehicleUpdated", vehData);
+                return true;
+            }
+        }
+
         public class PoliceVehiclesAction : IRequestAction{
             private readonly HashSet<Vehicle> _trackedVehicles = new HashSet<Vehicle>();
             public           string           Name => "policeVehicles";
@@ -263,6 +289,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 }
 
                 // 2. Issue Citation via Policing Redefined
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Issued", $"~y~Citation For: ~b~{pedName}\n~w~Infraction: ~o~{infraction}\n~w~Fine: ~g~${fine}");
+
                 try
                 {
                     var citation = new Citation(targetPed, infraction, fine, currencySymbol, true, // Currency In Front
@@ -323,7 +351,6 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
 
                     var nearbyVehicles = Main.LPC.GetNearbyVehicles(15);
                     if (nearbyVehicles != null)
-                    {
                         foreach (var veh in nearbyVehicles)
                         {
                             if (!veh || !veh.Exists()) continue;
@@ -331,10 +358,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             targetVehicle = veh;
                             break;
                         }
-                    }
 
                     if (targetVehicle == null)
-                    {
                         foreach (var veh in World.GetAllVehicles())
                         {
                             if (!veh || !veh.Exists()) continue;
@@ -342,7 +367,6 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             targetVehicle = veh;
                             break;
                         }
-                    }
 
                     if (targetVehicle == null)
                     {
