@@ -4,8 +4,6 @@ using Newtonsoft.Json.Linq;
 using Rage;
 using Rage.Native;
 
-// Assumed namespace for VehicleData
-
 namespace ReportsPlus.Utils.WorldData{
     public static class VehicleDataHelper{
         /**
@@ -47,14 +45,16 @@ namespace ReportsPlus.Utils.WorldData{
                 ["entityId"] = (int)vehicle.Handle.Value,
                 ["basics"] = new JObject
                 {
-                    ["plate"]         = vehicle.LicensePlate ?? string.Empty,
-                    ["model"]         = vehicle.Model.Name ?? string.Empty,
-                    ["make"]          = Game.GetLocalizedString(NativeFunction.Natives.xF7AF4F159FF99F97<string>(vehicle.Model.Hash)) ?? string.Empty,
-                    ["colorSpecific"] = vehData.PrimaryColor ?? string.Empty,
-                    ["color"]         = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1 ? string.Empty : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}",
-                    ["vin"]           = vehData.Vin.ToString() ?? string.Empty,
-                    ["isPolice"]      = vehicle.IsPoliceVehicle ? "true" : "false",
-                    ["driver"]        = driverName
+                    ["plate"]            = vehicle.LicensePlate ?? string.Empty,
+                    ["type"]             = string.Empty,
+                    ["inspectionStatus"] = string.Empty,
+                    ["model"]            = vehicle.Model.Name ?? string.Empty,
+                    ["make"]             = Game.GetLocalizedString(NativeFunction.Natives.xF7AF4F159FF99F97<string>(vehicle.Model.Hash)) ?? string.Empty,
+                    ["colorSpecific"]    = vehData.PrimaryColor ?? string.Empty,
+                    ["color"]            = NativeFunction.Natives.GET_VEHICLE_LIVERY<int>(vehicle) != -1 ? string.Empty : $"{vehicle.PrimaryColor.R}-{vehicle.PrimaryColor.G}-{vehicle.PrimaryColor.B}",
+                    ["vin"]              = vehData.Vin.ToString() ?? string.Empty,
+                    ["isPolice"]         = vehicle.IsPoliceVehicle ? "true" : "false",
+                    ["driver"]           = driverName
                 },
                 ["ownership"] = new JObject
                 {

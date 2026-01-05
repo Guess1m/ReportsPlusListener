@@ -43,9 +43,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 }
 
                 foreach (var ped in World.GetAllPeds())
-                {
-                    if (TryProcessPed(client, ped, nameToFind)) return;
-                }
+                    if (TryProcessPed(client, ped, nameToFind))
+                        return;
 
                 client.Send("pedNotFound", new JValue(nameToFind));
             }

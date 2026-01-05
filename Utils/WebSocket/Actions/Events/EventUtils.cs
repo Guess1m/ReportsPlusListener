@@ -1,10 +1,12 @@
 using System;
 using CalloutInterfaceAPI;
+using CommonDataFramework.Modules.PedDatabase;
 using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using Rage;
 using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.WorldData;
 using Functions = LSPD_First_Response.Mod.API.Functions;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Events{
@@ -29,42 +31,47 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
 
         private static void PR_OnPedStopped(Ped ped)
         {
-            Logger.LogInfo("Running PR OnPedStopped");
+            Logger.LogWarning("PR_OnPedStopped NOT IMPLEMENTED YET");
         }
 
         private static void PR_OnOccupantIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
-            Logger.LogInfo("Running PR OnOccupantIdentificationGiven");
+            Logger.LogInfo("Running PR PR_OnOccupantIdentificationGiven for " + ped.GetPedData().FullName);
+            EventManager.SendIDUpdate(PedDataHelper.GeneratePedData(ped));
         }
 
         private static void PR_OnDriverIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
-            Logger.LogInfo("Running PR OnDriverIdentificationGiven");
+            Logger.LogInfo("Running PR_OnDriverIdentificationGiven for " + ped.GetPedData().FullName);
+            EventManager.SendIDUpdate(PedDataHelper.GeneratePedData(ped));
         }
 
         private static void PR_OnPedPatDown(Ped ped)
         {
-            Logger.LogInfo("Running PR OnPedPatDown");
+            Logger.LogInfo("Running PR_OnPedPatDown for " + ped.GetPedData().FullName);
+            EventManager.SendIDUpdate(PedDataHelper.GeneratePedData(ped));
         }
 
         private static void PR_OnPedArrested(Ped ped, Ped officer, bool frontcuffs)
         {
-            Logger.LogInfo("Running PR OnPedArrested");
+            Logger.LogWarning("PR_OnPedArrested NOT IMPLEMENTED YET");
         }
 
         private static void PR_OnIdentificationGiven(Ped ped, EGivenIdentification identification)
         {
-            Logger.LogInfo("Running PR OnIdentificationGiven");
+            Logger.LogInfo("Running PR_OnIdentificationGiven for " + ped.GetPedData().FullName);
+            EventManager.SendIDUpdate(PedDataHelper.GeneratePedData(ped));
         }
 
         private static void PR_OnDeadPedPatDown(Ped ped)
         {
-            Logger.LogInfo("Running PR OnDeadPedPatDown");
+            Logger.LogInfo("Running PR_OnDeadPedPatDown for " + ped.GetPedData().FullName);
+            EventManager.SendIDUpdate(PedDataHelper.GeneratePedData(ped));
         }
 
         private static void PR_OnVehicleCheck(Vehicle vehicle, bool isVinCheck)
         {
-            Logger.LogInfo("Updated Lookup File (vehicle); ");
+            Logger.LogWarning("PR_OnVehicleCheck NOT IMPLEMENTED YET");
         }
 
         private static void PR_OnPedCheck(Ped ped)

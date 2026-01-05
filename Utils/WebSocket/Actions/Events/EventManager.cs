@@ -24,6 +24,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
             SendUpdate("calloutUpdate", data);
         }
 
+        public static void SendIDUpdate(JObject data)
+        {
+            SendUpdate("pedIdScan", data);
+        }
+
         public static void SendDynamicEvent(DynamicEvent dynamicEvent)
         {
             try
