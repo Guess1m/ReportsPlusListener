@@ -1,4 +1,3 @@
-using System;
 using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.Logging;
 
@@ -27,24 +26,6 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
         public static void SendIDUpdate(JObject data)
         {
             SendUpdate("pedIdScan", data);
-        }
-
-        public static void SendDynamicEvent(DynamicEvent dynamicEvent)
-        {
-            try
-            {
-                var payload = JObject.FromObject(dynamicEvent.GetPayload());
-
-                payload["topic"] = dynamicEvent.Topic;
-
-                SendUpdate("dynamic_event", payload);
-
-                Logger.LogInfo($"Sent Dynamic Event: {dynamicEvent.Topic}");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Failed to send dynamic event {dynamicEvent.Topic}: {ex.Message}");
-            }
         }
     }
 }

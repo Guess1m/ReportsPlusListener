@@ -1,7 +1,6 @@
 using System;
 using Rage;
 using ReportsPlus.Utils.Logging;
-using ReportsPlus.Utils.WebSocket.Actions.Events;
 using ReportsPlus.Utils.WebSocket.Messages;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
@@ -106,24 +105,6 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             {
                 Main.LPCV?.Repair();
                 Logger.LogInfo("Vehicle repaired.");
-            }
-        }
-
-        public class PanicKeybinding : IKeybindingAction{
-            public string Name => "panic";
-
-            public void Execute(IncomingRequest request)
-            {
-                Logger.LogInfo("Panic button pressed!");
-
-                // 1. Visual feedback in game
-                Game.DisplayNotification("~r~PANIC BUTTON ACTIVATED");
-
-                // 2. Create the event
-                var panicEvent = new DynamicEvents.PanicButtonEvent("OFFICER IN DISTRESS - 10-99");
-
-                // 3. Send it via the EventManager
-                EventManager.SendDynamicEvent(panicEvent);
             }
         }
     }

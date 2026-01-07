@@ -18,6 +18,9 @@ namespace ReportsPlus.Utils.Config{
         [ConfigOption("Keybindings", "InputLockKey", "Key to toggle input lock (e.g. F9). Must be capitalized.")]
         public Keys InputLockKey { get; set; } = Keys.F9;
 
+        [ConfigOption("Keybindings", "ReconnectKey", "Key to reconnect (e.g. F10). Must be capitalized.")]
+        public Keys ReconnectKey { get; set; } = Keys.F10;
+
         // keybinding for give parking citation
         [ConfigOption("Keybindings", "GiveParkingCitationKey", "Key to give out a parking citation (e.g. F3). Must be capitalized.")]
         public Keys GiveParkingCitationKey { get; set; } = Keys.F3;

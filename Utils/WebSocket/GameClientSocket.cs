@@ -1,150 +1,208 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Rage;
-using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.WebSocket.Messages;
 using WebSocketSharp;
 using Logger = ReportsPlus.Utils.Logging.Logger;
 
 namespace ReportsPlus.Utils.WebSocket{
     public class GameClientSocket{
-        private readonly WebSocketSharp.WebSocket _clientSocket;
+        private readonly ConcurrentQueue<string> _sendQueue  = new ConcurrentQueue<string>();
+        private readonly object                  _socketLock = new object();
+        private readonly string                  _url;
 
-        private readonly ConcurrentQueue<string> _sendQueue = new ConcurrentQueue<string>();
+        private WebSocketSharp.WebSocket _clientSocket;
+        private Task                     _senderTask;
+        private CancellationTokenSource  _shutdownTokenSource;
 
-        private GameFiber _senderFiber;
-
-        public GameClientSocket(string hostname = "localhost", int port = 6969)
+        public GameClientSocket(string hostname, int port)
         {
-            var url = $"ws://{hostname}:{port}/ws/game-client";
-            _clientSocket = new WebSocketSharp.WebSocket(url);
-            SetupEvents();
-
-            OnMessageReceived += message => HandleServerMessage(this, message);
+            _url = $"ws://{hostname}:{port}/ws/game-client";
         }
 
-        /**
-         * Gets a value indicating whether the WebSocket connection is currently open and ready for communication.
-         * This property safely checks for null references and handles potential disposal race conditions.
-         * 
-         * @return True if the socket is initialized and the ready state is Open; otherwise, false.
-         */
         public bool IsConnected
         {
             get
             {
-                try
+                lock (_socketLock)
                 {
                     return _clientSocket is { ReadyState: WebSocketState.Open };
                 }
-                catch
-                {
-                    return false;
-                }
             }
-        }
-
-        private static void HandleServerMessage(GameClientSocket client, IncomingRequest message)
-        {
-            MessageHandler.ProcessMessage(client, message);
         }
 
         public event Action<IncomingRequest> OnMessageReceived;
+        public event Action                  OnConnected;
+        public event Action                  OnDisconnected;
 
-        private void SetupEvents()
+        /// <summary>
+        ///     Initializes the sender loop and attempts a single connection to the server.
+        /// </summary>
+        public void Start()
         {
-            _clientSocket.OnOpen += (sender, e) =>
-            {
-                Logger.LogInfo("Connected successfully.");
-                _senderFiber = GameFiber.StartNew(SenderLoop, "ReportsPlus-SenderFiber");
+            if (_shutdownTokenSource != null && !_shutdownTokenSource.IsCancellationRequested) return;
 
-                CleanupRegistry.Register(() => Misc.Misc.CleanupFiber(_senderFiber));
-            };
+            _shutdownTokenSource = new CancellationTokenSource();
+            var token = _shutdownTokenSource.Token;
 
-            _clientSocket.OnMessage += (client, e) =>
-            {
-                try
-                {
-                    var jsonObject = JObject.Parse(e.Data);
-                    OnMessageReceived?.Invoke(new IncomingRequest(jsonObject));
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Could not parse message from server: {ex.Message}");
-                }
-            };
+            Logger.LogInfo("Starting background socket tasks...");
 
-            _clientSocket.OnError += (sender, e) => { Logger.LogError($"WebSocket error: {e.Message}"); };
-            _clientSocket.OnClose += (sender, e) => { Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}"); };
+            _senderTask = Task.Run(() => SenderLoop(token), token);
+
+            // Initial connection attempt
+            Task.Run(AttemptConnection);
         }
 
-        private void SenderLoop()
+        /// <summary>
+        ///     Attempts to connect to the websocket server.
+        ///     Safe to call if already connected (will return early) or if previous connection failed.
+        /// </summary>
+        public void AttemptConnection()
         {
-            Logger.LogInfo("SenderLoop has started.");
+            lock (_socketLock)
+            {
+                if (_clientSocket is { ReadyState: WebSocketState.Open })
+                {
+                    Logger.LogWarning("AttemptConnection called, but socket is already open.");
+                    return;
+                }
+            }
+
             try
             {
-                while (IsConnected)
-                    if (_sendQueue.TryDequeue(out var message))
-                        _clientSocket.Send(message);
-                    else
-                        GameFiber.Sleep(10);
+                InitializeSocket();
+                Logger.LogInfo($"Attempting to connect to {_url}...");
+
+                lock (_socketLock)
+                {
+                    _clientSocket?.Connect();
+                }
             }
             catch (Exception ex)
             {
-                Logger.LogError($"An exception occurred in the SenderLoop: {ex.Message}");
-            }
-            finally
-            {
-                Logger.LogWarning("SenderLoop has ended.");
+                Logger.LogError($"Connection attempt failed: {ex.Message}");
+                OnDisconnected?.Invoke();
             }
         }
 
-        public void Connect()
+        private void InitializeSocket()
         {
-            Logger.LogInfo($"Connecting to {_clientSocket.Url}...");
-            _clientSocket.Connect();
+            lock (_socketLock)
+            {
+                // Ensure previous socket is closed before creating a new one
+                if (_clientSocket != null)
+                {
+                    _clientSocket.OnOpen    -= OnSocketOpen;
+                    _clientSocket.OnMessage -= OnSocketMessage;
+                    _clientSocket.OnError   -= OnSocketError;
+                    _clientSocket.OnClose   -= OnSocketClose;
+
+                    if (_clientSocket.ReadyState == WebSocketState.Open)
+                        _clientSocket.Close();
+                }
+
+                _clientSocket = new WebSocketSharp.WebSocket(_url);
+
+                _clientSocket.OnOpen    += OnSocketOpen;
+                _clientSocket.OnMessage += OnSocketMessage;
+                _clientSocket.OnError   += OnSocketError;
+                _clientSocket.OnClose   += OnSocketClose;
+            }
+        }
+
+        private void OnSocketOpen(object sender, EventArgs e)
+        {
+            Logger.LogInfo("Connected successfully.");
+            OnConnected?.Invoke();
+        }
+
+        private void OnSocketMessage(object sender, MessageEventArgs e)
+        {
+            try
+            {
+                var jsonObject = JObject.Parse(e.Data);
+                OnMessageReceived?.Invoke(new IncomingRequest(jsonObject));
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Parse error: {ex.Message}");
+            }
+        }
+
+        private void OnSocketError(object sender, ErrorEventArgs e)
+        {
+            Logger.LogError($"WebSocket error: {e.Message}");
+        }
+
+        private void OnSocketClose(object sender, CloseEventArgs e)
+        {
+            Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}");
+            OnDisconnected?.Invoke();
+        }
+
+        private async Task SenderLoop(CancellationToken token)
+        {
+            Logger.LogInfo("Background SenderLoop started.");
+            while (!token.IsCancellationRequested)
+                if (IsConnected && _sendQueue.TryDequeue(out var message))
+                    lock (_socketLock)
+                    {
+                        _clientSocket.Send(message);
+                    }
+                else
+                    try
+                    {
+                        await Task.Delay(10, token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
+
+            Logger.LogWarning("Background SenderLoop stopped.");
         }
 
         public void Send(string type, JToken data, string args = "")
         {
-            if (!IsConnected)
-            {
-                Logger.LogWarning("Cannot send message: not connected.");
-                return;
-            }
-
             try
             {
                 var messageObject = new JObject
                 {
                     ["type"]   = type,
                     ["data"]   = data,
-                    ["sender"] = _clientSocket.Url.ToString()
+                    ["sender"] = _url
                 };
 
                 if (!string.IsNullOrEmpty(args)) messageObject["args"] = args;
 
                 var messageJson = messageObject.ToString(Formatting.None);
-
                 _sendQueue.Enqueue(messageJson);
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to serialize or enqueue message: {ex.Message}");
+                Logger.LogError($"Serialization error: {ex.Message}");
             }
         }
 
-        public void Disconnect()
+        public void Stop()
         {
-            if (_senderFiber is { IsAlive: true })
+            Logger.LogInfo("Stopping GameClientSocket...");
+            _shutdownTokenSource?.Cancel();
+
+            lock (_socketLock)
             {
-                _senderFiber.Abort();
-                _senderFiber = null;
+                if (_clientSocket != null)
+                {
+                    _clientSocket.Close(CloseStatusCode.Normal);
+                    _clientSocket = null;
+                }
             }
 
-            if (_clientSocket != null && IsConnected) _clientSocket.Close(CloseStatusCode.Normal);
+            _shutdownTokenSource?.Dispose();
+            _shutdownTokenSource = null;
         }
     }
 }
