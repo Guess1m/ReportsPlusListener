@@ -17,7 +17,7 @@ namespace ReportsPlus.Utils.WorldData{
         {
             if (!vehicle || !vehicle.Exists()) return null;
 
-            // Retrieve custom vehicle data from the framework
+            // Retrieve custom vehicle data from cdf
             var vehData = vehicle.GetVehicleData();
             if (vehData == null) return null;
 

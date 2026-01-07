@@ -68,7 +68,6 @@ namespace ReportsPlus{
             _continuousUpdateFiber = GameFiber.StartNew(ContinuousUpdateLoop, "ReportsPlus-ContinuousUpdateFiber");
             _inputLockFiber        = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
 
-            // OPTIMIZATION: Start the Request Processing Fiber
             _requestProcessingFiber = GameFiber.StartNew(ProcessRequestQueueLoop, "ReportsPlus-RequestProcessingFiber");
 
             CleanupRegistry.Register(() => Misc.CleanupFiber(_continuousUpdateFiber));
@@ -82,7 +81,6 @@ namespace ReportsPlus{
             {
                 Logger.LogInfo("Initializing Background Socket Client...");
 
-                // Pass new settings to constructor
                 _client = new GameClientSocket(Settings.ClientAddress, Settings.ClientPort);
                 Client  = _client;
                 EventManager.SetClient(Client);
@@ -121,7 +119,7 @@ namespace ReportsPlus{
                 while (true)
                 {
                     GameFiber.Yield();
-                    // Only run game logic updates if actually connected
+
                     if (Client is { IsConnected: true }) MessageHandler.ExecuteContinuousActions(Client);
                     GameFiber.Sleep(Settings.ContinuousUpdateInterval);
                 }

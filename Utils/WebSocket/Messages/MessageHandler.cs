@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.CustomEvents;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Continuous;
@@ -86,13 +87,27 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
                             Logger.LogWarning($"Unknown or invalid keybinding action: {request.Data}");
                         break;
 
-                    case "custom_action":
-                        var actionName = request.Data?.ToString();
-                        if (!string.IsNullOrEmpty(actionName) && CustomActionRegistry.TryGetAction(actionName, out var customAction))
-                            ActionExecutor.ExecuteTarget(customAction);
+                    case "register_actions":
+                        Logger.LogInfo("Registering custom actions...");
+                        if (request.Data is JArray actionsArray)
+                        {
+                            var actions = actionsArray.ToObject<List<CustomActionConfig>>();
+                            CustomActionRegistry.RegisterActions(actions);
+                        }
                         else
-                            Logger.LogWarning($"Received unknown or invalid custom_action: {actionName}");
+                        {
+                            Logger.LogWarning($"Invalid register_actions payload: {request.Data}");
+                        }
 
+                        break;
+
+                    case "execute_action":
+                        var executionData = request.Data as JObject;
+                        var actionName    = executionData?["name"]?.ToString();
+                        if (CustomActionRegistry.TryGetAction(actionName, out var actionConfig))
+                            ActionExecutor.Execute(actionConfig);
+                        else
+                            Logger.LogWarning($"Unknown action: {actionName}");
                         break;
 
                     default:

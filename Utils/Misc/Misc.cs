@@ -71,17 +71,13 @@ namespace ReportsPlus.Utils.Misc{
             Logger.LogInfo("Cleaning up plugin event subscriptions...");
             if (_usingCi)
             {
-                // YOU MUST IMPLEMENT THIS
                 EventUtils.CleanupCiEvent();
                 Logger.LogInfo("CI Events Cleaned up.");
             }
 
-            if (UsingPrFunctions)
-            {
-                // YOU MUST IMPLEMENT THIS
-                EventUtils.CleanupEventsPr();
-                Logger.LogInfo("PR Events Cleaned up.");
-            }
+            if (!UsingPrFunctions) return;
+            EventUtils.CleanupEventsPr();
+            Logger.LogInfo("PR Events Cleaned up.");
         }
 
         internal static string FindPedModel(Ped ped)

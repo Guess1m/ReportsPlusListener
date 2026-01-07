@@ -259,7 +259,6 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
 
                 Ped targetPed = null;
 
-                // 1. Find the Ped
                 foreach (var ped in Main.LPC.GetNearbyPeds(10))
                 {
                     if (!ped || !ped.Exists()) continue;
@@ -287,13 +286,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     return;
                 }
 
-                // 2. Issue Citation via Policing Redefined
                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Issued", $"~y~Citation For: ~b~{pedName}\n~w~Infraction: ~o~{infraction}\n~w~Fine: ~g~${fine}");
 
                 try
                 {
-                    var citation = new Citation(targetPed, infraction, fine, currencySymbol, true, // Currency In Front
-                        isArrestable);
+                    var citation = new Citation(targetPed, infraction, fine, currencySymbol, true, isArrestable);
 
                     PedAPI.GiveCitationToPed(targetPed, citation);
                     Logger.LogInfo($"Citation issued to {pedName} for {infraction} (${fine}).");
