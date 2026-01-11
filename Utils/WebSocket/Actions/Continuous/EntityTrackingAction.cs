@@ -8,6 +8,13 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
     public class EntityTrackingAction : IContinuousAction{
         private static readonly Dictionary<int, Ped> TrackedPeds = new Dictionary<int, Ped>();
 
+        /// <summary>
+        ///     Performs a periodic scan of all peds in the world to maintain synchronization between the game state and the
+        ///     client.
+        ///     Automatically handles the registration of new peds and the removal of peds that have been deleted or left the
+        ///     tracking radius.
+        /// </summary>
+        /// <param name="client">The active <see cref="GameClientSocket" /> instance used for communication.</param>
         public void Execute(GameClientSocket client)
         {
             var nearbyPeds = new HashSet<Ped>(World.GetAllPeds());
@@ -28,9 +35,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
             foreach (var ped in nearbyPeds)
             {
                 if (ped == null || !ped.Exists() || ped == Main.LPC) continue;
-
                 if (TrackedPeds.ContainsKey((int)ped.Handle.Value)) continue;
-                var pedData = PedDataHelper.GeneratePedData(ped);
+                var pedData = Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined ? PedDataHelper.GeneratePedDataPR(ped) : PedDataHelper.GeneratePedData(ped);
                 if (pedData == null) continue;
                 client.Send("pedCreated", pedData);
                 TrackedPeds.Add((int)ped.Handle.Value, ped);

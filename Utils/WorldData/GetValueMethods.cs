@@ -1,117 +1,44 @@
-using CommonDataFramework.Modules;
-using CommonDataFramework.Modules.PedDatabase;
 using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
+using StopThePed.API;
 
 namespace ReportsPlus.Utils.WorldData{
+    /// <summary>
+    ///     Getters for reg/ins data
+    /// </summary>
     public static class GetValueMethods{
         public static string GetInsExpPr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            return vehicleData?.Insurance?.ExpirationDate?.ToString("MM-dd-yyyy") ?? "";
+            return vehicleData?.Insurance?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty;
         }
 
         public static string GetRegExpPr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            return vehicleData?.Registration?.ExpirationDate?.ToString("MM-dd-yyyy") ?? "";
+            return vehicleData?.Registration?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty;
         }
 
-        public static string GetVinPr(Vehicle car)
+        public static string GetRegistrationPr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            return vehicleData?.Vin?.ToString() ?? "";
+            return vehicleData?.Registration == null ? string.Empty : vehicleData.Registration.Status.ToString();
         }
 
-        public static string GetOwnerType(Vehicle car)
+        public static string GetInsurancePr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();
-            return vehicleData?.OwnerType.ToString() ?? "";
+            return vehicleData?.Insurance == null ? string.Empty : vehicleData.Insurance.Status.ToString();
         }
 
-        public static string GetOwnerPr(Vehicle car)
+        public static string GetRegistrationStp(Vehicle car)
         {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Owner?.FullName ?? "";
+            return car == null ? string.Empty : Functions.getVehicleRegistrationStatus(car).ToString();
         }
 
-        public static string GetOwnerGenderPr(Vehicle car)
+        public static string GetInsuranceStp(Vehicle car)
         {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Owner?.Gender.ToString() ?? "";
-        }
-
-        public static string GetOwnerAddressPr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Owner?.Address?.ToString() ?? "";
-        }
-
-        public static string GetOwnerDobPr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            if (vehicleData?.Owner?.Birthday == null) return "";
-            var birthday = vehicleData.Owner.Birthday;
-            return $"{birthday.Month}/{birthday.Day}/{birthday.Year}";
-        }
-
-        public static string GetOwnerLicenseStatePr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Owner?.DriversLicenseState.ToString() ?? "";
-        }
-
-        public static string GetOwnerIsWantedPr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Owner?.Wanted.ToString() ?? "";
-        }
-
-        public static string GetOwnerModelPr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            var owner       = vehicleData?.Owner?.Holder;
-            return Misc.Misc.FindPedModel(owner).ToLower() ?? "";
-        }
-
-        public static string GetFullNamePr(Ped ped)
-        {
-            if (ped == null || !ped.Exists()) return "";
-            var pedData = ped.GetPedData();
-            return pedData?.FullName ?? "";
-        }
-
-        public static string GetStolenPr(Vehicle car, bool setValid = false)
-        {
-            var vehicleData = car.GetVehicleData();
-            if (vehicleData == null) return "";
-            return setValid ? "False" : vehicleData.IsStolen.ToString();
-        }
-
-        public static string GetRegistrationPr(Vehicle car, bool setValid = false)
-        {
-            var vehicleData = car.GetVehicleData();
-            if (vehicleData?.Registration == null) return "";
-            return setValid ? EDocumentStatus.Valid.ToString() : vehicleData.Registration.Status.ToString();
-        }
-
-        public static string GetInsurancePr(Vehicle car, bool setValid = false)
-        {
-            var vehicleData = car.GetVehicleData();
-            if (vehicleData?.Insurance == null) return "";
-            return setValid ? EDocumentStatus.Valid.ToString() : vehicleData.Insurance.Status.ToString();
-        }
-
-        public static string GetMakePr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Make ?? "";
-        }
-
-        public static string GetModelPr(Vehicle car)
-        {
-            var vehicleData = car.GetVehicleData();
-            return vehicleData?.Model ?? "";
+            return car == null ? string.Empty : Functions.getVehicleInsuranceStatus(car).ToString();
         }
     }
 }

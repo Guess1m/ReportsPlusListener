@@ -20,12 +20,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class FindPedByNameAction : IRequestAction{
             public string Name => "findPedByName";
 
-            /**
-             * Executes the search for a ped by name.
-             * Optimization: Searches nearby peds first to avoid iterating the entire world if the target is close.
-             * * @param client The socket client.
-             * @param request The incoming request containing the name to find.
-             */
+            /// <summary>
+            ///     Executes a search for a pedestrian by their full name, prioritizing nearby entities.
+            /// </summary>
+            /// <param name="client">The socket client to send the result to.</param>
+            /// <param name="request">The request containing the target pedestrian's name in the arguments.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 Logger.LogInfo("Running FindPedByNameAction ...");
@@ -49,6 +48,13 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 client.Send("pedNotFound", new JValue(nameToFind));
             }
 
+            /// <summary>
+            ///     Attempts to match a specific pedestrian entity against a search string and sends data if found.
+            /// </summary>
+            /// <param name="client">The socket client to send the data to.</param>
+            /// <param name="ped">The pedestrian entity to evaluate.</param>
+            /// <param name="nameToFind">The name string to search for.</param>
+            /// <returns><c>true</c> if a match was found and processed; otherwise, <c>false</c>.</returns>
             private bool TryProcessPed(GameClientSocket client, Ped ped, string nameToFind)
             {
                 if (!ped || !ped.Exists()) return false;
@@ -60,10 +66,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 if (string.IsNullOrEmpty(pedName)) return false;
 
                 if (!pedName.ToLower().Contains(nameToFind.ToLower())) return false;
-
-                var pedDataJson = PedDataHelper.GeneratePedData(ped);
+                var pedDataJson = Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined ? PedDataHelper.GeneratePedDataPR(ped) : PedDataHelper.GeneratePedData(ped);
                 if (pedDataJson == null) return false;
-
                 client.Send("pedUpdated", pedDataJson);
                 return true;
             }
@@ -72,12 +76,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class FindVehicleByPlateAction : IRequestAction{
             public string Name => "findVehicleByPlate";
 
-            /**
-             * Executes the search for a vehicle by plate.
-             * Optimization: Searches nearby vehicles first to avoid iterating the entire world if the target is close.
-             * * @param client The socket client.
-             * @param request The incoming request containing the plate to find.
-             */
+            /// <summary>
+            ///     Executes a search for a vehicle by its license plate, prioritizing nearby vehicles.
+            /// </summary>
+            /// <param name="client">The socket client to send the result to.</param>
+            /// <param name="request">The request containing the license plate string in the arguments.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 Logger.LogInfo("Running FindVehicleByPlateAction ...");
@@ -102,6 +105,13 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 client.Send("vehicleNotFound", new JValue(plateToFind));
             }
 
+            /// <summary>
+            ///     Attempts to match a specific vehicle's license plate against a search string and sends data if found.
+            /// </summary>
+            /// <param name="client">The socket client to send the data to.</param>
+            /// <param name="veh">The vehicle entity to evaluate.</param>
+            /// <param name="searchClean">The sanitized license plate string to search for.</param>
+            /// <returns><c>true</c> if a match was found and processed; otherwise, <c>false</c>.</returns>
             private bool TryProcessVehicle(GameClientSocket client, Vehicle veh, string searchClean)
             {
                 if (!veh || !veh.Exists()) return false;
@@ -109,10 +119,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 var plate = veh.LicensePlate ?? "";
 
                 if (!plate.Replace(" ", "").ToLower().Contains(searchClean)) return false;
-
-                var vehData = VehicleDataHelper.GenerateVehicleData(veh);
+                var vehData = Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined ? VehicleDataHelper.GenerateVehicleDataPR(veh) : VehicleDataHelper.GenerateVehicleData(veh);
                 if (vehData == null) return false;
-
                 client.Send("vehicleUpdated", vehData);
                 return true;
             }
@@ -122,6 +130,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             private readonly HashSet<Vehicle> _trackedVehicles = new HashSet<Vehicle>();
             public           string           Name => "policeVehicles";
 
+            /// <summary>
+            ///     Retrieves and sends the coordinates of all active police vehicles to the client.
+            /// </summary>
+            /// <param name="client">The socket client to send the vehicle data to.</param>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 UpdateTrackedVehicleLocations();
@@ -129,6 +142,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 client.Send(Name, vehiclesData);
             }
 
+            /// <summary>
+            ///     Updates the internal list of tracked police vehicles by removing invalid entities and adding new ones.
+            /// </summary>
             private void UpdateTrackedVehicleLocations()
             {
                 _trackedVehicles.RemoveWhere(vehicle => !vehicle.Exists() || vehicle.IsDead || vehicle == Main.LPCV);
@@ -139,6 +155,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                         _trackedVehicles.Add(vehicle);
             }
 
+            /// <summary>
+            ///     Serializes the currently tracked police vehicles into a JSON array of coordinates and IDs.
+            /// </summary>
+            /// <returns>A <see cref="JArray" /> containing the position data of tracked vehicles.</returns>
             private JArray GetTrackedVehiclesAsJson()
             {
                 var vehiclesArray = new JArray();
@@ -156,6 +176,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class PlayerLocationAction : IRequestAction{
             public string Name => "playerLocation";
 
+            /// <summary>
+            ///     Sends the local player's current X and Y coordinates to the client.
+            /// </summary>
+            /// <param name="client">The socket client to send the location to.</param>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var playerPosition = Main.LPC.Position;
@@ -171,6 +196,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class GameTimeAction : IRequestAction{
             public string Name => "gametime";
 
+            /// <summary>
+            ///     Retrieves the current in-game world time and sends it to the client.
+            /// </summary>
+            /// <param name="client">The socket client to send the time to.</param>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var timeString = World.DateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
@@ -182,13 +212,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class FindLocationAction : IRequestAction{
             public string Name => "locationData";
 
-            /**
-             * Executes the location data request.
-             * Simulates the C# client retrieving the current street, area, and county.
-             *
-             * @param client  The mock socket client.
-             * @param request The incoming request envelope.
-             */
+            /// <summary>
+            ///     Retrieves detailed location data (street, area, county) for the player's current position.
+            /// </summary>
+            /// <param name="client">The socket client to send the location data to.</param>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var currentStreet = World.GetStreetName(Main.LPC.Position);
@@ -209,6 +237,11 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         public class HeartbeatAction : IRequestAction{
             public string Name => "heartbeat";
 
+            /// <summary>
+            ///     Sends the current UTC system time to the client to verify connection health.
+            /// </summary>
+            /// <param name="client">The socket client to send the heartbeat to.</param>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var now = DateTime.UtcNow;
@@ -216,12 +249,16 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
-        public class GiveCitationAction : IRequestAction{
+        public class GiveCitationActionPR : IRequestAction{
             public string Name => "giveCitation";
 
+            /// <summary>
+            ///     Processes a request to issue a citation to a pedestrian, including validation and nearby entity lookup.
+            /// </summary>
+            /// <param name="client">The socket client to send success or error notifications to.</param>
+            /// <param name="request">The request containing the citation payload (name, infraction, fine).</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
-                // Fix: Parse the payload from 'Args' because 'Data' is used by MessageHandler for routing
                 if (string.IsNullOrEmpty(request.Args))
                 {
                     Logger.LogError("GiveCitationAction: Request Args (Payload) is empty.");
@@ -303,9 +340,103 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
+        public class GiveCitationAction : IRequestAction{
+            public string Name => "giveCitation";
+
+            /// <summary>
+            ///     Processes a request to issue a citation to a pedestrian, including validation and nearby entity lookup.
+            /// </summary>
+            /// <param name="client">The socket client to send success or error notifications to.</param>
+            /// <param name="request">The request containing the citation payload (name, infraction, fine).</param>
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                if (string.IsNullOrEmpty(request.Args))
+                {
+                    Logger.LogError("GiveCitationAction: Request Args (Payload) is empty.");
+                    return;
+                }
+
+                JObject payload;
+                try
+                {
+                    payload = JObject.Parse(request.Args);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"GiveCitationAction: Failed to parse JSON args: {ex.Message}");
+                    return;
+                }
+
+                var pedName        = payload["pedName"]?.ToString();
+                var infraction     = payload["infraction"]?.ToString();
+                var fineToken      = payload["fine"];
+                var isArrestable   = (bool?)payload["isArrestable"] ?? false;
+                var currencySymbol = payload["currency"]?.ToString() ?? "$";
+
+                if (string.IsNullOrEmpty(pedName) || string.IsNullOrEmpty(infraction) || fineToken == null)
+                {
+                    Logger.LogError($"GiveCitationAction: Missing required fields. Ped: {pedName}, Infraction: {infraction}");
+                    return;
+                }
+
+                if (!int.TryParse(fineToken.ToString(), out var fine))
+                {
+                    Logger.LogError($"GiveCitationAction: Invalid fine amount '{fineToken}'.");
+                    return;
+                }
+
+                Ped targetPed = null;
+
+                foreach (var ped in Main.LPC.GetNearbyPeds(10))
+                {
+                    if (!ped || !ped.Exists()) continue;
+                    var name = Functions.GetPersonaForPed(ped).FullName;
+                    if (name == null || !name.Equals(pedName, StringComparison.OrdinalIgnoreCase)) continue;
+                    targetPed = ped;
+                    break;
+                }
+
+                if (targetPed == null)
+                    foreach (var ped in World.GetAllPeds())
+                    {
+                        if (!ped || !ped.Exists()) continue;
+                        var name = Functions.GetPersonaForPed(ped).FullName;
+                        if (name == null || !name.Equals(pedName, StringComparison.OrdinalIgnoreCase)) continue;
+                        targetPed = ped;
+                        break;
+                    }
+
+                if (targetPed == null)
+                {
+                    Logger.LogWarning($"GiveCitationAction: Could not find in-game entity for ped '{pedName}'.");
+                    client.Send("citationError", new JObject { ["error"] = "Ped not found nearby", ["ped"] = pedName });
+                    return;
+                }
+
+                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Issued", $"~y~Citation For: ~b~{pedName}\n~w~Infraction: ~o~{infraction}\n~w~Fine: ~g~${fine}");
+
+                try
+                {
+                    //TODO: Implement Animation,etc. for citation
+                    Game.DisplayNotification($"(ANIM NOT IMPLEMENTED YET)\nCitation issued to {pedName} for {infraction} (${fine}).");
+                    Logger.LogInfo($"Citation issued to {pedName} for {infraction} (${fine}).");
+                    client.Send("citationSuccess", new JObject { ["ped"] = pedName });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"GiveCitationAction: Error invoking PR API: {ex.Message}");
+                }
+            }
+        }
+
         public class GiveParkingCitationAction : IRequestAction{
             public string Name => "giveParkingCitation";
 
+            /// <summary>
+            ///     Initiates a fiber-based interaction to allow the player to physically place a parking citation on a vehicle.
+            /// </summary>
+            /// <param name="client">The socket client for sending result updates.</param>
+            /// <param name="request">The request containing vehicle plate and infraction details.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var parkingCitationFiber = GameFiber.StartNew(() =>

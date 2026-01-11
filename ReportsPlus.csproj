@@ -109,6 +109,7 @@
         <Compile Include="Utils\CustomEvents\CustomActionRegistry.cs"/>
         <Compile Include="Utils\CustomEvents\CustomActionConfig.cs"/>
         <Compile Include="Utils\Logging\Logger.cs"/>
+        <Compile Include="Utils\Misc\KeyMapUtils.cs"/>
         <Compile Include="Utils\Misc\Misc.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\EntityTrackingAction.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\IContinuousAction.cs"/>

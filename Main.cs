@@ -47,34 +47,30 @@ namespace ReportsPlus{
 
             Misc.CleanupPluginEvents();
             CleanupRegistry.RunCleanup();
-            Client = null; // Clear the client when going off-duty
+            Client = null;
 
             if (!onduty) return;
             // On-Duty Initialization
             Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "By: ~y~Guess1m", "~g~Version: " + Version + " Loaded!" + "\n" + Misc.RunPluginChecks());
-
-            // TODO: TEMPORARY exit if not using policing redefined and common data framework
-            if (!Misc.UsingPrFunctions)
-            {
-                Logger.LogError("Policing Redefined and Common Data Framework not found.");
-                return;
-            }
 
             Settings = ConfigLoader.LoadSettings<ReportsPlusSettings>("plugins/LSPDFR/ReportsPlus.ini");
 
             MessageHandler.Initialize();
 
             // Start Fibers
-            _continuousUpdateFiber = GameFiber.StartNew(ContinuousUpdateLoop, "ReportsPlus-ContinuousUpdateFiber");
-            _inputLockFiber        = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
-
+            _continuousUpdateFiber  = GameFiber.StartNew(ContinuousUpdateLoop, "ReportsPlus-ContinuousUpdateFiber");
+            _inputLockFiber         = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
             _requestProcessingFiber = GameFiber.StartNew(ProcessRequestQueueLoop, "ReportsPlus-RequestProcessingFiber");
 
+            // Register Cleanups for Fibers
             CleanupRegistry.Register(() => Misc.CleanupFiber(_continuousUpdateFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_inputLockFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_requestProcessingFiber));
         }
 
+        /// <summary>
+        ///     Background loop that manages the socket connection and executes continuous update actions.
+        /// </summary>
         private void ContinuousUpdateLoop()
         {
             try
@@ -85,29 +81,30 @@ namespace ReportsPlus{
                 Client  = _client;
                 EventManager.SetClient(Client);
 
-                // --- Event Subscriptions ---
-
-                // 1. Enqueue incoming messages (ThreadPool -> Queue)
+                // enqueue incoming messages (ThreadPool to Queue)
                 _client.OnMessageReceived += request => _requestQueue.Enqueue(request);
 
-                // 2. Handle Connection Event
+                // connection Event
                 _client.OnConnected += () =>
                 {
-                    GameFiber.StartNew(() =>
+                    var socketConnectedFiber = GameFiber.StartNew(() =>
                     {
                         Logger.LogInfo("Socket Connected!");
                         Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Connection Established", "Successfully connected to the CAD server.");
                     });
+
+                    CleanupRegistry.Register(() => Misc.CleanupFiber(socketConnectedFiber));
                 };
 
-                // 3. Handle Disconnection Event
+                // disconnection Event
                 _client.OnDisconnected += () =>
                 {
-                    GameFiber.StartNew(() =>
+                    var socketDisconnectedFiber = GameFiber.StartNew(() =>
                     {
                         Logger.LogWarning("Socket Disconnected!");
                         Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Connection Lost", "Disconnected from the CAD server.");
                     });
+                    CleanupRegistry.Register(() => Misc.CleanupFiber(socketDisconnectedFiber));
                 };
 
                 CleanupRegistry.Register(() => EventManager.SetClient(null));
@@ -116,6 +113,7 @@ namespace ReportsPlus{
 
                 Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Background Client Started", $"~y~Target: ~b~{Settings.ClientAddress}~y~:~b~{Settings.ClientPort}");
 
+                // Continuous Update Loop
                 while (true)
                 {
                     GameFiber.Yield();
@@ -131,10 +129,9 @@ namespace ReportsPlus{
             }
         }
 
-        /**
-         * Fiber Loop: Consumes the request queue.
-         * Runs on the Game Thread, so RAGE API calls in MessageHandler are safe.
-         */
+        /// <summary>
+        ///     Fiber loop that processes the incoming request queue on the main game thread for safe API access.
+        /// </summary>
         private void ProcessRequestQueueLoop()
         {
             while (true)
@@ -148,6 +145,9 @@ namespace ReportsPlus{
             }
         }
 
+        /// <summary>
+        ///     Fiber loop that monitors hardware key presses for input locking and reconnection logic.
+        /// </summary>
         private static void CheckForInputLock()
         {
             while (true)
@@ -170,6 +170,9 @@ namespace ReportsPlus{
             }
         }
 
+        /// <summary>
+        ///     Performs final cleanup of socket connections and fibers when the plugin is stopped.
+        /// </summary>
         public override void Finally()
         {
             if (_client != null)

@@ -8,9 +8,9 @@ namespace ReportsPlus.Utils.Cleanup{
         private static readonly object       LockObject     = new object();
 
         /// <summary>
-        ///     Registers a cleanup action to be executed later.
+        ///     Thread-safely adds a new cleanup delegate to the internal registry for deferred execution.
         /// </summary>
-        /// <param name="cleanupAction">The action to perform on cleanup.</param>
+        /// <param name="cleanupAction">The <see cref="Action" /> containing the cleanup logic to be stored.</param>
         public static void Register(Action cleanupAction)
         {
             if (cleanupAction == null)
@@ -27,7 +27,9 @@ namespace ReportsPlus.Utils.Cleanup{
         }
 
         /// <summary>
-        ///     Executes all registered cleanup actions and clears the registry.
+        ///     Atomically retrieves and executes every registered cleanup action in a safe manner.
+        ///     Ensures that each action is invoked within a try-catch block to prevent a single failure from halting the entire
+        ///     cleanup process.
         /// </summary>
         public static void RunCleanup()
         {

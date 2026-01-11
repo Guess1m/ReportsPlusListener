@@ -8,6 +8,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
         public class InputLockKeybinding : IKeybindingAction{
             public string Name => "inputlock";
 
+            /// <summary>
+            ///     Handles the toggling or setting of the global game input lock via the CAD interface.
+            /// </summary>
+            /// <param name="request">The request containing the target state (enable/disable/toggle).</param>
             public void Execute(IncomingRequest request)
             {
                 switch (request.Args)
@@ -31,6 +35,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
         public class SirenKeybinding : IKeybindingAction{
             public string Name => "siren";
 
+            /// <summary>
+            ///     Remotely controls the local vehicle's siren states, such as blipping or toggling.
+            /// </summary>
+            /// <param name="request">The request specifying the siren action (blip/toggle).</param>
             public void Execute(IncomingRequest request)
             {
                 switch (request.Args)
@@ -54,6 +62,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
         public class WeatherKeybinding : IKeybindingAction{
             public string Name => "weather";
 
+            /// <summary>
+            ///     Randomizes the world weather based on a selection of predefined types.
+            /// </summary>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(IncomingRequest request)
             {
                 var random2 = new Random();
@@ -87,6 +99,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
         public class TimeKeybinding : IKeybindingAction{
             public string Name => "time";
 
+            /// <summary>
+            ///     Sets the world time to a randomized hour and minute.
+            /// </summary>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(IncomingRequest request)
             {
                 var random = new Random();
@@ -101,6 +117,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
         public class RepairKeybinding : IKeybindingAction{
             public string Name => "repair";
 
+            /// <summary>
+            ///     Instantly repairs the local player's current vehicle.
+            /// </summary>
+            /// <param name="request">The incoming request object.</param>
             public void Execute(IncomingRequest request)
             {
                 Main.LPCV?.Repair();

@@ -3,11 +3,25 @@ using System.Reflection;
 using ReportsPlus.Utils.Logging;
 
 namespace ReportsPlus.Utils.CustomEvents{
+    /// <summary>
+    ///     Provides functionality to dynamically find and execute methods across loaded assemblies.
+    /// </summary>
     public static class ActionExecutor{
+        /// <summary>
+        ///     Dynamically resolves a method target and its parameters across all loaded assemblies and invokes it.
+        ///     Supports both static and instance methods with primitive or enum parameter conversion.
+        /// </summary>
+        /// <param name="action">The <see cref="CustomActionConfig" /> containing the reflection target and parameter values.</param>
         public static void Execute(CustomActionConfig action)
         {
             try
             {
+                if (action == null)
+                {
+                    Logger.LogError("[ActionExecutor] Action configuration is null.");
+                    return;
+                }
+
                 Logger.LogInfo($"[ActionExecutor] Request received for: '{action.Name}'");
 
                 if (string.IsNullOrEmpty(action.Target))
@@ -16,7 +30,6 @@ namespace ReportsPlus.Utils.CustomEvents{
                     return;
                 }
 
-                // 1. Parse Target String
                 var lastDot = action.Target.LastIndexOf('.');
                 if (lastDot == -1)
                 {
@@ -24,12 +37,12 @@ namespace ReportsPlus.Utils.CustomEvents{
                     return;
                 }
 
+                // split into class path and method name
                 var typeName   = action.Target.Substring(0, lastDot);
                 var methodName = action.Target.Substring(lastDot + 1);
 
                 Logger.LogInfo($"[ActionExecutor] Looking for Type: '{typeName}' | Method: '{methodName}'");
 
-                // 2. Find the Class (would be target type)
                 var type = FindTypeInAssemblies(typeName);
                 if (type == null)
                 {
@@ -39,7 +52,6 @@ namespace ReportsPlus.Utils.CustomEvents{
 
                 Logger.LogInfo($"[ActionExecutor] Found Type: {type.FullName} in {type.Assembly.GetName().Name}");
 
-                // Check Params
                 object[] finalArgs = null;
                 var      argTypes  = Type.EmptyTypes;
 
@@ -51,10 +63,9 @@ namespace ReportsPlus.Utils.CustomEvents{
                     for (var i = 0; i < action.Parameters.Count; i++)
                     {
                         var paramConfig = action.Parameters[i];
+                        if (paramConfig == null) continue;
 
-                        // Find Parameter Type
                         var pType = FindTypeInAssemblies(paramConfig.Type);
-
                         if (pType == null)
                         {
                             Logger.LogError($"[ActionExecutor] Unknown parameter type '{paramConfig.Type}' (Param #{i + 1})");
@@ -65,6 +76,7 @@ namespace ReportsPlus.Utils.CustomEvents{
 
                         try
                         {
+                            // Convert string to requested type
                             if (pType.IsEnum)
                                 finalArgs[i] = Enum.Parse(pType, paramConfig.Value);
                             else
@@ -78,22 +90,20 @@ namespace ReportsPlus.Utils.CustomEvents{
                     }
                 }
 
-                // 4. Find Method
+                // check for public static method matching name and sig
                 var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.InvokeMethod, null, argTypes, null);
 
                 if (method == null)
                 {
                     Logger.LogError($"[ActionExecutor] Method '{methodName}' not found in '{typeName}' with the specific parameters provided.");
-                    Logger.LogError("[ActionExecutor] Ensure your parameter types match EXACTLY.");
                     return;
                 }
 
-                // 5. Attempt method invoke
                 Logger.LogInfo($"[ActionExecutor] Invoking: {typeName}.{methodName}...");
 
                 try
                 {
-                    method.Invoke(null, finalArgs);
+                    method.Invoke(null, finalArgs); // Assuming static method
                     Logger.LogInfo("[ActionExecutor] Invocation successful.");
                 }
                 catch (TargetInvocationException tie)
@@ -108,28 +118,32 @@ namespace ReportsPlus.Utils.CustomEvents{
             }
         }
 
-        // Helper to find types even if they are in other DLLs
+        /// <summary>
+        ///     Iterates through all loaded application domains to locate a <see cref="Type" /> matching the provided fully
+        ///     qualified name.
+        /// </summary>
+        /// <param name="typeName">The full name of the type, including namespace.</param>
+        /// <returns>The resolved <see cref="Type" />, or null if no matching type could be found in non-dynamic assemblies.</returns>
         private static Type FindTypeInAssemblies(string typeName)
         {
-            // Try standard lookup first
+            if (string.IsNullOrEmpty(typeName)) return null;
+
             var type = Type.GetType(typeName);
             if (type != null) return type;
 
-            // Scan all loaded assemblies
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
                 try
                 {
-                    // Basic check to skip dynamic assemblies that crash on GetType
-                    if (assembly.IsDynamic) continue;
-
+                    if (assembly.IsDynamic) continue; // skip dynamic
                     type = assembly.GetType(typeName);
                     if (type != null) return type;
                 }
                 catch
                 {
-                    // Ignore assembly load errors
-                    continue;
+                    // catch thrown by assembly
                 }
+            }
 
             return null;
         }

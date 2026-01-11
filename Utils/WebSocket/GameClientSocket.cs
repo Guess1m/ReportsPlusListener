@@ -39,7 +39,7 @@ namespace ReportsPlus.Utils.WebSocket{
         public event Action                  OnDisconnected;
 
         /// <summary>
-        ///     Initializes the sender loop and attempts a single connection to the server.
+        ///     Starts the background sender loop and initiates the first connection attempt.
         /// </summary>
         public void Start()
         {
@@ -57,8 +57,7 @@ namespace ReportsPlus.Utils.WebSocket{
         }
 
         /// <summary>
-        ///     Attempts to connect to the websocket server.
-        ///     Safe to call if already connected (will return early) or if previous connection failed.
+        ///     Manually triggers a connection attempt if the socket is currently disconnected.
         /// </summary>
         public void AttemptConnection()
         {
@@ -88,6 +87,9 @@ namespace ReportsPlus.Utils.WebSocket{
             }
         }
 
+        /// <summary>
+        ///     Disposes of the existing socket and initializes a new instance with event handlers.
+        /// </summary>
         private void InitializeSocket()
         {
             lock (_socketLock)
@@ -113,12 +115,18 @@ namespace ReportsPlus.Utils.WebSocket{
             }
         }
 
+        /// <summary>
+        ///     Event handler for a successful socket connection.
+        /// </summary>
         private void OnSocketOpen(object sender, EventArgs e)
         {
             Logger.LogInfo("Connected successfully.");
             OnConnected?.Invoke();
         }
 
+        /// <summary>
+        ///     Event handler for incoming raw messages; parses them into IncomingRequest objects.
+        /// </summary>
         private void OnSocketMessage(object sender, MessageEventArgs e)
         {
             try
@@ -132,17 +140,27 @@ namespace ReportsPlus.Utils.WebSocket{
             }
         }
 
+        /// <summary>
+        ///     Event handler for socket-level errors.
+        /// </summary>
         private void OnSocketError(object sender, ErrorEventArgs e)
         {
             Logger.LogError($"WebSocket error: {e.Message}");
         }
 
+        /// <summary>
+        ///     Event handler for socket closure.
+        /// </summary>
         private void OnSocketClose(object sender, CloseEventArgs e)
         {
             Logger.LogError($"Disconnected. Code: {e.Code}, Reason: {e.Reason}");
             OnDisconnected?.Invoke();
         }
 
+        /// <summary>
+        ///     An asynchronous loop that consumes the send queue and transmits data to the server.
+        /// </summary>
+        /// <param name="token">Cancellation token to stop the loop.</param>
         private async Task SenderLoop(CancellationToken token)
         {
             Logger.LogInfo("Background SenderLoop started.");
@@ -165,6 +183,12 @@ namespace ReportsPlus.Utils.WebSocket{
             Logger.LogWarning("Background SenderLoop stopped.");
         }
 
+        /// <summary>
+        ///     Enqueues a structured message to be sent to the server.
+        /// </summary>
+        /// <param name="type">The message type identifier.</param>
+        /// <param name="data">The JSON payload data.</param>
+        /// <param name="args">Optional additional arguments.</param>
         public void Send(string type, JToken data, string args = "")
         {
             try
@@ -187,6 +211,9 @@ namespace ReportsPlus.Utils.WebSocket{
             }
         }
 
+        /// <summary>
+        ///     Stops the sender loop and closes the socket connection gracefully.
+        /// </summary>
         public void Stop()
         {
             Logger.LogInfo("Stopping GameClientSocket...");

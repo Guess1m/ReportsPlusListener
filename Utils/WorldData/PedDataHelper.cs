@@ -1,37 +1,83 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using CommonDataFramework.Modules.PedDatabase;
+using LSPD_First_Response.Engine.Scripting.Entities;
+using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using Rage;
+using ReportsPlus.Utils.Logging;
 
 namespace ReportsPlus.Utils.WorldData{
     public static class PedDataHelper{
-        /**
-         * Generates a JObject containing comprehensive data for a given Ped entity.
-         * Validates the entity existence before processing.
-         *
-         * @param ped The Rage.Ped entity to process.
-         * @return A JObject containing the ped's data, or null if the ped is invalid or data is missing.
-         */
-        public static JObject GeneratePedData(Ped ped)
+        /// <summary>
+        ///     Retrieves the internal model name and variation indices for a pedestrian.
+        /// </summary>
+        /// <param name="ped">The pedestrian entity to inspect.</param>
+        /// <returns>A formatted string containing the model name, drawable index, and texture index.</returns>
+        private static string FindPedModel(Ped ped)
+        {
+            try
+            {
+                if (ped == null || !ped.IsValid()) return "";
+                ped.GetVariation(0, out var drawable, out var texture);
+                return $"[{ped.Model.Name.ToLower()}][{drawable}][{texture}]";
+            }
+            catch
+            {
+                Logger.LogError("ReportsPlusListener: Error fetching model for ped: " + ped);
+                return "";
+            }
+        }
+
+        /// <summary>
+        ///     Formats a physical address string from a <see cref="PedData" /> object.
+        /// </summary>
+        /// <param name="pedData">The data object containing address components.</param>
+        /// <returns>A string representing the full address (Number, Street, Area, County).</returns>
+        private static string GetPedAddress(PedData pedData)
+        {
+            if (pedData == null) return null;
+
+            var addressBuilder = new StringBuilder();
+            addressBuilder.Append(pedData.Address.AddressPostal.Number).Append(" ");
+            addressBuilder.Append(pedData.Address.StreetName).Append(", ");
+            addressBuilder.Append(pedData.Address.Zone.RealAreaName).Append(", ");
+            addressBuilder.Append(Regex.Replace(pedData.Address.Zone.County.ToString(), "(?<!^)([A-Z])", " $1"));
+
+            return addressBuilder.ToString();
+        }
+
+        #region PolicingRedefined PedData
+
+        /// <summary>
+        ///     Generates a comprehensive JSON representation of a pedestrian using Policing Redefined data.
+        /// </summary>
+        /// <param name="ped">The physical pedestrian entity to process.</param>
+        /// <returns>
+        ///     A <see cref="JObject" /> containing identification, judicial, and license data; null if the pedestrian is
+        ///     invalid.
+        /// </returns>
+        public static JObject GeneratePedDataPR(Ped ped)
         {
             if (!ped || !ped.Exists()) return null;
 
             var pedData = ped.GetPedData();
-            if (pedData == null) return null;
-
-            // Pass the handle if the ped exists, otherwise null
-            return GeneratePedDataFromObject(pedData, (int)ped.Handle.Value, ped);
+            return pedData == null
+                ? null
+                :
+                // Pass the handle if the ped exists, otherwise null
+                GeneratePedDataFromObjectPR(pedData, (int)ped.Handle.Value, ped);
         }
 
-        /**
-         * Generates a JObject from a raw PedData object.
-         * Used for generating data for entities that may not be physically present (e.g., vehicle owners).
-         *
-         * @param pedData The data object containing civilian information.
-         * @param entityHandle The optional entity handle ID.
-         * @param physicalPed The optional physical Ped entity (used for calculating dynamic flags like 'isPolice').
-         * @return A JObject constructed from the provided data.
-         */
-        public static JObject GeneratePedDataFromObject(PedData pedData, int? entityHandle, Ped physicalPed = null)
+        /// <summary>
+        ///     Constructs a pedestrian JSON object from a raw <see cref="PedData" /> object, typically for entities not physically
+        ///     present.
+        /// </summary>
+        /// <param name="pedData">The source data object.</param>
+        /// <param name="entityHandle">An optional handle ID for the entity.</param>
+        /// <param name="physicalPed">An optional physical entity to determine relationship-based flags like 'isPolice'.</param>
+        /// <returns>A populated <see cref="JObject" /> containing the source data.</returns>
+        public static JObject GeneratePedDataFromObjectPR(PedData pedData, int? entityHandle, Ped physicalPed = null)
         {
             if (pedData == null) return null;
 
@@ -42,8 +88,8 @@ namespace ReportsPlus.Utils.WorldData{
                 ["identification"] = new JObject
                 {
                     ["name"]                = pedData.FullName ?? string.Empty,
-                    ["address"]             = Misc.Misc.GetPedAddress(pedData) ?? string.Empty,
-                    ["pedModel"]            = physicalPed != null ? Misc.Misc.FindPedModel(physicalPed) ?? string.Empty : string.Empty,
+                    ["address"]             = GetPedAddress(pedData) ?? string.Empty,
+                    ["pedModel"]            = physicalPed != null ? FindPedModel(physicalPed) ?? string.Empty : string.Empty,
                     ["birthday"]            = pedData.Birthday.Month.ToString("D2") + "/" + pedData.Birthday.Day.ToString("D2") + "/" + pedData.Birthday.Year,
                     ["gender"]              = pedData.Gender.ToString() ?? string.Empty,
                     ["height"]              = string.Empty,
@@ -135,5 +181,140 @@ namespace ReportsPlus.Utils.WorldData{
             };
             return pedJson;
         }
+
+        #endregion
+
+        #region STP/BaseGame PedData
+
+        /// <summary>
+        ///     Generates a JSON representation of a pedestrian using standard LSPDFR/STP persona data.
+        /// </summary>
+        /// <param name="ped">The physical pedestrian entity to process.</param>
+        /// <returns>A <see cref="JObject" /> containing the persona information; null if the pedestrian is invalid.</returns>
+        public static JObject GeneratePedData(Ped ped)
+        {
+            if (!ped || !ped.Exists()) return null;
+
+            var pedPersona = Functions.GetPersonaForPed(ped);
+            return pedPersona == null
+                ? null
+                :
+                // Pass the handle if the ped exists, otherwise null
+                GeneratePedDataFromObject(pedPersona, (int)ped.Handle.Value, ped);
+        }
+
+        /// <summary>
+        ///     Constructs a pedestrian JSON object from a raw <see cref="Persona" /> object.
+        /// </summary>
+        /// <param name="pedPersona">The source persona object.</param>
+        /// <param name="entityHandle">An optional handle ID for the entity.</param>
+        /// <param name="physicalPed">An optional physical entity to determine relationship-based flags.</param>
+        /// <returns>A populated <see cref="JObject" /> based on the persona details.</returns>
+        private static JObject GeneratePedDataFromObject(Persona pedPersona, int? entityHandle, Ped physicalPed = null)
+        {
+            if (pedPersona == null) return null;
+
+            var pedJson = new JObject
+            {
+                // -- Identification --
+                ["entityId"] = entityHandle ?? -1,
+                ["identification"] = new JObject
+                {
+                    ["name"]                = pedPersona.FullName ?? string.Empty,
+                    ["address"]             = string.Empty,
+                    ["pedModel"]            = physicalPed != null ? FindPedModel(physicalPed) ?? string.Empty : string.Empty,
+                    ["birthday"]            = pedPersona.Birthday.Month.ToString("D2") + "/" + pedPersona.Birthday.Day.ToString("D2") + "/" + pedPersona.Birthday.Year,
+                    ["gender"]              = pedPersona.Gender.ToString() ?? string.Empty,
+                    ["height"]              = string.Empty,
+                    ["weight"]              = string.Empty,
+                    ["eyeColor"]            = string.Empty,
+                    ["hairColor"]           = string.Empty,
+                    ["knownAliases"]        = string.Empty,
+                    ["ethnicity"]           = string.Empty,
+                    ["distinguishingMarks"] = string.Empty,
+                    ["citizenshipStatus"]   = string.Empty,
+                    ["maritalStatus"]       = string.Empty,
+                    ["disabilityStatus"]    = string.Empty,
+                    ["isPolice"]            = physicalPed != null && physicalPed.RelationshipGroup == "COP" ? "true" : "false"
+                },
+
+                // -- Criminal History --
+                ["judicialStatus"] = new JObject
+                {
+                    ["isWanted"] = pedPersona.Wanted.ToString() ?? string.Empty,
+                    ["warrantInfo"] = new JObject
+                    {
+                        ["warrantNumber"] = string.Empty,
+                        ["dateIssued"]    = string.Empty,
+                        ["issuingAgency"] = string.Empty,
+                        ["warrantCharge"] = string.Empty,
+                        ["bailAmount"]    = string.Empty
+                    },
+                    ["paroleInfo"] = new JObject
+                    {
+                        ["isOnParole"]         = string.Empty,
+                        ["paroleStartDate"]    = string.Empty,
+                        ["paroleEndDate"]      = string.Empty,
+                        ["paroleRestrictions"] = string.Empty,
+                        ["paroleAgency"]       = string.Empty,
+                        ["paroleOfficer"]      = string.Empty,
+                        ["paroleOfficerEmail"] = string.Empty
+                    },
+                    ["probationInfo"] = new JObject
+                    {
+                        ["isOnProbation"]         = string.Empty,
+                        ["probationStartDate"]    = string.Empty,
+                        ["probationEndDate"]      = string.Empty,
+                        ["probationRestrictions"] = string.Empty,
+                        ["probationAgency"]       = string.Empty,
+                        ["probationOfficer"]      = string.Empty,
+                        ["probationOfficerEmail"] = string.Empty
+                    },
+                    ["timesStopped"]           = pedPersona.TimesStopped.ToString() ?? string.Empty,
+                    ["restrainingOrderActive"] = string.Empty
+                },
+
+                // -- Licenses and Permits --
+                ["licensesAndPermits"] = new JObject
+                {
+                    ["driversLicense"] = new JObject
+                    {
+                        ["status"]        = pedPersona.ELicenseState.ToString() ?? string.Empty,
+                        ["expiration"]    = string.Empty,
+                        ["licenseNumber"] = string.Empty,
+                        ["dlclass"]       = string.Empty
+                    },
+                    ["weaponPermit"] = new JObject
+                    {
+                        ["type"]          = string.Empty,
+                        ["status"]        = string.Empty,
+                        ["expiration"]    = string.Empty,
+                        ["licenseNumber"] = string.Empty,
+                        ["wpclass"]       = string.Empty
+                    },
+                    ["fishingPermit"] = new JObject
+                    {
+                        ["status"]        = string.Empty,
+                        ["expiration"]    = string.Empty,
+                        ["licenseNumber"] = string.Empty
+                    },
+                    ["huntingPermit"] = new JObject
+                    {
+                        ["status"]        = string.Empty,
+                        ["expiration"]    = string.Empty,
+                        ["licenseNumber"] = string.Empty
+                    },
+                    ["boatingPermit"] = new JObject
+                    {
+                        ["status"]        = string.Empty,
+                        ["expiration"]    = string.Empty,
+                        ["licenseNumber"] = string.Empty
+                    }
+                }
+            };
+            return pedJson;
+        }
+
+        #endregion
     }
 }

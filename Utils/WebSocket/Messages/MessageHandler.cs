@@ -13,6 +13,9 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
         private static readonly Dictionary<string, IRequestAction>    RequestActions    = new Dictionary<string, IRequestAction>();
         private static readonly Dictionary<string, IKeybindingAction> KeybindingActions = new Dictionary<string, IKeybindingAction>();
 
+        /// <summary>
+        ///     Registers all available continuous, on-request, and keybinding actions into their respective collections.
+        /// </summary>
         public static void Initialize()
         {
             ContinuousActions.Clear();
@@ -32,7 +35,18 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             RegisterRequestAction(new RequestActions.FindVehicleByPlateAction());
             RegisterRequestAction(new RequestActions.PoliceVehiclesAction());
             RegisterRequestAction(new RequestActions.FindPedByNameAction());
-            RegisterRequestAction(new RequestActions.GiveCitationAction());
+
+            if (Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined)
+            {
+                Logger.LogInfo("Using PR GiveCitationAction");
+                RegisterRequestAction(new RequestActions.GiveCitationActionPR());
+            }
+            else
+            {
+                Logger.LogInfo("Using Base GiveCitationAction");
+                RegisterRequestAction(new RequestActions.GiveCitationAction());
+            }
+
             RegisterRequestAction(new RequestActions.GiveParkingCitationAction());
 
             // Register Keybinding Actions
@@ -45,26 +59,38 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             Logger.LogInfo("MessageHandler initialized.");
         }
 
+        /// <summary>
+        ///     Registers a single request action to the internal dispatch dictionary.
+        /// </summary>
+        /// <param name="action">The request action implementation.</param>
         private static void RegisterRequestAction(IRequestAction action)
         {
             RequestActions[action.Name] = action;
         }
 
+        /// <summary>
+        ///     Registers a single keybinding action to the internal dispatch dictionary.
+        /// </summary>
+        /// <param name="action">The keybinding action implementation.</param>
         private static void RegisterKeybindingAction(IKeybindingAction action)
         {
             KeybindingActions[action.Name] = action;
         }
 
+        /// <summary>
+        ///     Iterates through and executes all registered continuous actions.
+        /// </summary>
+        /// <param name="client">The active game client socket.</param>
         public static void ExecuteContinuousActions(GameClientSocket client)
         {
             foreach (var action in ContinuousActions) action.Execute(client);
         }
 
-        /**
-         * Processes an incoming request immediately.
-         * Optimization: This method NO LONGER creates a new GameFiber.
-         * It MUST be called from an existing GameFiber (e.g., the RequestProcessingFiber in Main).
-         */
+        /// <summary>
+        ///     Dispatches an incoming request to the appropriate registered action based on its type and data.
+        /// </summary>
+        /// <param name="client">The active game client socket.</param>
+        /// <param name="request">The incoming request to process.</param>
         public static void ProcessMessage(GameClientSocket client, IncomingRequest request)
         {
             try
