@@ -261,7 +261,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             {
                 if (string.IsNullOrEmpty(request.Args))
                 {
-                    Logger.LogError("GiveCitationAction: Request Args (Payload) is empty.");
+                    Logger.LogError("GiveCitationActionPR: Request Args (Payload) is empty.");
                     return;
                 }
 
@@ -272,7 +272,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"GiveCitationAction: Failed to parse JSON args: {ex.Message}");
+                    Logger.LogError($"GiveCitationActionPR: Failed to parse JSON args: {ex.Message}");
                     return;
                 }
 
@@ -284,13 +284,13 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
 
                 if (string.IsNullOrEmpty(pedName) || string.IsNullOrEmpty(infraction) || fineToken == null)
                 {
-                    Logger.LogError($"GiveCitationAction: Missing required fields. Ped: {pedName}, Infraction: {infraction}");
+                    Logger.LogError($"GiveCitationActionPR: Missing required fields. Ped: {pedName}, Infraction: {infraction}");
                     return;
                 }
 
                 if (!int.TryParse(fineToken.ToString(), out var fine))
                 {
-                    Logger.LogError($"GiveCitationAction: Invalid fine amount '{fineToken}'.");
+                    Logger.LogError($"GiveCitationActionPR: Invalid fine amount '{fineToken}'.");
                     return;
                 }
 
@@ -318,7 +318,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
 
                 if (targetPed == null)
                 {
-                    Logger.LogWarning($"GiveCitationAction: Could not find in-game entity for ped '{pedName}'.");
+                    Logger.LogWarning($"GiveCitationActionPR: Could not find in-game entity for ped '{pedName}'.");
                     client.Send("citationError", new JObject { ["error"] = "Ped not found nearby", ["ped"] = pedName });
                     return;
                 }
@@ -335,7 +335,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"GiveCitationAction: Error invoking PR API: {ex.Message}");
+                    Logger.LogError($"GiveCitationActionPR: Error invoking PR API: {ex.Message}");
                 }
             }
         }
@@ -344,60 +344,51 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             public string Name => "giveCitation";
 
             /// <summary>
-            ///     Processes a request to issue a citation to a pedestrian, including validation and nearby entity lookup.
+            ///     Processes a request to issue a citation to a pedestrian, initiating a fiber-based interaction sequence that
+            ///     requires the player to approach the target.
             /// </summary>
             /// <param name="client">The socket client to send success or error notifications to.</param>
             /// <param name="request">The request containing the citation payload (name, infraction, fine).</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
-                if (string.IsNullOrEmpty(request.Args))
+                var citationFiber = GameFiber.StartNew(() =>
                 {
-                    Logger.LogError("GiveCitationAction: Request Args (Payload) is empty.");
-                    return;
-                }
+                    if (string.IsNullOrEmpty(request.Args))
+                    {
+                        Logger.LogError("GiveCitationAction: Request Args (Payload) is empty.");
+                        return;
+                    }
 
-                JObject payload;
-                try
-                {
-                    payload = JObject.Parse(request.Args);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"GiveCitationAction: Failed to parse JSON args: {ex.Message}");
-                    return;
-                }
+                    JObject payload;
+                    try
+                    {
+                        payload = JObject.Parse(request.Args);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError($"GiveCitationAction: Failed to parse JSON args: {ex.Message}");
+                        return;
+                    }
 
-                var pedName        = payload["pedName"]?.ToString();
-                var infraction     = payload["infraction"]?.ToString();
-                var fineToken      = payload["fine"];
-                var isArrestable   = (bool?)payload["isArrestable"] ?? false;
-                var currencySymbol = payload["currency"]?.ToString() ?? "$";
+                    var pedName    = payload["pedName"]?.ToString();
+                    var infraction = payload["infraction"]?.ToString();
+                    var fineToken  = payload["fine"];
 
-                if (string.IsNullOrEmpty(pedName) || string.IsNullOrEmpty(infraction) || fineToken == null)
-                {
-                    Logger.LogError($"GiveCitationAction: Missing required fields. Ped: {pedName}, Infraction: {infraction}");
-                    return;
-                }
+                    if (string.IsNullOrEmpty(pedName) || string.IsNullOrEmpty(infraction) || fineToken == null)
+                    {
+                        Logger.LogError($"GiveCitationAction: Missing required fields. Ped: {pedName}, Infraction: {infraction}");
+                        return;
+                    }
 
-                if (!int.TryParse(fineToken.ToString(), out var fine))
-                {
-                    Logger.LogError($"GiveCitationAction: Invalid fine amount '{fineToken}'.");
-                    return;
-                }
+                    if (!int.TryParse(fineToken.ToString(), out var fine))
+                    {
+                        Logger.LogError($"GiveCitationAction: Invalid fine amount '{fineToken}'.");
+                        return;
+                    }
 
-                Ped targetPed = null;
+                    Ped targetPed = null;
 
-                foreach (var ped in Main.LPC.GetNearbyPeds(10))
-                {
-                    if (!ped || !ped.Exists()) continue;
-                    var name = Functions.GetPersonaForPed(ped).FullName;
-                    if (name == null || !name.Equals(pedName, StringComparison.OrdinalIgnoreCase)) continue;
-                    targetPed = ped;
-                    break;
-                }
-
-                if (targetPed == null)
-                    foreach (var ped in World.GetAllPeds())
+                    foreach (var ped in Main.LPC.GetNearbyPeds(10))
                     {
                         if (!ped || !ped.Exists()) continue;
                         var name = Functions.GetPersonaForPed(ped).FullName;
@@ -406,26 +397,79 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                         break;
                     }
 
-                if (targetPed == null)
-                {
-                    Logger.LogWarning($"GiveCitationAction: Could not find in-game entity for ped '{pedName}'.");
-                    client.Send("citationError", new JObject { ["error"] = "Ped not found nearby", ["ped"] = pedName });
-                    return;
-                }
+                    if (targetPed == null)
+                        foreach (var ped in World.GetAllPeds())
+                        {
+                            if (!ped || !ped.Exists()) continue;
+                            var name = Functions.GetPersonaForPed(ped).FullName;
+                            if (name == null || !name.Equals(pedName, StringComparison.OrdinalIgnoreCase)) continue;
+                            targetPed = ped;
+                            break;
+                        }
 
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Issued", $"~y~Citation For: ~b~{pedName}\n~w~Infraction: ~o~{infraction}\n~w~Fine: ~g~${fine}");
+                    if (targetPed == null)
+                    {
+                        Logger.LogWarning($"GiveCitationAction: Could not find in-game entity for ped '{pedName}'.");
+                        client.Send("citationError", new JObject { ["error"] = "Ped not found nearby", ["ped"] = pedName });
+                        return;
+                    }
 
-                try
-                {
-                    //TODO: Implement Animation,etc. for citation
-                    Game.DisplayNotification($"(ANIM NOT IMPLEMENTED YET)\nCitation issued to {pedName} for {infraction} (${fine}).");
-                    Logger.LogInfo($"Citation issued to {pedName} for {infraction} (${fine}).");
-                    client.Send("citationSuccess", new JObject { ["ped"] = pedName });
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"GiveCitationAction: Error invoking PR API: {ex.Message}");
-                }
+                    // Assuming specific keys exist for general citations, otherwise reusing parking keys or standard interaction keys is recommended.
+                    var giveKey    = Main.Settings.GiveParkingCitationKey;
+                    var discardKey = Main.Settings.DiscardParkingCitationKey;
+
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{pedName}~w~: {infraction}\nPress ~g~{giveKey}~w~ to Issue, ~r~{discardKey}~w~ to Discard");
+                    Game.DisplaySubtitle($"~b~{pedName}~w~: Press ~g~{giveKey} ~w~to Issue | ~r~{discardKey} ~w~to Discard");
+                    Logger.LogInfo($"Citation Request: {pedName}: {infraction}, Keys are Give:[{giveKey}] - Discard:[{discardKey}]");
+
+                    while (true)
+                    {
+                        GameFiber.Yield();
+
+                        if (!targetPed.Exists())
+                        {
+                            Game.DisplaySubtitle("~r~Pedestrian is no longer valid.");
+                            Logger.LogInfo("Pedestrian is no longer valid.");
+                            break;
+                        }
+
+                        if (Game.IsKeyDown(discardKey))
+                        {
+                            Game.DisplaySubtitle("~r~Citation Discarded.");
+                            Logger.LogInfo("Citation Discarded.");
+                            break;
+                        }
+
+                        if (!Game.IsKeyDown(giveKey)) continue;
+                        var distance = Main.LPC.Position.DistanceTo(targetPed.Position);
+
+                        if (distance > 2.5f)
+                        {
+                            Game.DisplaySubtitle($"~r~Too far! ~w~Move closer (~y~{distance:F1}m~w~) and press ~g~{giveKey}~w~ again.");
+                            Logger.LogInfo($"Too far! Move closer ({distance:F1}m) and press {giveKey} again.");
+                            GameFiber.Sleep(500);
+                            continue;
+                        }
+
+                        Main.LPC.Tasks.PlayAnimation("veh@busted_std", "issue_ticket_cop", 1.0f, AnimationFlags.None);
+
+                        GameFiber.Sleep(1600);
+
+                        NativeFunction.CallByHash<bool>(0x28004F88151E03E0, Main.LPC, "issue_ticket_cop", "veh@busted_std", 0.5f);
+
+                        GameFiber.Sleep(1000);
+
+                        Game.DisplaySubtitle($"~g~Issued Citation to ~w~{pedName}");
+                        Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Citation Issued", $"~y~Citation Issued to: ~b~{pedName}\n~w~Infraction: ~o~{infraction}\n~w~Fine: ~g~${fine}");
+
+                        Logger.LogInfo($"Citation visually issued to {pedName} for {infraction} (${fine}).");
+
+                        client.Send("citationSuccess", new JObject { ["ped"] = pedName });
+                        break;
+                    }
+                }, "GiveCitationFiber");
+
+                CleanupRegistry.Register(() => Misc.Misc.CleanupFiber(citationFiber));
             }
         }
 
