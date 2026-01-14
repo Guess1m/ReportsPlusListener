@@ -43,7 +43,7 @@ namespace ReportsPlus.Utils.WebSocket{
         /// </summary>
         public void Start()
         {
-            if (_shutdownTokenSource != null && !_shutdownTokenSource.IsCancellationRequested) return;
+            if (_shutdownTokenSource is { IsCancellationRequested: false }) return;
 
             _shutdownTokenSource = new CancellationTokenSource();
             var token = _shutdownTokenSource.Token;
@@ -59,7 +59,7 @@ namespace ReportsPlus.Utils.WebSocket{
         /// <summary>
         ///     Manually triggers a connection attempt if the socket is currently disconnected.
         /// </summary>
-        public void AttemptConnection()
+        private void AttemptConnection()
         {
             lock (_socketLock)
             {

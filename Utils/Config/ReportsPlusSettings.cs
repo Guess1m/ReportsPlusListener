@@ -14,12 +14,13 @@ namespace ReportsPlus.Utils.Config{
         [ConfigOption("Intervals", "ContinuousUpdateInterval", "Interval (ms) for sending continuous updates to server (e.g. PlayerLocation, PoliceVehiclesLocation).")]
         public int ContinuousUpdateInterval { get; set; } = 15000;
 
+        // keybinding for menu
+        [ConfigOption("Keybindings", "MenuKey", "Key to toggle menu (e.g. F11). Must be capitalized.")]
+        public Keys MenuKey { get; set; } = Keys.F11;
+
         // keybinding for input-lock
         [ConfigOption("Keybindings", "InputLockKey", "Key to toggle input lock (e.g. F9). Must be capitalized.")]
-        public Keys InputLockKey { get; set; } = Keys.F9;
-
-        [ConfigOption("Keybindings", "ReconnectKey", "Key to reconnect (e.g. F10). Must be capitalized.")]
-        public Keys ReconnectKey { get; set; } = Keys.F10;
+        public Keys InputLockKey { get; set; } = Keys.None;
 
         // keybinding for give parking citation
         [ConfigOption("Keybindings", "GiveParkingCitationKey", "Key to give out a parking citation (e.g. F3). Must be capitalized.")]
@@ -36,7 +37,6 @@ namespace ReportsPlus.Utils.Config{
             foreach (var prop in GetType().GetProperties())
                 if (prop.GetCustomAttributes(typeof(ConfigOptionAttribute), false).Length > 0)
                     sb.AppendLine($" {prop.Name}: '{prop.GetValue(this)}'");
-
             sb.AppendLine("-----------------------------------");
             return sb.ToString();
         }

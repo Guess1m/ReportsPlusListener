@@ -3,8 +3,10 @@ using System.Linq;
 using System.Text;
 using LSPD_First_Response.Mod.API;
 using Rage;
+using Rage.Native;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Events;
+using Object = Rage.Object;
 
 namespace ReportsPlus.Utils.Misc{
     public static class Misc{
@@ -124,6 +126,61 @@ namespace ReportsPlus.Utils.Misc{
             if (!(fiber is { IsAlive: true })) return;
             fiber.Abort();
             Logger.LogInfo($"Fiber {fiber.Name} was cleaned up.");
+        }
+
+        /// <summary>
+        ///     Executes the visual animation sequence for an officer writing a citation on a notepad.
+        ///     Handles resource loading, attachment, animation playback, and cleanup.
+        /// </summary>
+        /// <param name="officer">The pedestrian entity (usually the player) performing the animation.</param>
+        public static void PerformCitationAnimation(Ped officer)
+        {
+            if (!officer.Exists() || officer.IsDead) return;
+
+            var          clipboardModel = new Model("prop_notepad_02");
+            var          animDict       = new AnimationDictionary("veh@busted_std");
+            const string animName       = "issue_ticket_cop";
+
+            clipboardModel.Load();
+            animDict.Load();
+
+            var timeout = 0;
+            while ((!clipboardModel.IsLoaded || !animDict.IsLoaded) && timeout < 2000)
+            {
+                GameFiber.Sleep(10);
+                timeout += 10;
+            }
+
+            if (!clipboardModel.IsLoaded || !animDict.IsLoaded) return;
+
+            Object clipboard = null;
+
+            try
+            {
+                if (!officer.Exists()) return;
+                clipboard = new Object(clipboardModel, officer.Position);
+                if (!clipboard.Exists()) return;
+                var boneIndex = officer.GetBoneIndex(PedBoneId.RightHand);
+                var offsetPos = new Vector3(0.156f, 0.072f, -0.012f);
+                var offsetRot = new Rotator(44.0f, -143.0f, -10.0f);
+
+                clipboard.AttachTo(officer, boneIndex, offsetPos, offsetRot);
+
+                officer.Tasks.PlayAnimation(animDict, animName, 1.0f, AnimationFlags.None);
+
+                GameFiber.Sleep(1600);
+
+                if (officer.Exists()) NativeFunction.CallByHash<bool>(0x28004F88151E03E0, officer, animName, (string)animDict, 0.5f);
+
+                GameFiber.Sleep(100);
+            }
+            finally
+            {
+                if (clipboard != null && clipboard.Exists()) clipboard.Delete();
+
+                clipboardModel.Dismiss();
+                animDict.Dismiss();
+            }
         }
     }
 }

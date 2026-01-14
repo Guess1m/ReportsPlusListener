@@ -60,11 +60,11 @@
         <Reference Include="PolicingRedefined">
             <HintPath>..\..\..\Documents\APIs\PR\PolicingRedefined.dll</HintPath>
         </Reference>
-        <Reference Include="RAGENativeUI">
-            <HintPath>..\..\..\Documents\APIs\RAGENativeUI.dll</HintPath>
+        <Reference Include="RAGENativeUI, Version=1.9.3.0, Culture=neutral, processorArchitecture=Amd64">
+            <HintPath>packages\RAGENativeUI.1.9.3\lib\net472\RAGENativeUI.dll</HintPath>
         </Reference>
-        <Reference Include="RagePluginHook">
-            <HintPath>..\..\..\Documents\APIs\RagePluginHookSDK.dll</HintPath>
+        <Reference Include="RagePluginHook, Version=0.0.0.0, Culture=neutral, processorArchitecture=Amd64">
+            <HintPath>packages\RagePluginHook.1.86.1\lib\net472\RagePluginHook.dll</HintPath>
         </Reference>
         <Reference Include="StopThePed">
             <HintPath>..\..\..\Documents\APIs\StopThePed.dll</HintPath>
@@ -109,6 +109,8 @@
         <Compile Include="Utils\CustomEvents\CustomActionRegistry.cs"/>
         <Compile Include="Utils\CustomEvents\CustomActionConfig.cs"/>
         <Compile Include="Utils\Logging\Logger.cs"/>
+        <Compile Include="Utils\Menu\MenuExtensions.cs"/>
+        <Compile Include="Utils\Menu\ReportsPlusMenu.cs"/>
         <Compile Include="Utils\Misc\KeyMapUtils.cs"/>
         <Compile Include="Utils\Misc\Misc.cs"/>
         <Compile Include="Utils\WebSocket\Actions\Continuous\EntityTrackingAction.cs"/>
@@ -158,6 +160,7 @@
             <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll"/>
             <InputAssemblies Include="$(OutputPath)websocket-sharp.dll"/>
             <InputAssemblies Include="$(OutputPath)INIUtility.dll"/>
+            <InputAssemblies Include="$(OutputPath)RAGENativeUI.dll"/>
         </ItemGroup>
         <ILRepack Parallel="true" Internalize="true" InputAssemblies="@(InputAssemblies)" TargetKind="Dll" OutputFile="$(OutputPath)$(AssemblyName).dll" LibraryPath="$(OutputPath);$(ProjectDir)..\..\..\Documents\APIs"/>
     </Target>
