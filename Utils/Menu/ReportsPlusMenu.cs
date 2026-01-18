@@ -95,10 +95,10 @@ namespace ReportsPlus.Utils.Menu{
             lockKeyItem.WithKeyEditing(() => Main.Settings.InputLockKey, k => Main.Settings.InputLockKey = k);
 
             var giveCiteItem = new UIMenuItem("Give Citation", "Key to issue a parking citation.");
-            giveCiteItem.WithKeyEditing(() => Main.Settings.GiveParkingCitationKey, k => Main.Settings.GiveParkingCitationKey = k);
+            giveCiteItem.WithKeyEditing(() => Main.Settings.GiveCitationKey, k => Main.Settings.GiveCitationKey = k);
 
             var discardCiteItem = new UIMenuItem("Discard Citation", "Key to discard a parking citation.");
-            discardCiteItem.WithKeyEditing(() => Main.Settings.DiscardParkingCitationKey, k => Main.Settings.DiscardParkingCitationKey = k);
+            discardCiteItem.WithKeyEditing(() => Main.Settings.DiscardCitationKey, k => Main.Settings.DiscardCitationKey = k);
 
             keybindsMenu.AddItems(menuKeyItem, lockKeyItem, giveCiteItem, discardCiteItem);
 

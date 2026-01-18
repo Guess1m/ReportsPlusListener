@@ -421,8 +421,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             return;
                         }
 
-                        var giveKey    = Main.Settings.GiveParkingCitationKey;
-                        var discardKey = Main.Settings.DiscardParkingCitationKey;
+                        var giveKey    = Main.Settings.GiveCitationKey;
+                        var discardKey = Main.Settings.DiscardCitationKey;
 
                         Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{pedName}~w~: {infraction}\nPress ~g~{giveKey}~w~ to Issue, ~r~{discardKey}~w~ to Discard");
                         Game.DisplaySubtitle($"~b~{pedName}~w~: Press ~g~{giveKey} ~w~to Issue | ~r~{discardKey} ~w~to Discard");
@@ -566,8 +566,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             return;
                         }
 
-                        var giveKey    = Main.Settings.GiveParkingCitationKey;
-                        var discardKey = Main.Settings.DiscardParkingCitationKey;
+                        var giveKey    = Main.Settings.GiveCitationKey;
+                        var discardKey = Main.Settings.DiscardCitationKey;
 
                         Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{vehiclePlate}~w~: {infraction}\nPress ~g~{giveKey}~w~ to Issue, ~r~{discardKey}~w~ to Discard");
                         Game.DisplaySubtitle($"~b~{vehiclePlate}~w~: Press ~g~{giveKey} ~w~to Issue | ~r~{discardKey} ~w~to Discard");

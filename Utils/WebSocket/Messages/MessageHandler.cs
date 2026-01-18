@@ -43,7 +43,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             }
             else
             {
-                Logger.LogInfo("Using Base GiveCitationAction");
+                Logger.LogInfo("Using Base/STP GiveCitationAction");
                 RegisterRequestAction(new RequestActions.GiveCitationAction());
             }
 
@@ -55,6 +55,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             RegisterKeybindingAction(new KeybindingActions.TimeKeybinding());
             RegisterKeybindingAction(new KeybindingActions.WeatherKeybinding());
             RegisterKeybindingAction(new KeybindingActions.InputLockKeybinding());
+            RegisterKeybindingAction(new KeybindingActions.KeyPressKeybinding());
 
             Logger.LogInfo("MessageHandler initialized.");
         }

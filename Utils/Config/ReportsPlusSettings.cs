@@ -23,12 +23,12 @@ namespace ReportsPlus.Utils.Config{
         public Keys InputLockKey { get; set; } = Keys.None;
 
         // keybinding for give parking citation
-        [ConfigOption("Keybindings", "GiveParkingCitationKey", "Key to give out a parking citation (e.g. F3). Must be capitalized.")]
-        public Keys GiveParkingCitationKey { get; set; } = Keys.F3;
+        [ConfigOption("Keybindings", "GiveCitationKey", "Key to give out a citation (e.g. F3). Must be capitalized. This isn't used when you are using PR.")]
+        public Keys GiveCitationKey { get; set; } = Keys.F3;
 
         // keybinding for discarding vehicle citation
-        [ConfigOption("Keybindings", "DiscardParkingCitationKey", "Key to discard a parking citation (e.g. Delete). Must be capitalized.")]
-        public Keys DiscardParkingCitationKey { get; set; } = Keys.Delete;
+        [ConfigOption("Keybindings", "DiscardCitationKey", "Key to discard a citation (e.g. Delete). Must be capitalized. Always used for parking citations. Not used for printed when you are using PR.")]
+        public Keys DiscardCitationKey { get; set; } = Keys.Delete;
 
         public override string ToString()
         {

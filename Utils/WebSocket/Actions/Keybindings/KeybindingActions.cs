@@ -1,6 +1,7 @@
 using System;
 using Rage;
 using ReportsPlus.Utils.Logging;
+using ReportsPlus.Utils.Misc;
 using ReportsPlus.Utils.WebSocket.Messages;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
@@ -125,6 +126,25 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             {
                 Main.LPCV?.Repair();
                 Logger.LogInfo("Vehicle repaired.");
+            }
+        }
+
+        public class KeyPressKeybinding : IKeybindingAction{
+            public string Name => "keypress";
+
+            /// <summary>
+            ///     Receives a keybinding request and attempts to simulate the key press via KeyMapUtils.
+            /// </summary>
+            /// <param name="request">The request containing the key name in the arguments.</param>
+            public void Execute(IncomingRequest request)
+            {
+                if (string.IsNullOrEmpty(request.Args))
+                {
+                    Logger.LogWarning("KeyPressKeybinding: Execute called with empty arguments.");
+                    return;
+                }
+
+                KeyMapUtils.Press(request.Args);
             }
         }
     }

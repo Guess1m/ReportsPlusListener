@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Windows.Forms;
 using INIUtility;
 using LSPD_First_Response.Mod.API;
 using Rage;
@@ -211,11 +212,14 @@ namespace ReportsPlus{
             while (true)
             {
                 GameFiber.Yield();
-                if (Game.IsKeyDown(Settings.InputLockKey))
+
+                if (Settings != null && Settings.InputLockKey != Keys.None && Game.IsKeyDown(Settings.InputLockKey))
                 {
                     IsInputDisabled = !IsInputDisabled;
                     Logger.LogInfo($"InputLock Key Pressed. Is input disabled: [{IsInputDisabled}]");
                     Game.DisplayNotification(IsInputDisabled ? "All input DISABLED via keybind." : "All input ENABLED via keybind.");
+
+                    while (Settings != null && Game.IsKeyDown(Settings.InputLockKey)) GameFiber.Yield();
                 }
 
                 if (IsInputDisabled) NativeFunction.CallByHash<int>(0x5F4B6931816E599B, 0);
