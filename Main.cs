@@ -16,8 +16,10 @@ using ReportsPlus.Utils.WebSocket;
 using ReportsPlus.Utils.WebSocket.Actions.Events;
 using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus{
-    public class Main : Plugin{
+namespace ReportsPlus
+{
+    public class Main : Plugin
+    {
         private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         //Fibers
@@ -27,28 +29,28 @@ namespace ReportsPlus{
         private static GameFiber _requestProcessingFiber;
 
         // WebSocket
-        private static          GameClientSocket                 _client;
+        private static GameClientSocket _client;
         private static readonly ConcurrentQueue<IncomingRequest> _requestQueue = new ConcurrentQueue<IncomingRequest>(); // incoming request queue
 
         // Data
-        public static  bool                IsInputDisabled;
-        public static  bool                IsKeyboardOpen;
-        private static GameClientSocket    Client      { get; set; }
-        public static  bool                IsConnected => Client is { IsConnected: true }; // safe access to client state
-        public static  ReportsPlusSettings Settings    { get; set; }
+        public static bool IsInputDisabled;
+        public static bool IsKeyboardOpen;
+        private static GameClientSocket Client { get; set; }
+        public static bool IsConnected => Client is { IsConnected: true }; // safe access to client state
+        public static ReportsPlusSettings Settings { get; set; }
 
         // Citation State Triggers
-        public static bool IsCitationPending   { get; set; }
+        public static bool IsCitationPending { get; set; }
         public static bool TriggerGiveCitation { get; set; }
 
         public static bool TriggerDiscardCitation { get; set; }
 
         // Menu Data
-        public static  MenuPool        Pool     { get; private set; } // primary menu-pool
+        public static MenuPool Pool { get; private set; } // primary menu-pool
         private static ReportsPlusMenu MainMenu { get; set; }         // primary menu
 
         // Getters for lp and lpv
-        public static Ped     LPC  => Game.LocalPlayer.Character;
+        public static Ped LPC => Game.LocalPlayer.Character;
         public static Vehicle LPCV => Game.LocalPlayer.Character?.CurrentVehicle;
 
         public override void Initialize()
@@ -64,7 +66,7 @@ namespace ReportsPlus{
             Misc.CleanupPluginEvents();
             CleanupRegistry.RunCleanup();
             Client = null;
-            Pool   = null;
+            Pool = null;
 
             if (!onduty) return;
             // On-Duty Initialization
@@ -73,15 +75,15 @@ namespace ReportsPlus{
             Settings = ConfigLoader.LoadSettings<ReportsPlusSettings>("plugins/LSPDFR/ReportsPlus.ini");
 
             // initialize menu-pool
-            Pool     = new MenuPool();
+            Pool = new MenuPool();
             MainMenu = new ReportsPlusMenu();
 
             MessageHandler.Initialize();
 
             // Start Fibers
-            _continuousUpdateFiber  = GameFiber.StartNew(ContinuousUpdateLoop, "ReportsPlus-ContinuousUpdateFiber");
-            _inputLockFiber         = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
-            _menuPoolFiber          = GameFiber.StartNew(ProcessMenuPool, "ReportsPlus-MenuPoolFiber");
+            _continuousUpdateFiber = GameFiber.StartNew(ContinuousUpdateLoop, "ReportsPlus-ContinuousUpdateFiber");
+            _inputLockFiber = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
+            _menuPoolFiber = GameFiber.StartNew(ProcessMenuPool, "ReportsPlus-MenuPoolFiber");
             _requestProcessingFiber = GameFiber.StartNew(ProcessRequestQueueLoop, "ReportsPlus-RequestProcessingFiber");
 
             // Register Cleanups
@@ -144,13 +146,13 @@ namespace ReportsPlus{
                 finally
                 {
                     _client = null;
-                    Client  = null;
+                    Client = null;
                 }
 
             try
             {
                 _client = new GameClientSocket(Settings.ClientAddress, Settings.ClientPort);
-                Client  = _client;
+                Client = _client;
                 EventManager.SetClient(Client);
 
                 // enqueue incoming messages (ThreadPool to Queue)
@@ -204,43 +206,31 @@ namespace ReportsPlus{
             }
         }
 
-        /// <summary>
-        ///     Fiber loop that monitors hardware key presses for input locking and reconnection logic.
-        /// </summary>
         private static void CheckForInputLock()
         {
             while (true)
             {
                 GameFiber.Yield();
-
-                if (Settings != null && Settings.InputLockKey != Keys.None && Game.IsKeyDown(Settings.InputLockKey))
+                if (Settings != null && Settings.InputLockKey.Key != Keys.None && Settings.InputLockKey.IsPressed())
                 {
                     IsInputDisabled = !IsInputDisabled;
                     Logger.LogInfo($"InputLock Key Pressed. Is input disabled: [{IsInputDisabled}]");
                     Game.DisplayNotification(IsInputDisabled ? "All input DISABLED via keybind." : "All input ENABLED via keybind.");
-
-                    while (Settings != null && Game.IsKeyDown(Settings.InputLockKey)) GameFiber.Yield();
+                    while (Settings != null && Settings.InputLockKey.IsPressed())
+                        GameFiber.Yield();
                 }
-
                 if (IsInputDisabled) NativeFunction.CallByHash<int>(0x5F4B6931816E599B, 0);
             }
         }
-
-        /// <summary>
-        ///     Fiber loop that processes UI menus.
-        /// </summary>
         private static void ProcessMenuPool()
         {
             while (true)
             {
                 GameFiber.Yield();
-
                 if (Pool == null) continue;
-
                 if (!IsKeyboardOpen) Pool.ProcessMenus();
-
-                if (!Game.IsKeyDown(Settings.MenuKey)) continue;
-
+                if (Settings == null || Settings.MenuKey.Key == Keys.None || !Settings.MenuKey.IsPressed())
+                    continue;
                 if (Pool.IsAnyMenuOpen())
                 {
                     Pool.CloseAllMenus();
@@ -251,6 +241,9 @@ namespace ReportsPlus{
                     Pool.CloseAllMenus();
                     MainMenu.Visible = true;
                 }
+                // Wait for release so the menu doesn't flicker on/off
+                while (Settings.MenuKey.IsPressed())
+                    GameFiber.Yield();
             }
         }
 
@@ -263,7 +256,7 @@ namespace ReportsPlus{
             {
                 _client.Stop();
                 _client = null;
-                Client  = null;
+                Client = null;
             }
 
             Misc.CleanupPluginEvents();

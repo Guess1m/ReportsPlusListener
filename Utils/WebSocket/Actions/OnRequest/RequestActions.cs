@@ -14,9 +14,12 @@ using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Messages;
 using ReportsPlus.Utils.WorldData;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
-    public abstract class RequestActions{
-        public class FindPedByNameAction : IRequestAction{
+namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
+{
+    public abstract class RequestActions
+    {
+        public class FindPedByNameAction : IRequestAction
+        {
             public string Name => "findPedByName";
 
             /// <summary>
@@ -44,7 +47,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     if (TryProcessPed(client, ped, nameToFind))
                         return;
 
-                client.Send("pedNotFound", new JValue(nameToFind));
+                var notFoundData = new JObject { ["searchQuery"] = nameToFind };
+                client.Send("pedNotFound", notFoundData);
             }
 
             /// <summary>
@@ -72,7 +76,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
-        public class FindVehicleByPlateAction : IRequestAction{
+        public class FindVehicleByPlateAction : IRequestAction
+        {
             public string Name => "findVehicleByPlate";
 
             /// <summary>
@@ -101,9 +106,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     if (TryProcessVehicle(client, veh, searchClean))
                         return;
 
-                client.Send("vehicleNotFound", new JValue(plateToFind));
+                var notFoundData = new JObject { ["searchQuery"] = plateToFind };
+                client.Send("vehicleNotFound", notFoundData);
             }
-
             /// <summary>
             ///     Attempts to match a specific vehicle's license plate against a search string and sends data if found.
             /// </summary>
@@ -125,9 +130,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
-        public class PoliceVehiclesAction : IRequestAction{
+        public class PoliceVehiclesAction : IRequestAction
+        {
             private readonly HashSet<Vehicle> _trackedVehicles = new HashSet<Vehicle>();
-            public           string           Name => "policeVehicles";
+            public string Name => "policeVehicles";
 
             /// <summary>
             ///     Retrieves and sends the coordinates of all active police vehicles to the client.
@@ -165,14 +171,15 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     vehiclesArray.Add(new JObject
                     {
                         ["id"] = $"v-{vehicle.Handle}",
-                        ["x"]  = vehicle.Position.X,
-                        ["y"]  = vehicle.Position.Y
+                        ["x"] = vehicle.Position.X,
+                        ["y"] = vehicle.Position.Y
                     });
                 return vehiclesArray;
             }
         }
 
-        public class PlayerLocationAction : IRequestAction{
+        public class PlayerLocationAction : IRequestAction
+        {
             public string Name => "playerLocation";
 
             /// <summary>
@@ -192,7 +199,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
-        public class GameTimeAction : IRequestAction{
+        public class GameTimeAction : IRequestAction
+        {
             public string Name => "gametime";
 
             /// <summary>
@@ -203,12 +211,13 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var timeString = World.DateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
-                var timeData   = new JObject { ["time"] = timeString };
+                var timeData = new JObject { ["time"] = timeString };
                 client.Send(Name, timeData);
             }
         }
 
-        public class FindLocationAction : IRequestAction{
+        public class FindLocationAction : IRequestAction
+        {
             public string Name => "locationData";
 
             /// <summary>
@@ -219,13 +228,13 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
                 var currentStreet = World.GetStreetName(Main.LPC.Position);
-                var currentZone   = Functions.GetZoneAtPosition(Main.LPC.Position).RealAreaName;
+                var currentZone = Functions.GetZoneAtPosition(Main.LPC.Position).RealAreaName;
                 var currentCounty = Regex.Replace(Functions.GetZoneAtPosition(Main.LPC.Position).County.ToString(), "(?<!^)([A-Z])", " $1");
 
                 var locationData = new JObject
                 {
                     ["street"] = currentStreet ?? string.Empty,
-                    ["area"]   = currentZone ?? string.Empty,
+                    ["area"] = currentZone ?? string.Empty,
                     ["county"] = currentCounty ?? string.Empty
                 };
 
@@ -233,7 +242,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
-        public class HeartbeatAction : IRequestAction{
+        public class HeartbeatAction : IRequestAction
+        {
             public string Name => "heartbeat";
 
             /// <summary>
@@ -249,7 +259,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         }
 
         // Will only execute if PR is being used (Assigns citation to ped rather than custom animation)
-        public class GiveCitationActionPR : IRequestAction{
+        public class GiveCitationActionPR : IRequestAction
+        {
             public string Name => "giveCitation";
 
             /// <summary>
@@ -276,10 +287,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     return;
                 }
 
-                var pedName        = payload["pedName"]?.ToString();
-                var infraction     = payload["infraction"]?.ToString();
-                var fineToken      = payload["fine"];
-                var isArrestable   = (bool?)payload["isArrestable"] ?? false;
+                var pedName = payload["pedName"]?.ToString();
+                var infraction = payload["infraction"]?.ToString();
+                var fineToken = payload["fine"];
+                var isArrestable = (bool?)payload["isArrestable"] ?? false;
                 var currencySymbol = payload["currency"]?.ToString() ?? "$";
 
                 if (string.IsNullOrEmpty(pedName) || string.IsNullOrEmpty(infraction) || fineToken == null)
@@ -341,7 +352,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
         }
 
         // Standard GiveCitation for STP/base
-        public class GiveCitationAction : IRequestAction{
+        public class GiveCitationAction : IRequestAction
+        {
             public string Name => "giveCitation";
 
             /// <summary>
@@ -356,9 +368,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 {
                     try
                     {
-                        Main.TriggerGiveCitation    = false;
+                        Main.TriggerGiveCitation = false;
                         Main.TriggerDiscardCitation = false;
-                        Main.IsCitationPending      = true;
+                        Main.IsCitationPending = true;
 
                         if (string.IsNullOrEmpty(request.Args))
                         {
@@ -377,9 +389,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             return;
                         }
 
-                        var pedName    = payload["pedName"]?.ToString();
+                        var pedName = payload["pedName"]?.ToString();
                         var infraction = payload["infraction"]?.ToString();
-                        var fineToken  = payload["fine"];
+                        var fineToken = payload["fine"];
 
                         if (string.IsNullOrEmpty(pedName) || string.IsNullOrEmpty(infraction) || fineToken == null)
                         {
@@ -421,7 +433,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             return;
                         }
 
-                        var giveKey    = Main.Settings.GiveCitationKey;
+                        var giveKey = Main.Settings.GiveCitationKey;
                         var discardKey = Main.Settings.DiscardCitationKey;
 
                         Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{pedName}~w~: {infraction}\nPress ~g~{giveKey}~w~ to Issue, ~r~{discardKey}~w~ to Discard");
@@ -439,7 +451,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                                 break;
                             }
 
-                            if (Game.IsKeyDown(discardKey) || Main.TriggerDiscardCitation)
+                            if (Main.Settings.DiscardCitationKey.IsPressed() || Main.TriggerDiscardCitation)
                             {
                                 Main.TriggerDiscardCitation = false;
                                 Game.DisplaySubtitle("~r~Citation Discarded.");
@@ -447,7 +459,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                                 break;
                             }
 
-                            if (!Game.IsKeyDown(giveKey) && !Main.TriggerGiveCitation) continue;
+                            if (!Main.Settings.GiveCitationKey.IsPressed() && !Main.TriggerGiveCitation) continue;
                             Main.TriggerGiveCitation = false;
 
                             var distance = Main.LPC.Position.DistanceTo(targetPed.Position);
@@ -477,8 +489,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     }
                     finally
                     {
-                        Main.IsCitationPending      = false;
-                        Main.TriggerGiveCitation    = false;
+                        Main.IsCitationPending = false;
+                        Main.TriggerGiveCitation = false;
                         Main.TriggerDiscardCitation = false;
                     }
                 }, "GiveCitationFiber");
@@ -487,7 +499,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
             }
         }
 
-        public class GiveParkingCitationAction : IRequestAction{
+        public class GiveParkingCitationAction : IRequestAction
+        {
             public string Name => "giveParkingCitation";
 
             /// <summary>
@@ -501,9 +514,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                 {
                     try
                     {
-                        Main.TriggerGiveCitation    = false;
+                        Main.TriggerGiveCitation = false;
                         Main.TriggerDiscardCitation = false;
-                        Main.IsCitationPending      = true;
+                        Main.IsCitationPending = true;
 
                         if (string.IsNullOrEmpty(request.Args))
                         {
@@ -523,8 +536,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                         }
 
                         var vehiclePlate = payload["vehiclePlate"]?.ToString();
-                        var infraction   = payload["infraction"]?.ToString();
-                        var fineToken    = payload["fine"];
+                        var infraction = payload["infraction"]?.ToString();
+                        var fineToken = payload["fine"];
 
                         if (string.IsNullOrEmpty(vehiclePlate) || string.IsNullOrEmpty(infraction) || fineToken == null)
                         {
@@ -566,7 +579,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                             return;
                         }
 
-                        var giveKey    = Main.Settings.GiveCitationKey;
+                        var giveKey = Main.Settings.GiveCitationKey;
                         var discardKey = Main.Settings.DiscardCitationKey;
 
                         Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~y~Citation Request", $"~b~{vehiclePlate}~w~: {infraction}\nPress ~g~{giveKey}~w~ to Issue, ~r~{discardKey}~w~ to Discard");
@@ -584,7 +597,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                                 break;
                             }
 
-                            if (Game.IsKeyDown(discardKey) || Main.TriggerDiscardCitation)
+                            if (Main.Settings.DiscardCitationKey.IsPressed() || Main.TriggerDiscardCitation)
                             {
                                 Main.TriggerDiscardCitation = false;
                                 Game.DisplaySubtitle("~r~Citation Discarded.");
@@ -592,7 +605,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                                 break;
                             }
 
-                            if (!Game.IsKeyDown(giveKey) && !Main.TriggerGiveCitation) continue;
+                            if (!Main.Settings.GiveCitationKey.IsPressed() && !Main.TriggerGiveCitation) continue;
                             Main.TriggerGiveCitation = false;
 
                             var distance = Main.LPC.Position.DistanceTo(targetVehicle.Position);
@@ -622,8 +635,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest{
                     }
                     finally
                     {
-                        Main.IsCitationPending      = false;
-                        Main.TriggerGiveCitation    = false;
+                        Main.IsCitationPending = false;
+                        Main.TriggerGiveCitation = false;
                         Main.TriggerDiscardCitation = false;
                     }
                 }, "GiveParkingCitationFiber");

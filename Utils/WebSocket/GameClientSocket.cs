@@ -8,15 +8,17 @@ using ReportsPlus.Utils.WebSocket.Messages;
 using WebSocketSharp;
 using Logger = ReportsPlus.Utils.Logging.Logger;
 
-namespace ReportsPlus.Utils.WebSocket{
-    public class GameClientSocket{
-        private readonly ConcurrentQueue<string> _sendQueue  = new ConcurrentQueue<string>();
-        private readonly object                  _socketLock = new object();
-        private readonly string                  _url;
+namespace ReportsPlus.Utils.WebSocket
+{
+    public class GameClientSocket
+    {
+        private readonly ConcurrentQueue<string> _sendQueue = new ConcurrentQueue<string>();
+        private readonly object _socketLock = new object();
+        private readonly string _url;
 
         private WebSocketSharp.WebSocket _clientSocket;
-        private Task                     _senderTask;
-        private CancellationTokenSource  _shutdownTokenSource;
+        private Task _senderTask;
+        private CancellationTokenSource _shutdownTokenSource;
 
         public GameClientSocket(string hostname, int port)
         {
@@ -35,8 +37,8 @@ namespace ReportsPlus.Utils.WebSocket{
         }
 
         public event Action<IncomingRequest> OnMessageReceived;
-        public event Action                  OnConnected;
-        public event Action                  OnDisconnected;
+        public event Action OnConnected;
+        public event Action OnDisconnected;
 
         /// <summary>
         ///     Starts the background sender loop and initiates the first connection attempt.
@@ -97,10 +99,10 @@ namespace ReportsPlus.Utils.WebSocket{
                 // Ensure previous socket is closed before creating a new one
                 if (_clientSocket != null)
                 {
-                    _clientSocket.OnOpen    -= OnSocketOpen;
+                    _clientSocket.OnOpen -= OnSocketOpen;
                     _clientSocket.OnMessage -= OnSocketMessage;
-                    _clientSocket.OnError   -= OnSocketError;
-                    _clientSocket.OnClose   -= OnSocketClose;
+                    _clientSocket.OnError -= OnSocketError;
+                    _clientSocket.OnClose -= OnSocketClose;
 
                     if (_clientSocket.ReadyState == WebSocketState.Open)
                         _clientSocket.Close();
@@ -108,10 +110,10 @@ namespace ReportsPlus.Utils.WebSocket{
 
                 _clientSocket = new WebSocketSharp.WebSocket(_url);
 
-                _clientSocket.OnOpen    += OnSocketOpen;
+                _clientSocket.OnOpen += OnSocketOpen;
                 _clientSocket.OnMessage += OnSocketMessage;
-                _clientSocket.OnError   += OnSocketError;
-                _clientSocket.OnClose   += OnSocketClose;
+                _clientSocket.OnError += OnSocketError;
+                _clientSocket.OnClose += OnSocketClose;
             }
         }
 
@@ -159,18 +161,33 @@ namespace ReportsPlus.Utils.WebSocket{
 
         /// <summary>
         ///     An asynchronous loop that consumes the send queue and transmits data to the server.
+        ///     Error handling to prevent the loop from crashing.
         /// </summary>
         /// <param name="token">Cancellation token to stop the loop.</param>
         private async Task SenderLoop(CancellationToken token)
         {
             Logger.LogInfo("Background SenderLoop started.");
             while (!token.IsCancellationRequested)
+            {
                 if (IsConnected && _sendQueue.TryDequeue(out var message))
-                    lock (_socketLock)
+                {
+                    try
                     {
-                        _clientSocket.Send(message);
+                        lock (_socketLock)
+                        {
+                            if (_clientSocket != null && _clientSocket.ReadyState == WebSocketState.Open)
+                            {
+                                _clientSocket.Send(message);
+                            }
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError($"SenderLoop Error: Failed to send message. {ex.Message}");
+                    }
+                }
                 else
+                {
                     try
                     {
                         await Task.Delay(10, token);
@@ -179,6 +196,8 @@ namespace ReportsPlus.Utils.WebSocket{
                     {
                         break;
                     }
+                }
+            }
 
             Logger.LogWarning("Background SenderLoop stopped.");
         }
@@ -195,8 +214,8 @@ namespace ReportsPlus.Utils.WebSocket{
             {
                 var messageObject = new JObject
                 {
-                    ["type"]   = type,
-                    ["data"]   = data,
+                    ["type"] = type,
+                    ["data"] = data,
                     ["sender"] = _url
                 };
 

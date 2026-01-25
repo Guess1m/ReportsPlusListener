@@ -1,167 +1,94 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="packages\Costura.Fody.6.0.0\build\Costura.Fody.props" Condition="Exists('packages\Costura.Fody.6.0.0\build\Costura.Fody.props')"/>
-    <Import Project="packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('packages\EntityFramework.6.4.4\build\EntityFramework.props')"/>
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{1E12E960-A505-42E7-9238-F0A1EA3129AE}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>ReportsPlus</RootNamespace>
-        <AssemblyName>ReportsPlus</AssemblyName>
-        <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <Deterministic>true</Deterministic>
-        <NuGetPackageImportStamp></NuGetPackageImportStamp>
-        <LangVersion>8</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <PlatformTarget>x64</PlatformTarget>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <LangVersion>8</LangVersion>
+    <AssemblyName>ReportsPlus</AssemblyName>
+    <RootNamespace>ReportsPlus</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+
+    <!-- Build properties -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.44.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="RAGENativeUI" Version="1.9.3" />
+    <PackageReference Include="RagePluginHook" Version="1.86.1" />
+    <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118.0" />
+    <PackageReference Include="System.Data.SQLite.EF6" Version="1.0.118.0" />
+    <PackageReference Include="System.Data.SQLite.Linq" Version="1.0.118.0" />
+    <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CalloutInterface">
+      <HintPath>..\..\..\APIs\CalloutInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="CalloutInterfaceAPI">
+      <HintPath>..\..\..\APIs\CalloutInterfaceAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="CommonDataFramework">
+      <HintPath>..\..\..\APIs\PR\CommonDataFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="INIUtility">
+      <HintPath>..\..\..\APIs\INIUtility.dll</HintPath>
+    </Reference>
+    <Reference Include="LSPD First Response">
+      <HintPath>..\..\..\APIs\LSPD First Response.dll</HintPath>
+    </Reference>
+    <Reference Include="PolicingRedefined">
+      <HintPath>..\..\..\APIs\PR\PolicingRedefined.dll</HintPath>
+    </Reference>
+    <Reference Include="StopThePed">
+      <HintPath>..\..\..\APIs\StopThePed.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="App.config" />
+    <None Remove="packages.config" />
+  </ItemGroup>
+  
+  <Target Name="RunILRepack" AfterTargets="Build">
     <ItemGroup>
-        <Reference Include="CalloutInterface">
-            <HintPath>..\..\..\Documents\APIs\CalloutInterface.dll</HintPath>
-        </Reference>
-        <Reference Include="CalloutInterfaceAPI">
-            <HintPath>..\..\..\Documents\APIs\CalloutInterfaceAPI.dll</HintPath>
-        </Reference>
-        <Reference Include="CommonDataFramework">
-            <HintPath>..\..\..\Documents\APIs\PR\CommonDataFramework.dll</HintPath>
-        </Reference>
-        <Reference Include="Costura, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
-            <HintPath>packages\Costura.Fody.6.0.0\lib\netstandard2.0\Costura.dll</HintPath>
-        </Reference>
-        <Reference Include="INIUtility">
-            <HintPath>..\..\..\RiderProjects\Plugins\INIUtility\bin\Debug\INIUtility.dll</HintPath>
-        </Reference>
-        <Reference Include="LSPD First Response">
-            <HintPath>..\..\..\Documents\APIs\LSPD First Response.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-            <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="PolicingRedefined">
-            <HintPath>..\..\..\Documents\APIs\PR\PolicingRedefined.dll</HintPath>
-        </Reference>
-        <Reference Include="RAGENativeUI, Version=1.9.3.0, Culture=neutral, processorArchitecture=Amd64">
-            <HintPath>packages\RAGENativeUI.1.9.3\lib\net472\RAGENativeUI.dll</HintPath>
-        </Reference>
-        <Reference Include="RagePluginHook, Version=0.0.0.0, Culture=neutral, processorArchitecture=Amd64">
-            <HintPath>packages\RagePluginHook.1.86.1\lib\net472\RagePluginHook.dll</HintPath>
-        </Reference>
-        <Reference Include="StopThePed">
-            <HintPath>..\..\..\Documents\APIs\StopThePed.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Windows.Forms"/>
-        <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-            <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
-        </Reference>
-        <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-            <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-        </Reference>
-        <Reference Include="System"/>
-        <Reference Include="System.ComponentModel.DataAnnotations"/>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Data.SQLite, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-            <HintPath>packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\lib\net46\System.Data.SQLite.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Data.SQLite.EF6, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-            <HintPath>packages\System.Data.SQLite.EF6.1.0.118.0\lib\net46\System.Data.SQLite.EF6.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Data.SQLite.Linq, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-            <HintPath>packages\System.Data.SQLite.Linq.1.0.118.0\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Drawing"/>
-        <Reference Include="System.Web"/>
-        <Reference Include="System.Xml.Linq"/>
-        <Reference Include="System.Data.DataSetExtensions"/>
-        <Reference Include="Microsoft.CSharp"/>
-        <Reference Include="System.Data"/>
-        <Reference Include="System.Net.Http"/>
-        <Reference Include="System.Xml"/>
-        <Reference Include="websocket-sharp, Version=1.0.1.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-            <HintPath>packages\WebSocketSharp-netstandard.1.0.1\lib\net45\websocket-sharp.dll</HintPath>
-        </Reference>
+        <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll"/>
+        <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll"/>
+        <InputAssemblies Include="$(OutputPath)websocket-sharp.dll"/>
+        <InputAssemblies Include="$(OutputPath)INIUtility.dll"/>
+        <InputAssemblies Include="$(OutputPath)RAGENativeUI.dll"/>
     </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Main.cs"/>
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="Utils\Cleanup\CleanupRegistry.cs"/>
-        <Compile Include="Utils\Config\ReportsPlusSettings.cs"/>
-        <Compile Include="Utils\CustomEvents\ActionExecuter.cs"/>
-        <Compile Include="Utils\CustomEvents\CustomActionRegistry.cs"/>
-        <Compile Include="Utils\CustomEvents\CustomActionConfig.cs"/>
-        <Compile Include="Utils\Logging\Logger.cs"/>
-        <Compile Include="Utils\Menu\MenuExtensions.cs"/>
-        <Compile Include="Utils\Menu\ReportsPlusMenu.cs"/>
-        <Compile Include="Utils\Misc\KeyMapUtils.cs"/>
-        <Compile Include="Utils\Misc\Misc.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Continuous\EntityTrackingAction.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Continuous\IContinuousAction.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Continuous\VehicleTrackingAction.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Events\EventManager.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Events\EventUtils.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Keybindings\IKeybindingAction.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\Keybindings\KeybindingActions.cs"/>
-        <Compile Include="Utils\WebSocket\Actions\OnRequest\RequestActions.cs"/>
-        <Compile Include="Utils\WebSocket\GameClientSocket.cs"/>
-        <Compile Include="Utils\WebSocket\Messages\IncomingRequest.cs"/>
-        <Compile Include="Utils\WebSocket\Messages\IRequestAction.cs"/>
-        <Compile Include="Utils\WebSocket\Messages\MessageHandler.cs"/>
-        <Compile Include="Utils\WorldData\GetValueMethods.cs"/>
-        <Compile Include="Utils\WorldData\PedDataHelper.cs"/>
-        <Compile Include="Utils\WorldData\VehicleDataHelper.cs"/>
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="App.config"/>
-        <None Include="packages.config"/>
-    </ItemGroup>
-    <ItemGroup>
-        <Folder Include="Utils\WebSocket\Actions\"/>
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-        <PropertyGroup>
-            <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-            <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-        </PropertyGroup>
-        <Error Condition="!Exists('packages\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EntityFramework.6.4.4\build\EntityFramework.props'))"/>
-        <Error Condition="!Exists('packages\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EntityFramework.6.4.4\build\EntityFramework.targets'))"/>
-        <Error Condition="!Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))"/>
-        <Error Condition="!Exists('packages\Fody.6.8.2\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Fody.6.8.2\build\Fody.targets'))"/>
-        <Error Condition="!Exists('packages\Costura.Fody.6.0.0\build\Costura.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Costura.Fody.6.0.0\build\Costura.Fody.props'))"/>
-        <Error Condition="!Exists('packages\Costura.Fody.6.0.0\build\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Costura.Fody.6.0.0\build\Costura.Fody.targets'))"/>
-        <Error Condition="!Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.44.1\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\ILRepack.Lib.MSBuild.Task.2.0.44.1\build\ILRepack.Lib.MSBuild.Task.targets'))"/>
-    </Target>
-    <Import Project="packages\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('packages\EntityFramework.6.4.4\build\EntityFramework.targets')"/>
-    <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')"/>
-    <Import Project="packages\ILRepack.Lib.MSBuild.Task.2.0.44.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.44.1\build\ILRepack.Lib.MSBuild.Task.targets')"/>
-    <UsingTask TaskName="ILRepack" AssemblyFile="$(ProjectDir)..\packages\ILRepack.Lib.MSBuild.Task.2.0.34.2\build\ILRepack.Lib.MSBuild.Task.dll"/>
-    <Target Name="ILRepack" AfterTargets="Build">
-        <ItemGroup>
-            <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll"/>
-            <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll"/>
-            <InputAssemblies Include="$(OutputPath)websocket-sharp.dll"/>
-            <InputAssemblies Include="$(OutputPath)INIUtility.dll"/>
-            <InputAssemblies Include="$(OutputPath)RAGENativeUI.dll"/>
-        </ItemGroup>
-        <ILRepack Parallel="true" Internalize="true" InputAssemblies="@(InputAssemblies)" TargetKind="Dll" OutputFile="$(OutputPath)$(AssemblyName).dll" LibraryPath="$(OutputPath);$(ProjectDir)..\..\..\Documents\APIs"/>
-    </Target>
+    <ILRepack Parallel="true" Internalize="true" InputAssemblies="@(InputAssemblies)" TargetKind="Dll" OutputFile="$(OutputPath)$(AssemblyName).dll" LibraryPath="$(OutputPath);$(ProjectDir)..\..\..\Documents\APIs"/>
+  </Target>
+
 </Project>
