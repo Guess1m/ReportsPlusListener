@@ -219,9 +219,13 @@ namespace ReportsPlus
                     while (Settings != null && Settings.InputLockKey.IsPressed())
                         GameFiber.Yield();
                 }
-                if (IsInputDisabled) NativeFunction.CallByHash<int>(0x5F4B6931816E599B, 0);
+                if (IsInputDisabled)
+                {
+                    NativeFunction.CallByHash<int>(0x5F4B6931816E599B, 0);
+                }
             }
         }
+
         private static void ProcessMenuPool()
         {
             while (true)

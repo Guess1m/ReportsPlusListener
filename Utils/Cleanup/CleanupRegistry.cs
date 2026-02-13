@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.Cleanup{
-    public static class CleanupRegistry{
+namespace ReportsPlus.Utils.Cleanup
+{
+    public static class CleanupRegistry
+    {
         private static readonly List<Action> CleanupActions = new List<Action>();
-        private static readonly object       LockObject     = new object();
+        private static readonly object LockObject = new object();
 
         /// <summary>
         ///     Thread-safely adds a new cleanup delegate to the internal registry for deferred execution.
@@ -19,7 +21,7 @@ namespace ReportsPlus.Utils.Cleanup{
                 return;
             }
 
-            lock (LockObject)
+            lock (LockObject) // race cond for cleanups on WebSocket thread
             {
                 Logger.LogInfo($"Registering cleanup action: {cleanupAction.Method.Name}");
                 CleanupActions.Add(cleanupAction);
@@ -34,7 +36,7 @@ namespace ReportsPlus.Utils.Cleanup{
         public static void RunCleanup()
         {
             List<Action> actionsToRun;
-            lock (LockObject)
+            lock (LockObject) // race cond for cleanups on WebSocket thread
             {
                 actionsToRun = new List<Action>(CleanupActions);
                 CleanupActions.Clear();

@@ -8,7 +8,6 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
 
-    <!-- Build properties -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <Configurations>Debug;Release</Configurations>
@@ -43,12 +42,13 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="RAGENativeUI" Version="1.9.3" />
-    <PackageReference Include="RagePluginHook" Version="1.86.1" />
+    <PackageReference Include="RagePluginHook" Version="1.98.0" />
     <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118.0" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118.0" />
     <PackageReference Include="System.Data.SQLite.EF6" Version="1.0.118.0" />
     <PackageReference Include="System.Data.SQLite.Linq" Version="1.0.118.0" />
     <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+    <PackageReference Include="Obfuscar" Version="2.2.50" />
   </ItemGroup>
 
   <ItemGroup>
@@ -82,13 +82,30 @@
   
   <Target Name="RunILRepack" AfterTargets="Build">
     <ItemGroup>
-        <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll"/>
-        <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll"/>
-        <InputAssemblies Include="$(OutputPath)websocket-sharp.dll"/>
-        <InputAssemblies Include="$(OutputPath)INIUtility.dll"/>
-        <InputAssemblies Include="$(OutputPath)RAGENativeUI.dll"/>
+        <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
+        <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
+        <InputAssemblies Include="$(OutputPath)websocket-sharp.dll" />
+        <InputAssemblies Include="$(OutputPath)INIUtility.dll" />
+        <InputAssemblies Include="$(OutputPath)RAGENativeUI.dll" />
     </ItemGroup>
-    <ILRepack Parallel="true" Internalize="true" InputAssemblies="@(InputAssemblies)" TargetKind="Dll" OutputFile="$(OutputPath)$(AssemblyName).dll" LibraryPath="$(OutputPath);$(ProjectDir)..\..\..\Documents\APIs"/>
+    
+    <ILRepack 
+        Parallel="true" 
+        Internalize="true" 
+        InputAssemblies="@(InputAssemblies)" 
+        TargetKind="Dll" 
+        OutputFile="$(OutputPath)$(AssemblyName).dll" 
+        LibraryPath="$(OutputPath);$(ProjectDir)..\..\..\APIs" 
+    />
+  </Target>
+
+  <Target Name="RunObfuscation" AfterTargets="RunILRepack" Condition="'$(Configuration)' == 'Debug'">
+    <PropertyGroup>
+      <ObfuscarXml>$(ProjectDir)obfuscar.xml</ObfuscarXml>
+    </PropertyGroup>
+    <Message Text="Executing Obfuscar from: $(Obfuscar)" Importance="High" />
+    <Exec Command="&quot;$(Obfuscar)&quot; &quot;$(ObfuscarXml)&quot;" WorkingDirectory="$(OutputPath)" />
+    <Copy SourceFiles="$(OutputPath)\Obfuscated\$(AssemblyName).dll" DestinationFolder="$(OutputPath)" />
   </Target>
 
 </Project>
