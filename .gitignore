@@ -361,3 +361,21 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# IDE - Visual Studio
+.vs/
+*.user
+*.suo
+
+# IDE - VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# IDE - JetBrains (Rider/IntelliJ)
+.idea/
+*.sln.DotSettings.user
+
+# ReSharper
+_ReSharper.Caches/

@@ -1,11 +1,15 @@
 using System.Collections.Generic;
+using System.Reflection;
 using Newtonsoft.Json;
 
-namespace ReportsPlus.Utils.CustomEvents{
+namespace ReportsPlus.Utils.CustomEvents
+{
     /// <summary>
     ///     Configuration model for a custom action sent from the server.
     /// </summary>
-    public class CustomActionConfig{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public class CustomActionConfig
+    {
         /// <summary>
         ///     The unique name of the action.
         /// </summary>
@@ -28,7 +32,9 @@ namespace ReportsPlus.Utils.CustomEvents{
     /// <summary>
     ///     Represents a single parameter used in a custom action.
     /// </summary>
-    public class ActionParameterConfig{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public class ActionParameterConfig
+    {
         /// <summary>
         ///     The fully qualified name of the system type.
         /// </summary>

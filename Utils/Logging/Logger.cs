@@ -1,7 +1,9 @@
 using Rage;
 
-namespace ReportsPlus.Utils.Logging{
-    internal static class Logger{
+namespace ReportsPlus.Utils.Logging
+{
+    internal static class Logger
+    {
         /// <summary>
         ///     Dispatches a log message to the Rage Plugin Hook console with a formatted prefix and appropriate verbosity level.
         /// </summary>
@@ -9,18 +11,18 @@ namespace ReportsPlus.Utils.Logging{
         /// <param name="severity">The <see cref="Severity" /> level determining the logging channel and prefix.</param>
         private static void Log(string message, Severity severity)
         {
-            var prefix = $"ReportsPlus [{severity.ToString().ToUpperInvariant()}]: ";
+            if (string.IsNullOrEmpty(message)) return;
 
             switch (severity)
             {
                 case Severity.Info:
-                    Game.LogTrivial(prefix + message);
+                    Game.LogTrivial($"ReportsPlus [INFO]: {message}");
                     break;
                 case Severity.Warning:
-                    Game.LogVerbose(prefix + message);
+                    Game.LogVerbose($"ReportsPlus [WARNING]: {message}");
                     break;
                 case Severity.Error:
-                    Game.LogVeryVerbose(prefix + message);
+                    Game.LogVeryVerbose($"ReportsPlus [ERROR]: {message}");
                     break;
                 default:
                     Game.LogTrivial($"ReportsPlus [FATAL/UNKNOWN]: {message}");
@@ -55,7 +57,8 @@ namespace ReportsPlus.Utils.Logging{
             Log(message, Severity.Error);
         }
 
-        private enum Severity{
+        private enum Severity
+        {
             Info,
             Warning,
             Error

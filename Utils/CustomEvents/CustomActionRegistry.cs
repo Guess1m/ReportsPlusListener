@@ -2,11 +2,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.CustomEvents{
+namespace ReportsPlus.Utils.CustomEvents
+{
     /// <summary>
     ///     Manages the registration and retrieval of custom actions received from external sources.
     /// </summary>
-    public static class CustomActionRegistry{
+    public static class CustomActionRegistry
+    {
         private static readonly ConcurrentDictionary<string, CustomActionConfig> Actions = new ConcurrentDictionary<string, CustomActionConfig>();
 
         /// <summary>
@@ -16,17 +18,21 @@ namespace ReportsPlus.Utils.CustomEvents{
         /// <param name="newActions">The list of <see cref="CustomActionConfig" /> objects to register.</param>
         public static void RegisterActions(List<CustomActionConfig> newActions)
         {
-            if (newActions == null)
+            if (newActions == null || newActions.Count == 0)
             {
-                Logger.LogError("[Registry] Received null action list.");
+                Logger.LogError("[Registry] Received null or empty action list.");
                 return;
             }
 
             Actions.Clear();
             foreach (var action in newActions)
             {
-                if (action == null || string.IsNullOrEmpty(action.Name)) continue;
-                Actions[action.Name.ToLower()] = action;
+                if (action == null || string.IsNullOrWhiteSpace(action.Name) || string.IsNullOrWhiteSpace(action.Target))
+                {
+                    continue;
+                }
+
+                Actions[action.Name.ToLowerInvariant()] = action;
                 Logger.LogInfo($"[Registry] Registered Action: {action.Name} -> {action.Target} [{action.Parameters?.Count ?? 0} params]");
             }
 
