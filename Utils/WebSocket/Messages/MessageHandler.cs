@@ -7,10 +7,12 @@ using ReportsPlus.Utils.WebSocket.Actions.Continuous;
 using ReportsPlus.Utils.WebSocket.Actions.Keybindings;
 using ReportsPlus.Utils.WebSocket.Actions.OnRequest;
 
-namespace ReportsPlus.Utils.WebSocket.Messages{
-    public static class MessageHandler{
-        private static readonly List<IContinuousAction>               ContinuousActions = new List<IContinuousAction>();
-        private static readonly Dictionary<string, IRequestAction>    RequestActions    = new Dictionary<string, IRequestAction>();
+namespace ReportsPlus.Utils.WebSocket.Messages
+{
+    public static class MessageHandler
+    {
+        private static readonly List<IContinuousAction> ContinuousActions = new List<IContinuousAction>();
+        private static readonly Dictionary<string, IRequestAction> RequestActions = new Dictionary<string, IRequestAction>();
         private static readonly Dictionary<string, IKeybindingAction> KeybindingActions = new Dictionary<string, IKeybindingAction>();
 
         /// <summary>
@@ -35,6 +37,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
             RegisterRequestAction(new RequestActions.FindVehicleByPlateAction());
             RegisterRequestAction(new RequestActions.PoliceVehiclesAction());
             RegisterRequestAction(new RequestActions.FindPedByNameAction());
+            RegisterRequestAction(new RequestActions.PlayerLocationTrackingAction());
 
             if (Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined)
             {
@@ -130,7 +133,7 @@ namespace ReportsPlus.Utils.WebSocket.Messages{
 
                     case "execute_action":
                         var executionData = request.Data as JObject;
-                        var actionName    = executionData?["name"]?.ToString();
+                        var actionName = executionData?["name"]?.ToString();
                         if (CustomActionRegistry.TryGetAction(actionName, out var actionConfig))
                             ActionExecutor.Execute(actionConfig);
                         else

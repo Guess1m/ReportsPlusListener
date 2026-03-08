@@ -20,6 +20,37 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
     [Obfuscation(Exclude = true, ApplyToMembers = true)]
     public abstract class RequestActions
     {
+        public class PlayerLocationTrackingAction : IRequestAction
+        {
+            public string Name => "playerLocationTracking";
+
+            /// <summary>
+            ///     Retrieves the local player's current X and Y coordinates and sends them to the client upon request.
+            /// </summary>
+            /// <param name="client">The socket client to send the location to.</param>
+            /// <param name="request">The incoming request object.</param>
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                if (client == null || request == null) return;
+
+                var player = Game.LocalPlayer;
+                if (player == null) return;
+
+                var character = player.Character;
+                if (character == null || !character.Exists()) return;
+
+                var position = character.Position;
+
+                var locationData = new JObject
+                {
+                    ["x"] = position.X,
+                    ["y"] = position.Y
+                };
+
+                client.Send("playerLocation", locationData);
+            }
+        }
+
         public class FindPedByNameAction : IRequestAction
         {
             public string Name => "findPedByName";
