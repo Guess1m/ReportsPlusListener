@@ -291,6 +291,55 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
             }
         }
 
+        public class GetLocationFromCoordsAction : IRequestAction
+        {
+            public string Name => "getLocationFromCoords";
+
+            /// <summary>
+            ///     Retrieves detailed location data for a specific X and Y coordinate.
+            /// </summary>
+            /// <param name="client">The socket client to send the location data to.</param>
+            /// <param name="request">The incoming request object containing x and y coordinates.</param>
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                if (string.IsNullOrEmpty(request?.Args)) return;
+
+                try
+                {
+                    var payload = JObject.Parse(request.Args);
+                    var xToken = payload["x"];
+                    var yToken = payload["y"];
+
+                    if (xToken == null || yToken == null) return;
+
+                    if (!float.TryParse(xToken.ToString(), out var x) || !float.TryParse(yToken.ToString(), out var y)) return;
+
+                    var position = new Rage.Vector3(x, y, 0f);
+
+                    var currentStreet = Rage.World.GetStreetName(position);
+                    var zoneInfo = Functions.GetZoneAtPosition(position);
+
+                    var currentZone = zoneInfo?.RealAreaName;
+                    var currentCounty = zoneInfo != null ? Regex.Replace(zoneInfo.County.ToString(), "(?<!^)([A-Z])", " $1") : string.Empty;
+
+                    var locationData = new JObject
+                    {
+                        ["street"] = currentStreet ?? string.Empty,
+                        ["area"] = currentZone ?? string.Empty,
+                        ["county"] = currentCounty ?? string.Empty,
+                        ["x"] = x,
+                        ["y"] = y
+                    };
+
+                    client.Send("clickedLocationData", locationData);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"GetLocationFromCoordsAction: {ex.Message}");
+                }
+            }
+        }
+
         // Will only execute if PR is being used (Assigns citation to ped rather than custom animation)
         public class GiveCitationActionPR : IRequestAction
         {

@@ -36,8 +36,8 @@ namespace ReportsPlus.Utils.WebSocket.Messages
             RegisterRequestAction(new RequestActions.FindPedByNameAction());
             RegisterRequestAction(new RequestActions.FindVehicleByPlateAction());
             RegisterRequestAction(new RequestActions.PoliceVehiclesAction());
-            RegisterRequestAction(new RequestActions.FindPedByNameAction());
             RegisterRequestAction(new RequestActions.PlayerLocationTrackingAction());
+            RegisterRequestAction(new RequestActions.GetLocationFromCoordsAction());
 
             if (Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined)
             {
