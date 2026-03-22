@@ -1,8 +1,10 @@
 using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.Events{
-    public static class EventManager{
+namespace ReportsPlus.Utils.WebSocket.Actions.Events
+{
+    public static class EventManager
+    {
         private static GameClientSocket _client;
 
         /// <summary>
@@ -43,6 +45,24 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events{
         public static void SendIDUpdate(JObject data)
         {
             SendUpdate("pedIdScan", data);
+        }
+
+        /// <summary>
+        ///     Dispatches a ped dispatch check event to the client.
+        /// </summary>
+        /// <param name="data">The ped identification payload.</param>
+        public static void SendPedDispatchCheck(JObject data)
+        {
+            SendUpdate("dispatchPedCheck", data);
+        }
+
+        /// <summary>
+        ///     Dispatches a vehicle dispatch check event to the client.
+        /// </summary>
+        /// <param name="data">The vehicle identification payload.</param>
+        public static void SendVehicleDispatchCheck(JObject data)
+        {
+            SendUpdate("dispatchVehicleCheck", data);
         }
     }
 }
