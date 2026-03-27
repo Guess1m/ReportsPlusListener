@@ -64,5 +64,14 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Events
         {
             SendUpdate("dispatchVehicleCheck", data);
         }
+
+        /// <summary>
+        ///     Dispatches a Ten code update event to the client.
+        /// </summary>
+        /// <param name="data">The ten code payload.</param>
+        public static void SendTenCodeUpdate(JObject data)
+        {
+            SendUpdate("tenCodeUpdate", data);
+        }
     }
 }
