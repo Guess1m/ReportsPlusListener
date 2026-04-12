@@ -1,10 +1,12 @@
 using System;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Events;
 
 namespace ReportsPlus.PublicEndpoints
 {
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
     public class EndPoints
     {
         /// <summary>
