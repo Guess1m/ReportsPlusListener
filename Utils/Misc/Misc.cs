@@ -8,12 +8,15 @@ using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Events;
 using Object = Rage.Object;
 
-namespace ReportsPlus.Utils.Misc{
-    public static class Misc{
+namespace ReportsPlus.Utils.Misc
+{
+    public static class Misc
+    {
         /// <summary>
         ///     Enumeration for different integration modes and which functionality to use
         /// </summary>
-        public enum IntegrationMode{
+        public enum IntegrationMode
+        {
             PolicingRedefined,
             StopThePed,
             BaseGame
@@ -60,7 +63,7 @@ namespace ReportsPlus.Utils.Misc{
 
             // Check functions to use PR > STP > Base
             var hasPolicingRedefined = IsPluginInstalled("PolicingRedefined") && IsPluginInstalled("CommonDataFramework");
-            var hasStopThePed        = IsPluginInstalled("StopThePed");
+            var hasStopThePed = IsPluginInstalled("StopThePed");
 
             if (hasPolicingRedefined)
             {
@@ -137,9 +140,9 @@ namespace ReportsPlus.Utils.Misc{
         {
             if (!officer.Exists() || officer.IsDead) return;
 
-            var          clipboardModel = new Model("prop_notepad_02");
-            var          animDict       = new AnimationDictionary("veh@busted_std");
-            const string animName       = "issue_ticket_cop";
+            var clipboardModel = new Model("prop_notepad_02");
+            var animDict = new AnimationDictionary("veh@busted_std");
+            const string animName = "issue_ticket_cop";
 
             clipboardModel.Load();
             animDict.Load();

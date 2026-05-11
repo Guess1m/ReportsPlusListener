@@ -2,11 +2,13 @@ using CommonDataFramework.Modules.VehicleDatabase;
 using Rage;
 using StopThePed.API;
 
-namespace ReportsPlus.Utils.WorldData{
+namespace ReportsPlus.Utils.WorldData
+{
     /// <summary>
     ///     Getters for reg/ins data
     /// </summary>
-    public static class GetValueMethods{
+    public static class GetValueMethods
+    {
         public static string GetInsExpPr(Vehicle car)
         {
             var vehicleData = car.GetVehicleData();

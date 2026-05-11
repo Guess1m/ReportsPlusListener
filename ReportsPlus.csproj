@@ -73,6 +73,9 @@
     <Reference Include="StopThePed">
       <HintPath>..\..\..\APIs\StopThePed.dll</HintPath>
     </Reference>
+    <Reference Include="GrammarPolice">
+      <HintPath>..\..\..\APIs\GrammarPolice.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

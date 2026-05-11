@@ -4,8 +4,10 @@ using Newtonsoft.Json.Linq;
 using Rage;
 using ReportsPlus.Utils.WorldData;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
-    public class EntityTrackingAction : IContinuousAction{
+namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
+{
+    public class EntityTrackingAction : IContinuousAction
+    {
         private static readonly Dictionary<int, Ped> TrackedPeds = new Dictionary<int, Ped>();
 
         /// <summary>
@@ -19,7 +21,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
         {
             var nearbyPeds = new HashSet<Ped>(World.GetAllPeds());
 
-            var nearbyPedHandles  = new HashSet<int>(nearbyPeds.Select(p => (int)p.Handle.Value));
+            var nearbyPedHandles = new HashSet<int>(nearbyPeds.Select(p => (int)p.Handle.Value));
             var removedPedHandles = new List<int>();
 
             foreach (var trackedPedHandle in TrackedPeds.Keys)

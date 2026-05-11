@@ -4,9 +4,12 @@ using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.Misc;
 using ReportsPlus.Utils.WebSocket.Messages;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
-    public abstract class KeybindingActions{
-        public class InputLockKeybinding : IKeybindingAction{
+namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings
+{
+    public abstract class KeybindingActions
+    {
+        public class InputLockKeybinding : IKeybindingAction
+        {
             public string Name => "inputlock";
 
             /// <summary>
@@ -33,7 +36,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             }
         }
 
-        public class SirenKeybinding : IKeybindingAction{
+        public class SirenKeybinding : IKeybindingAction
+        {
             public string Name => "siren";
 
             /// <summary>
@@ -60,7 +64,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             }
         }
 
-        public class WeatherKeybinding : IKeybindingAction{
+        public class WeatherKeybinding : IKeybindingAction
+        {
             public string Name => "weather";
 
             /// <summary>
@@ -97,7 +102,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             }
         }
 
-        public class TimeKeybinding : IKeybindingAction{
+        public class TimeKeybinding : IKeybindingAction
+        {
             public string Name => "time";
 
             /// <summary>
@@ -107,7 +113,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             public void Execute(IncomingRequest request)
             {
                 var random = new Random();
-                var hour   = random.Next(0, 24);
+                var hour = random.Next(0, 24);
                 var minute = random.Next(0, 60);
                 World.TimeOfDay = new TimeSpan(hour, minute, 0);
                 Game.DisplayNotification($"Time set to {hour}:{minute}");
@@ -115,7 +121,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             }
         }
 
-        public class RepairKeybinding : IKeybindingAction{
+        public class RepairKeybinding : IKeybindingAction
+        {
             public string Name => "repair";
 
             /// <summary>
@@ -129,7 +136,8 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Keybindings{
             }
         }
 
-        public class KeyPressKeybinding : IKeybindingAction{
+        public class KeyPressKeybinding : IKeybindingAction
+        {
             public string Name => "keypress";
 
             /// <summary>

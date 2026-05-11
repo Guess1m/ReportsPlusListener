@@ -5,18 +5,20 @@ using System.Windows.Forms;
 using Rage;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.Misc{
-    public static class KeyMapUtils{
+namespace ReportsPlus.Utils.Misc
+{
+    public static class KeyMapUtils
+    {
         private const int KeyEventfScancode = 0x0008;
-        private const int KeyEventfKeyup    = 0x0002;
+        private const int KeyEventfKeyup = 0x0002;
 
         private static readonly int CurrentProcessId = Process.GetCurrentProcess().Id;
 
-        [DllImport("user32.dll")] private static extern void keybd_event(byte   bVk,   byte bScan, uint dwFlags, int dwExtraInfo); // keystroke
+        [DllImport("user32.dll")] private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo); // keystroke
         [DllImport("user32.dll")] private static extern uint MapVirtualKey(uint uCode, uint uMapType);                             // translate vk to scan code
 
         [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();                                         // active window handle
-        [DllImport("user32.dll")] private static extern uint   GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId); // get pid from window
+        [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId); // get pid from window
 
         // check game window focused
         private static bool IsGameWindowFocused()

@@ -7,8 +7,10 @@ using Newtonsoft.Json.Linq;
 using Rage;
 using ReportsPlus.Utils.Logging;
 
-namespace ReportsPlus.Utils.WorldData{
-    public static class PedDataHelper{
+namespace ReportsPlus.Utils.WorldData
+{
+    public static class PedDataHelper
+    {
         /// <summary>
         ///     Retrieves the internal model name and variation indices for a pedestrian.
         /// </summary>
@@ -87,22 +89,22 @@ namespace ReportsPlus.Utils.WorldData{
                 ["entityId"] = entityHandle ?? -1,
                 ["identification"] = new JObject
                 {
-                    ["name"]                = pedData.FullName ?? string.Empty,
-                    ["address"]             = GetPedAddress(pedData) ?? string.Empty,
-                    ["pedModel"]            = physicalPed != null ? FindPedModel(physicalPed) ?? string.Empty : string.Empty,
-                    ["birthday"]            = pedData.Birthday.Month.ToString("D2") + "/" + pedData.Birthday.Day.ToString("D2") + "/" + pedData.Birthday.Year,
-                    ["gender"]              = pedData.Gender.ToString() ?? string.Empty,
-                    ["height"]              = string.Empty,
-                    ["weight"]              = string.Empty,
-                    ["eyeColor"]            = string.Empty,
-                    ["hairColor"]           = string.Empty,
-                    ["knownAliases"]        = string.Empty,
-                    ["ethnicity"]           = string.Empty,
+                    ["name"] = pedData.FullName ?? string.Empty,
+                    ["address"] = GetPedAddress(pedData) ?? string.Empty,
+                    ["pedModel"] = physicalPed != null ? FindPedModel(physicalPed) ?? string.Empty : string.Empty,
+                    ["birthday"] = pedData.Birthday.Month.ToString("D2") + "/" + pedData.Birthday.Day.ToString("D2") + "/" + pedData.Birthday.Year,
+                    ["gender"] = pedData.Gender.ToString() ?? string.Empty,
+                    ["height"] = string.Empty,
+                    ["weight"] = string.Empty,
+                    ["eyeColor"] = string.Empty,
+                    ["hairColor"] = string.Empty,
+                    ["knownAliases"] = string.Empty,
+                    ["ethnicity"] = string.Empty,
                     ["distinguishingMarks"] = string.Empty,
-                    ["citizenshipStatus"]   = string.Empty,
-                    ["maritalStatus"]       = string.Empty,
-                    ["disabilityStatus"]    = string.Empty,
-                    ["isPolice"]            = physicalPed != null && physicalPed.RelationshipGroup == "COP" ? "true" : "false"
+                    ["citizenshipStatus"] = string.Empty,
+                    ["maritalStatus"] = string.Empty,
+                    ["disabilityStatus"] = string.Empty,
+                    ["isPolice"] = physicalPed != null && physicalPed.RelationshipGroup == "COP" ? "true" : "false"
                 },
 
                 // -- Criminal History --
@@ -112,32 +114,32 @@ namespace ReportsPlus.Utils.WorldData{
                     ["warrantInfo"] = new JObject
                     {
                         ["warrantNumber"] = string.Empty,
-                        ["dateIssued"]    = string.Empty,
+                        ["dateIssued"] = string.Empty,
                         ["issuingAgency"] = string.Empty,
                         ["warrantCharge"] = string.Empty,
-                        ["bailAmount"]    = string.Empty
+                        ["bailAmount"] = string.Empty
                     },
                     ["paroleInfo"] = new JObject
                     {
-                        ["isOnParole"]         = pedData.IsOnParole.ToString() ?? string.Empty,
-                        ["paroleStartDate"]    = string.Empty,
-                        ["paroleEndDate"]      = string.Empty,
+                        ["isOnParole"] = pedData.IsOnParole.ToString() ?? string.Empty,
+                        ["paroleStartDate"] = string.Empty,
+                        ["paroleEndDate"] = string.Empty,
                         ["paroleRestrictions"] = string.Empty,
-                        ["paroleAgency"]       = string.Empty,
-                        ["paroleOfficer"]      = string.Empty,
+                        ["paroleAgency"] = string.Empty,
+                        ["paroleOfficer"] = string.Empty,
                         ["paroleOfficerEmail"] = string.Empty
                     },
                     ["probationInfo"] = new JObject
                     {
-                        ["isOnProbation"]         = pedData.IsOnProbation.ToString() ?? string.Empty,
-                        ["probationStartDate"]    = string.Empty,
-                        ["probationEndDate"]      = string.Empty,
+                        ["isOnProbation"] = pedData.IsOnProbation.ToString() ?? string.Empty,
+                        ["probationStartDate"] = string.Empty,
+                        ["probationEndDate"] = string.Empty,
                         ["probationRestrictions"] = string.Empty,
-                        ["probationAgency"]       = string.Empty,
-                        ["probationOfficer"]      = string.Empty,
+                        ["probationAgency"] = string.Empty,
+                        ["probationOfficer"] = string.Empty,
                         ["probationOfficerEmail"] = string.Empty
                     },
-                    ["timesStopped"]           = pedData.TimesStopped.ToString() ?? string.Empty,
+                    ["timesStopped"] = pedData.TimesStopped.ToString() ?? string.Empty,
                     ["restrainingOrderActive"] = string.Empty
                 },
 
@@ -146,35 +148,35 @@ namespace ReportsPlus.Utils.WorldData{
                 {
                     ["driversLicense"] = new JObject
                     {
-                        ["status"]        = pedData.DriversLicenseState.ToString() ?? string.Empty,
-                        ["expiration"]    = pedData.DriversLicenseExpiration?.ToString("MM-dd-yyyy") ?? string.Empty,
+                        ["status"] = pedData.DriversLicenseState.ToString() ?? string.Empty,
+                        ["expiration"] = pedData.DriversLicenseExpiration?.ToString("MM-dd-yyyy") ?? string.Empty,
                         ["licenseNumber"] = string.Empty,
-                        ["dlclass"]       = string.Empty
+                        ["dlclass"] = string.Empty
                     },
                     ["weaponPermit"] = new JObject
                     {
-                        ["type"]          = pedData.WeaponPermit?.PermitType.ToString() ?? string.Empty,
-                        ["status"]        = pedData.WeaponPermit?.Status.ToString() ?? string.Empty,
-                        ["expiration"]    = pedData.WeaponPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty,
+                        ["type"] = pedData.WeaponPermit?.PermitType.ToString() ?? string.Empty,
+                        ["status"] = pedData.WeaponPermit?.Status.ToString() ?? string.Empty,
+                        ["expiration"] = pedData.WeaponPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty,
                         ["licenseNumber"] = string.Empty,
-                        ["wpclass"]       = string.Empty
+                        ["wpclass"] = string.Empty
                     },
                     ["fishingPermit"] = new JObject
                     {
-                        ["status"]        = pedData.FishingPermit?.Status.ToString() ?? string.Empty,
-                        ["expiration"]    = pedData.FishingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty,
+                        ["status"] = pedData.FishingPermit?.Status.ToString() ?? string.Empty,
+                        ["expiration"] = pedData.FishingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty,
                         ["licenseNumber"] = string.Empty
                     },
                     ["huntingPermit"] = new JObject
                     {
-                        ["status"]        = pedData.HuntingPermit?.Status.ToString() ?? string.Empty,
-                        ["expiration"]    = pedData.HuntingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty,
+                        ["status"] = pedData.HuntingPermit?.Status.ToString() ?? string.Empty,
+                        ["expiration"] = pedData.HuntingPermit?.ExpirationDate?.ToString("MM-dd-yyyy") ?? string.Empty,
                         ["licenseNumber"] = string.Empty
                     },
                     ["boatingPermit"] = new JObject
                     {
-                        ["status"]        = string.Empty,
-                        ["expiration"]    = string.Empty,
+                        ["status"] = string.Empty,
+                        ["expiration"] = string.Empty,
                         ["licenseNumber"] = string.Empty
                     }
                 }
@@ -220,22 +222,22 @@ namespace ReportsPlus.Utils.WorldData{
                 ["entityId"] = entityHandle ?? -1,
                 ["identification"] = new JObject
                 {
-                    ["name"]                = pedPersona.FullName ?? string.Empty,
-                    ["address"]             = string.Empty,
-                    ["pedModel"]            = physicalPed != null ? FindPedModel(physicalPed) ?? string.Empty : string.Empty,
-                    ["birthday"]            = pedPersona.Birthday.Month.ToString("D2") + "/" + pedPersona.Birthday.Day.ToString("D2") + "/" + pedPersona.Birthday.Year,
-                    ["gender"]              = pedPersona.Gender.ToString() ?? string.Empty,
-                    ["height"]              = string.Empty,
-                    ["weight"]              = string.Empty,
-                    ["eyeColor"]            = string.Empty,
-                    ["hairColor"]           = string.Empty,
-                    ["knownAliases"]        = string.Empty,
-                    ["ethnicity"]           = string.Empty,
+                    ["name"] = pedPersona.FullName ?? string.Empty,
+                    ["address"] = string.Empty,
+                    ["pedModel"] = physicalPed != null ? FindPedModel(physicalPed) ?? string.Empty : string.Empty,
+                    ["birthday"] = pedPersona.Birthday.Month.ToString("D2") + "/" + pedPersona.Birthday.Day.ToString("D2") + "/" + pedPersona.Birthday.Year,
+                    ["gender"] = pedPersona.Gender.ToString() ?? string.Empty,
+                    ["height"] = string.Empty,
+                    ["weight"] = string.Empty,
+                    ["eyeColor"] = string.Empty,
+                    ["hairColor"] = string.Empty,
+                    ["knownAliases"] = string.Empty,
+                    ["ethnicity"] = string.Empty,
                     ["distinguishingMarks"] = string.Empty,
-                    ["citizenshipStatus"]   = string.Empty,
-                    ["maritalStatus"]       = string.Empty,
-                    ["disabilityStatus"]    = string.Empty,
-                    ["isPolice"]            = physicalPed != null && physicalPed.RelationshipGroup == "COP" ? "true" : "false"
+                    ["citizenshipStatus"] = string.Empty,
+                    ["maritalStatus"] = string.Empty,
+                    ["disabilityStatus"] = string.Empty,
+                    ["isPolice"] = physicalPed != null && physicalPed.RelationshipGroup == "COP" ? "true" : "false"
                 },
 
                 // -- Criminal History --
@@ -245,32 +247,32 @@ namespace ReportsPlus.Utils.WorldData{
                     ["warrantInfo"] = new JObject
                     {
                         ["warrantNumber"] = string.Empty,
-                        ["dateIssued"]    = string.Empty,
+                        ["dateIssued"] = string.Empty,
                         ["issuingAgency"] = string.Empty,
                         ["warrantCharge"] = string.Empty,
-                        ["bailAmount"]    = string.Empty
+                        ["bailAmount"] = string.Empty
                     },
                     ["paroleInfo"] = new JObject
                     {
-                        ["isOnParole"]         = string.Empty,
-                        ["paroleStartDate"]    = string.Empty,
-                        ["paroleEndDate"]      = string.Empty,
+                        ["isOnParole"] = string.Empty,
+                        ["paroleStartDate"] = string.Empty,
+                        ["paroleEndDate"] = string.Empty,
                         ["paroleRestrictions"] = string.Empty,
-                        ["paroleAgency"]       = string.Empty,
-                        ["paroleOfficer"]      = string.Empty,
+                        ["paroleAgency"] = string.Empty,
+                        ["paroleOfficer"] = string.Empty,
                         ["paroleOfficerEmail"] = string.Empty
                     },
                     ["probationInfo"] = new JObject
                     {
-                        ["isOnProbation"]         = string.Empty,
-                        ["probationStartDate"]    = string.Empty,
-                        ["probationEndDate"]      = string.Empty,
+                        ["isOnProbation"] = string.Empty,
+                        ["probationStartDate"] = string.Empty,
+                        ["probationEndDate"] = string.Empty,
                         ["probationRestrictions"] = string.Empty,
-                        ["probationAgency"]       = string.Empty,
-                        ["probationOfficer"]      = string.Empty,
+                        ["probationAgency"] = string.Empty,
+                        ["probationOfficer"] = string.Empty,
                         ["probationOfficerEmail"] = string.Empty
                     },
-                    ["timesStopped"]           = pedPersona.TimesStopped.ToString() ?? string.Empty,
+                    ["timesStopped"] = pedPersona.TimesStopped.ToString() ?? string.Empty,
                     ["restrainingOrderActive"] = string.Empty
                 },
 
@@ -279,35 +281,35 @@ namespace ReportsPlus.Utils.WorldData{
                 {
                     ["driversLicense"] = new JObject
                     {
-                        ["status"]        = pedPersona.ELicenseState.ToString() ?? string.Empty,
-                        ["expiration"]    = string.Empty,
+                        ["status"] = pedPersona.ELicenseState.ToString() ?? string.Empty,
+                        ["expiration"] = string.Empty,
                         ["licenseNumber"] = string.Empty,
-                        ["dlclass"]       = string.Empty
+                        ["dlclass"] = string.Empty
                     },
                     ["weaponPermit"] = new JObject
                     {
-                        ["type"]          = string.Empty,
-                        ["status"]        = string.Empty,
-                        ["expiration"]    = string.Empty,
+                        ["type"] = string.Empty,
+                        ["status"] = string.Empty,
+                        ["expiration"] = string.Empty,
                         ["licenseNumber"] = string.Empty,
-                        ["wpclass"]       = string.Empty
+                        ["wpclass"] = string.Empty
                     },
                     ["fishingPermit"] = new JObject
                     {
-                        ["status"]        = string.Empty,
-                        ["expiration"]    = string.Empty,
+                        ["status"] = string.Empty,
+                        ["expiration"] = string.Empty,
                         ["licenseNumber"] = string.Empty
                     },
                     ["huntingPermit"] = new JObject
                     {
-                        ["status"]        = string.Empty,
-                        ["expiration"]    = string.Empty,
+                        ["status"] = string.Empty,
+                        ["expiration"] = string.Empty,
                         ["licenseNumber"] = string.Empty
                     },
                     ["boatingPermit"] = new JObject
                     {
-                        ["status"]        = string.Empty,
-                        ["expiration"]    = string.Empty,
+                        ["status"] = string.Empty,
+                        ["expiration"] = string.Empty,
                         ["licenseNumber"] = string.Empty
                     }
                 }

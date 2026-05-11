@@ -1,5 +1,7 @@
-namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
-    public interface IContinuousAction{
+namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
+{
+    public interface IContinuousAction
+    {
         /// <summary>
         ///     Defines the execution logic for a continuous tracking or synchronization task.
         /// </summary>

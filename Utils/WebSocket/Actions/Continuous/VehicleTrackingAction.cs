@@ -4,8 +4,10 @@ using Newtonsoft.Json.Linq;
 using Rage;
 using ReportsPlus.Utils.WorldData;
 
-namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
-    public class VehicleTrackingAction : IContinuousAction{
+namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
+{
+    public class VehicleTrackingAction : IContinuousAction
+    {
         // Dict to track sent vehicles to the client without dups
         private static readonly Dictionary<int, Vehicle> TrackedVehicles = new Dictionary<int, Vehicle>();
 
@@ -19,7 +21,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous{
         {
             var nearbyVehicles = new HashSet<Vehicle>(World.GetAllVehicles());
 
-            var nearbyVehicleHandles  = new HashSet<int>(nearbyVehicles.Select(v => (int)v.Handle.Value));
+            var nearbyVehicleHandles = new HashSet<int>(nearbyVehicles.Select(v => (int)v.Handle.Value));
             var removedVehicleHandles = new List<int>();
 
             // find removed vehs and send to the client

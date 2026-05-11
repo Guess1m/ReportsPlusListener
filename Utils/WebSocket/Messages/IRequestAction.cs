@@ -1,5 +1,7 @@
-namespace ReportsPlus.Utils.WebSocket.Messages{
-    public interface IRequestAction{
+namespace ReportsPlus.Utils.WebSocket.Messages
+{
+    public interface IRequestAction
+    {
         /// <summary>
         ///     Gets the unique identifier for the request action.
         /// </summary>
