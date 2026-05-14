@@ -29,10 +29,8 @@ namespace ReportsPlus.Utils.WebSocket
         {
             get
             {
-                lock (_socketLock)
-                {
-                    return _clientSocket is { ReadyState: WebSocketState.Open };
-                }
+                var socket = _clientSocket;
+                return socket is { ReadyState: WebSocketState.Open };
             }
         }
 
@@ -63,13 +61,11 @@ namespace ReportsPlus.Utils.WebSocket
         /// </summary>
         private void AttemptConnection()
         {
-            lock (_socketLock)
+            var socket = _clientSocket;
+            if (socket is { ReadyState: WebSocketState.Open })
             {
-                if (_clientSocket is { ReadyState: WebSocketState.Open })
-                {
-                    Logger.LogWarning("AttemptConnection called, but socket is already open.");
-                    return;
-                }
+                Logger.LogWarning("AttemptConnection called, but socket is already open.");
+                return;
             }
 
             try
@@ -77,10 +73,13 @@ namespace ReportsPlus.Utils.WebSocket
                 InitializeSocket();
                 Logger.LogInfo($"Attempting to connect to {_url}...");
 
+                WebSocketSharp.WebSocket socketToConnect;
                 lock (_socketLock)
                 {
-                    _clientSocket?.Connect();
+                    socketToConnect = _clientSocket;
                 }
+
+                socketToConnect?.ConnectAsync();
             }
             catch (Exception ex)
             {
@@ -96,7 +95,6 @@ namespace ReportsPlus.Utils.WebSocket
         {
             lock (_socketLock)
             {
-                // Ensure previous socket is closed before creating a new one
                 if (_clientSocket != null)
                 {
                     _clientSocket.OnOpen -= OnSocketOpen;
@@ -104,8 +102,10 @@ namespace ReportsPlus.Utils.WebSocket
                     _clientSocket.OnError -= OnSocketError;
                     _clientSocket.OnClose -= OnSocketClose;
 
-                    if (_clientSocket.ReadyState == WebSocketState.Open)
-                        _clientSocket.Close();
+                    if (_clientSocket.ReadyState == WebSocketState.Open || _clientSocket.ReadyState == WebSocketState.Connecting)
+                    {
+                        _clientSocket.CloseAsync();
+                    }
                 }
 
                 _clientSocket = new WebSocketSharp.WebSocket(_url);
@@ -173,12 +173,15 @@ namespace ReportsPlus.Utils.WebSocket
                 {
                     try
                     {
+                        WebSocketSharp.WebSocket socketToSend;
                         lock (_socketLock)
                         {
-                            if (_clientSocket != null && _clientSocket.ReadyState == WebSocketState.Open)
-                            {
-                                _clientSocket.Send(message);
-                            }
+                            socketToSend = _clientSocket;
+                        }
+
+                        if (socketToSend is { ReadyState: WebSocketState.Open })
+                        {
+                            socketToSend.SendAsync(message, null);
                         }
                     }
                     catch (Exception ex)
@@ -238,14 +241,14 @@ namespace ReportsPlus.Utils.WebSocket
             Logger.LogInfo("Stopping GameClientSocket...");
             _shutdownTokenSource?.Cancel();
 
+            WebSocketSharp.WebSocket socketToClose;
             lock (_socketLock)
             {
-                if (_clientSocket != null)
-                {
-                    _clientSocket.Close(CloseStatusCode.Normal);
-                    _clientSocket = null;
-                }
+                socketToClose = _clientSocket;
+                _clientSocket = null;
             }
+
+            socketToClose?.CloseAsync();
 
             _shutdownTokenSource?.Dispose();
             _shutdownTokenSource = null;
