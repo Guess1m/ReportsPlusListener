@@ -20,6 +20,12 @@ namespace ReportsPlus.Utils.Config
         [ConfigOption("Intervals", "ContinuousUpdateInterval", "Interval (ms) for sending continuous updates to server (e.g. PlayerLocation, PoliceVehiclesLocation).", Min = 1000, Max = 60000)]
         public int ContinuousUpdateInterval { get; set; } = 15000;
 
+        [ConfigOption("AutoConnect", "AutoConnectEnabled", "Automatically attempt to reconnect when disconnected.")]
+        public bool AutoConnectEnabled { get; set; } = true;
+
+        [ConfigOption("AutoConnect", "AutoConnectInterval", "Interval (ms) between auto-reconnect attempts.", Min = 5000, Max = 300000)]
+        public int AutoConnectInterval { get; set; } = 15000;
+
         // keybinding for menu
         [ConfigOption("Keybindings", "MenuKey", "Key to toggle menu (e.g. F11). Must be capitalized.")]
         public KeyBinding MenuKey { get; set; } = new KeyBinding(Keys.F11, Keys.Control);

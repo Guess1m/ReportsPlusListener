@@ -27,31 +27,34 @@ namespace ReportsPlus
         private static GameFiber _inputLockFiber;
         private static GameFiber _menuPoolFiber;
         private static GameFiber _requestProcessingFiber;
+        private static GameFiber _autoConnectFiber;
 
         // WebSocket
         private static GameClientSocket _client;
         private static readonly ConcurrentQueue<IncomingRequest> _requestQueue = new ConcurrentQueue<IncomingRequest>(); // incoming request queue
 
         // Data
+        private static GameClientSocket Client { get; set; }
+        public static ReportsPlusSettings Settings { get; set; }
         public static bool IsInputDisabled;
         public static bool IsKeyboardOpen;
-        private static GameClientSocket Client { get; set; }
-        public static bool IsConnected => Client is { IsConnected: true }; // safe access to client state
-        public static ReportsPlusSettings Settings { get; set; }
+        public static bool IsConnected => Client is { IsConnected: true };
+        public static bool IsConnecting => Client is { IsConnecting: true };
 
         // Citation State Triggers
         public static bool IsCitationPending { get; set; }
         public static bool TriggerGiveCitation { get; set; }
-
         public static bool TriggerDiscardCitation { get; set; }
 
         // Menu Data
-        public static MenuPool Pool { get; private set; } // primary menu-pool
-        private static ReportsPlusMenu MainMenu { get; set; }         // primary menu
+        public static MenuPool Pool { get; private set; }
+        private static ReportsPlusMenu MainMenu { get; set; }
 
         // Getters for lp and lpv
         public static Ped LPC => Game.LocalPlayer.Character;
         public static Vehicle LPCV => Game.LocalPlayer.Character?.CurrentVehicle;
+
+        private static volatile int _autoConnectAttempts = 0;
 
         public override void Initialize()
         {
@@ -81,12 +84,14 @@ namespace ReportsPlus
             MessageHandler.Initialize();
 
             // Start Fibers
+            _autoConnectFiber = GameFiber.StartNew(AutoConnectLoop, "ReportsPlus-AutoConnectFiber");
             _continuousUpdateFiber = GameFiber.StartNew(ContinuousUpdateLoop, "ReportsPlus-ContinuousUpdateFiber");
             _inputLockFiber = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
             _menuPoolFiber = GameFiber.StartNew(ProcessMenuPool, "ReportsPlus-MenuPoolFiber");
             _requestProcessingFiber = GameFiber.StartNew(ProcessRequestQueueLoop, "ReportsPlus-RequestProcessingFiber");
 
             // Register Cleanups
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_autoConnectFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_continuousUpdateFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_inputLockFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_menuPoolFiber));
@@ -123,7 +128,7 @@ namespace ReportsPlus
         /// <summary>
         ///     Initializes or resets the GameClientSocket connection using current settings and logs the connection details.
         /// </summary>
-        public static void AttemptConnection()
+        public static void AttemptConnection(bool silent = false)
         {
             if (Settings == null)
             {
@@ -131,13 +136,15 @@ namespace ReportsPlus
                 return;
             }
 
-            Logger.LogInfo($"Initiating connection attempt | Host: {Settings.ClientAddress} | Port: {Settings.ClientPort}");
+            if (!silent) _autoConnectAttempts = 0;
+
+            if (!silent) Logger.LogInfo($"Initiating connection attempt | Host: {Settings.ClientAddress} | Port: {Settings.ClientPort}");
 
             if (_client != null)
                 try
                 {
-                    Logger.LogInfo("Stopping existing client instance...");
-                    _client.Stop();
+                    if (!silent) Logger.LogInfo("Stopping existing client instance...");
+                    _client.Stop(silent: silent);
                 }
                 catch (Exception ex)
                 {
@@ -155,39 +162,111 @@ namespace ReportsPlus
                 Client = _client;
                 EventManager.SetClient(Client);
 
-                // enqueue incoming messages (ThreadPool to Queue)
                 _client.OnMessageReceived += request => _requestQueue.Enqueue(request);
 
-                // connection Event
                 _client.OnConnected += () =>
                 {
+                    _autoConnectAttempts = 0;
                     var socketConnectedFiber = GameFiber.StartNew(() =>
                     {
                         Logger.LogInfo($"Socket Connection Established -> {Settings.ClientAddress}:{Settings.ClientPort}");
-                        Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~g~Connection Established", $"Connected to ~y~{Settings.ClientAddress}~w~:~b~{Settings.ClientPort}");
+                        Game.DisplayHelp($"~b~ReportsPlus ~g~Connection Established\n~w~[~y~{Settings.ClientAddress}~w~:~y~{Settings.ClientPort}~w~]");
                     });
                     CleanupRegistry.Register(() => Misc.CleanupFiber(socketConnectedFiber));
                 };
 
-                // disconnection Event
                 _client.OnDisconnected += () =>
                 {
                     var socketDisconnectedFiber = GameFiber.StartNew(() =>
                     {
-                        Logger.LogWarning("Socket Disconnected!");
-                        Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", "~w~ReportsPlus", "~r~Connection Lost", $"~r~Disconnected ~w~from the CAD server at ~y~{Settings.ClientAddress}~w~:~b~{Settings.ClientPort}");
+                        Logger.LogWarning("Socket Connection Lost.");
+                        if (!silent || _autoConnectAttempts == 0)
+                            Game.DisplayHelp($"~b~ReportsPlus ~r~Connection Unavailable\n~w~[~y~{Settings.ClientAddress}~w~:~y~{Settings.ClientPort}~w~]");
                     });
                     CleanupRegistry.Register(() => Misc.CleanupFiber(socketDisconnectedFiber));
                 };
 
-                _client.Start();
-                Logger.LogInfo("Client start sequence completed.");
+                _client.Start(silent: silent);
+                if (!silent) Logger.LogInfo("Client start sequence completed.");
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Failed to initialize client: {ex.Message}");
                 Game.DisplayNotification("~r~Failed to initialize client connection.");
             }
+        }
+
+        /// <summary>
+        ///     Fiber loop that monitors connection state and automatically attempts reconnection
+        ///     when disconnected and auto-connect is enabled
+        /// </summary>
+        private static void AutoConnectLoop()
+        {
+            Logger.LogInfo("AutoConnect: fiber started.");
+            GameFiber.Sleep(2000);
+            var skipWait = true;
+
+            while (true)
+            {
+                GameFiber.Sleep(1000);
+
+                if (Settings == null || !Settings.AutoConnectEnabled || IsConnected || IsConnecting)
+                {
+                    skipWait = false;
+                    continue;
+                }
+
+                if (!skipWait)
+                {
+                    var elapsed = 0;
+                    var interval = Settings.AutoConnectInterval;
+                    const int step = 500;
+
+                    if (_autoConnectAttempts == 0 || _autoConnectAttempts % 5 == 0)
+                        Logger.LogInfo($"AutoConnect: Waiting {interval}ms before attempt #{_autoConnectAttempts + 1}.");
+
+                    while (elapsed < interval)
+                    {
+                        GameFiber.Sleep(step);
+                        elapsed += step;
+
+                        if (Settings == null || !Settings.AutoConnectEnabled || IsConnected || IsConnecting)
+                            goto NextCycle;
+                    }
+                }
+
+                if (Settings == null || !Settings.AutoConnectEnabled || IsConnected || IsConnecting)
+                    goto NextCycle;
+
+                Logger.LogInfo($"AutoConnect: Initiating attempt #{_autoConnectAttempts + 1}.");
+                AttemptConnection(silent: true);
+                _autoConnectAttempts++;
+                NotifyAutoConnectStatus();
+
+            NextCycle:
+                skipWait = false;
+            }
+        }
+
+        /// <summary>
+        ///     Shows a user-facing notification at attempt 3, then every 5 after (3, 8, 13...),
+        ///     so the player knows reconnection is ongoing without being spammed every cycle.
+        /// </summary>
+        private static void NotifyAutoConnectStatus()
+        {
+            if (Settings == null) return;
+
+            var isThreshold = _autoConnectAttempts == 3 ||
+                              (_autoConnectAttempts > 3 && (_autoConnectAttempts - 3) % 5 == 0);
+            if (!isThreshold) return;
+
+            var attempts = _autoConnectAttempts;
+            var fiber = GameFiber.StartNew(() =>
+                Game.DisplayHelp(
+                    $"~b~ReportsPlus~w~: ~r~Cannot reach server~w~ at " +
+                    $"~y~{Settings?.ClientAddress}~w~:~y~{Settings?.ClientPort}~w~.\n" +
+                    $"Auto-reconnect active (~y~{attempts} attempts~w~)."));
+            CleanupRegistry.Register(() => Misc.CleanupFiber(fiber));
         }
 
         /// <summary>

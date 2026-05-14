@@ -15,6 +15,7 @@ namespace ReportsPlus.Utils.WebSocket
         private readonly ConcurrentQueue<string> _sendQueue = new ConcurrentQueue<string>();
         private readonly object _socketLock = new object();
         private readonly string _url;
+        private bool _silent;
 
         private WebSocketSharp.WebSocket _clientSocket;
         private Task _senderTask;
@@ -34,6 +35,15 @@ namespace ReportsPlus.Utils.WebSocket
             }
         }
 
+        public bool IsConnecting
+        {
+            get
+            {
+                var socket = _clientSocket;
+                return socket is { ReadyState: WebSocketState.Connecting };
+            }
+        }
+
         public event Action<IncomingRequest> OnMessageReceived;
         public event Action OnConnected;
         public event Action OnDisconnected;
@@ -41,18 +51,17 @@ namespace ReportsPlus.Utils.WebSocket
         /// <summary>
         ///     Starts the background sender loop and initiates the first connection attempt.
         /// </summary>
-        public void Start()
+        public void Start(bool silent = false)
         {
+            _silent = silent;
             if (_shutdownTokenSource is { IsCancellationRequested: false }) return;
 
             _shutdownTokenSource = new CancellationTokenSource();
             var token = _shutdownTokenSource.Token;
 
-            Logger.LogInfo("Starting background socket tasks...");
+            if (!_silent) Logger.LogInfo("Starting background socket tasks...");
 
             _senderTask = Task.Run(() => SenderLoop(token), token);
-
-            // Initial connection attempt
             Task.Run(AttemptConnection);
         }
 
@@ -71,7 +80,7 @@ namespace ReportsPlus.Utils.WebSocket
             try
             {
                 InitializeSocket();
-                Logger.LogInfo($"Attempting to connect to {_url}...");
+                if (!_silent) Logger.LogInfo($"Attempting to connect to {_url}...");
 
                 WebSocketSharp.WebSocket socketToConnect;
                 lock (_socketLock)
@@ -166,7 +175,7 @@ namespace ReportsPlus.Utils.WebSocket
         /// <param name="token">Cancellation token to stop the loop.</param>
         private async Task SenderLoop(CancellationToken token)
         {
-            Logger.LogInfo("Background SenderLoop started.");
+            if (!_silent) Logger.LogInfo("Background SenderLoop started.");
             while (!token.IsCancellationRequested)
             {
                 if (IsConnected && _sendQueue.TryDequeue(out var message))
@@ -202,7 +211,7 @@ namespace ReportsPlus.Utils.WebSocket
                 }
             }
 
-            Logger.LogWarning("Background SenderLoop stopped.");
+            if (!_silent) Logger.LogWarning("Background SenderLoop stopped.");
         }
 
         /// <summary>
@@ -236,9 +245,9 @@ namespace ReportsPlus.Utils.WebSocket
         /// <summary>
         ///     Stops the sender loop and closes the socket connection gracefully.
         /// </summary>
-        public void Stop()
+        public void Stop(bool silent = false)
         {
-            Logger.LogInfo("Stopping GameClientSocket...");
+            if (!silent) Logger.LogInfo("Stopping GameClientSocket...");
             _shutdownTokenSource?.Cancel();
 
             WebSocketSharp.WebSocket socketToClose;

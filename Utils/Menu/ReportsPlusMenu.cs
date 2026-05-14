@@ -14,7 +14,9 @@ namespace ReportsPlus.Utils.Menu
 
         // items
         private readonly UIMenuCheckboxItem _inputLockItem;
+        private readonly UIMenuCheckboxItem _autoConnectItem;
         private readonly UIMenuNumericScrollerItem<int> _intervalItem;
+        private readonly UIMenuNumericScrollerItem<int> _autoConnectIntervalItem;
         private readonly UIMenuItem _reconnectItem;
         private readonly UIMenuItem _saveSettingsItem;
         private readonly UIMenuItem _statusItem;
@@ -82,7 +84,7 @@ namespace ReportsPlus.Utils.Menu
             _intervalItem.IndexChanged += (sender, oldIndex, newIndex) => { Main.Settings.ContinuousUpdateInterval = _intervalItem.Value; };
 
             var keybindsMenu = new UIMenu("REPORTS PLUS", "KEYBINDINGS");
-            var keybindsBtn = new UIMenuItem("Keybindings", "Customize plugin shortcuts.");
+            var keybindsBtn = new UIMenuItem("~b~Keybindings", "Customize plugin shortcuts.");
 
             AddKeybindSetting(keybindsMenu, "Menu Toggle", "Key to open/close this menu.",
                 () => Main.Settings.MenuKey,
@@ -100,7 +102,7 @@ namespace ReportsPlus.Utils.Menu
                 () => Main.Settings.DiscardCitationKey,
                 v => Main.Settings.DiscardCitationKey = v);
 
-            _saveSettingsItem = new UIMenuItem("Save Configuration", "Save current settings to INI file. ~r~Requires Reconnect.");
+            _saveSettingsItem = new UIMenuItem("~g~Save Configuration", "Save current settings to INI file. ~r~Requires Reconnect for Server IPv4/Port Changes.");
             _saveSettingsItem.Activated += (sender, item) =>
             {
                 ConfigLoader.SaveSettings(Main.Settings, "plugins/LSPDFR/ReportsPlus.ini");
@@ -110,7 +112,33 @@ namespace ReportsPlus.Utils.Menu
             Main.Pool.Add(keybindsMenu);
             settingsMenu.BindMenuToItem(keybindsMenu, keybindsBtn);
 
-            settingsMenu.AddItems(addressItem, portScroller, _intervalItem, keybindsBtn, _saveSettingsItem);
+            _autoConnectItem = new UIMenuCheckboxItem(
+                "Auto-Connect",
+                Main.Settings.AutoConnectEnabled,
+                "Automatically reconnect to the server when the connection is lost.");
+            _autoConnectItem.CheckboxEvent += (sender, isChecked) =>
+            {
+                Main.Settings.AutoConnectEnabled = isChecked;
+                Game.DisplayNotification(isChecked
+                    ? "Auto-Connect ~g~ENABLED~s~. Reconnects will happen automatically."
+                    : "Auto-Connect ~r~DISABLED~s~. Use Force Reconnect to connect manually.");
+            };
+
+            var safeAutoInterval = MathHelper.Clamp(Main.Settings.AutoConnectInterval, 5000, 300000);
+            _autoConnectIntervalItem = new UIMenuNumericScrollerItem<int>(
+                "Reconnect Interval (ms)",
+                "How long to wait between auto-reconnect attempts.",
+                5000, 300000, 1000)
+            {
+                Value = safeAutoInterval
+            };
+            _autoConnectIntervalItem.WithTextEditing();
+            _autoConnectIntervalItem.IndexChanged += (sender, oldIndex, newIndex) =>
+            {
+                Main.Settings.AutoConnectInterval = _autoConnectIntervalItem.Value;
+            };
+
+            settingsMenu.AddItems(addressItem, portScroller, _intervalItem, _autoConnectItem, _autoConnectIntervalItem, keybindsBtn, _saveSettingsItem);
 
             Main.Pool.Add(this);
             Main.Pool.Add(settingsMenu);
@@ -158,19 +186,18 @@ namespace ReportsPlus.Utils.Menu
             menu.AddItem(keyItem);
             menu.AddItem(modCheckbox);
         }
+
         // update connection status and input lock state every second
         public override void ProcessControl()
         {
             base.ProcessControl();
 
-            // Update Citation Menu Items - only assign property if the value has changed
             var isPending = Main.IsCitationPending;
             if (_giveCitationItem.Enabled != isPending)
             {
                 _giveCitationItem.Enabled = isPending;
                 _giveCitationItem.RightLabel = isPending ? "" : "No Pending Request";
             }
-
             if (_discardCitationItem.Enabled != isPending)
             {
                 _discardCitationItem.Enabled = isPending;
@@ -182,24 +209,38 @@ namespace ReportsPlus.Utils.Menu
 
             UpdateConnectionStatus();
             UpdateInputLockState();
+
+            if (_autoConnectItem.Checked != Main.Settings?.AutoConnectEnabled)
+                _autoConnectItem.Checked = Main.Settings?.AutoConnectEnabled ?? false;
         }
 
         // update connection status
         private void UpdateConnectionStatus()
         {
-            var isConnected = Main.IsConnected;
-            if (isConnected)
+            string label;
+            string desc;
+
+            if (Main.IsConnected)
             {
-                if (_statusItem.RightLabel == "~g~Connected") return;
-                _statusItem.RightLabel = "~g~Connected";
-                _statusItem.Description = "Successfully connected to " + Main.Settings.ClientAddress;
+                label = "~g~Connected";
+                desc = $"Connected to {Main.Settings?.ClientAddress}";
+            }
+            else if (Main.IsConnecting)
+            {
+                label = "~y~Connecting...";
+                desc = $"Connecting to {Main.Settings?.ClientAddress}...";
             }
             else
             {
-                if (_statusItem.RightLabel == "~r~Disconnected") return;
-                _statusItem.RightLabel = "~r~Disconnected";
-                _statusItem.Description = "Not connected. Check settings and try reconnecting.";
+                label = "~r~Disconnected";
+                desc = Main.Settings?.AutoConnectEnabled == true
+                    ? $"Disconnected — auto-reconnect is active (every {Main.Settings.AutoConnectInterval / 1000}s)."
+                    : "Disconnected — auto-connect is off. Use Force Reconnect.";
             }
+
+            if (_statusItem.RightLabel == label) return;
+            _statusItem.RightLabel = label;
+            _statusItem.Description = desc;
         }
 
         // update input lock state
