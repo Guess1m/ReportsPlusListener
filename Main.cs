@@ -28,6 +28,7 @@ namespace ReportsPlus
         private static GameFiber _menuPoolFiber;
         private static GameFiber _requestProcessingFiber;
         private static GameFiber _autoConnectFiber;
+        private static GameFiber _statusOverlayFiber;
 
         // WebSocket
         private static GameClientSocket _client;
@@ -89,6 +90,7 @@ namespace ReportsPlus
             _inputLockFiber = GameFiber.StartNew(CheckForInputLock, "ReportsPlus-InputLockFiber");
             _menuPoolFiber = GameFiber.StartNew(ProcessMenuPool, "ReportsPlus-MenuPoolFiber");
             _requestProcessingFiber = GameFiber.StartNew(ProcessRequestQueueLoop, "ReportsPlus-RequestProcessingFiber");
+            _statusOverlayFiber = GameFiber.StartNew(StatusOverlayLoop, "ReportsPlus-StatusOverlayFiber");
 
             // Register Cleanups
             CleanupRegistry.Register(() => Misc.CleanupFiber(_autoConnectFiber));
@@ -96,6 +98,7 @@ namespace ReportsPlus
             CleanupRegistry.Register(() => Misc.CleanupFiber(_inputLockFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_menuPoolFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_requestProcessingFiber));
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_statusOverlayFiber));
             CleanupRegistry.Register(() => Pool = null);
             CleanupRegistry.Register(() => EventManager.SetClient(null));
         }
@@ -328,6 +331,51 @@ namespace ReportsPlus
                 while (Settings.MenuKey.IsPressed())
                     GameFiber.Yield();
             }
+        }
+
+        private static void StatusOverlayLoop()
+        {
+            while (true)
+            {
+                GameFiber.Yield();
+                if (Settings == null || !Settings.StatusOverlayEnabled) continue;
+                DrawStatusOverlay();
+            }
+        }
+
+        private static void DrawStatusOverlay()
+        {
+            string colorCode;
+            string statusText;
+
+            if (IsConnected)
+            {
+                colorCode = "~g~";
+                statusText = "Connected";
+            }
+            else if (IsConnecting)
+            {
+                colorCode = "~y~";
+                statusText = "Connecting...";
+            }
+            else
+            {
+                colorCode = "~r~";
+                statusText = "Disconnected";
+            }
+
+            var label = Settings.StatusOverlayLabel ?? "MDT Status:";
+            var x = Settings.StatusOverlayX / 100f;
+            var y = Settings.StatusOverlayY / 100f;
+            var scale = Settings.StatusOverlaySize / 100f;
+            var displayText = $"~w~{label} {colorCode}{statusText}";
+
+            NativeFunction.CallByHash<int>(0x66E0276CC5F6B9DA, 0);               // SET_TEXT_FONT
+            NativeFunction.CallByHash<int>(0x07C837F9A01C34C9, 0.0f, scale);     // SET_TEXT_SCALE
+            NativeFunction.CallByHash<int>(0x1CA3E9EAC9D93E5E, 2, 0, 0, 0, 200); // SET_TEXT_DROPSHADOW
+            NativeFunction.CallByHash<int>(0x25FBB336DF1804CB, "STRING");         // SET_TEXT_ENTRY
+            NativeFunction.CallByHash<int>(0x6C188BE134E074AA, displayText);      // ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME
+            NativeFunction.CallByHash<int>(0xCD015E5BB0D96A57, x, y);            // DRAW_TEXT
         }
 
         /// <summary>

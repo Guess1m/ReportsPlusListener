@@ -138,7 +138,51 @@ namespace ReportsPlus.Utils.Menu
                 Main.Settings.AutoConnectInterval = _autoConnectIntervalItem.Value;
             };
 
-            settingsMenu.AddItems(addressItem, portScroller, _intervalItem, _autoConnectItem, _autoConnectIntervalItem, keybindsBtn, _saveSettingsItem);
+            var statusDisplayMenu = new UIMenu("REPORTS PLUS", "STATUS DISPLAY");
+            var statusDisplayBtn = new UIMenuItem("~b~Status Display", "Configure the on-screen MDT status overlay.");
+
+            var statusEnabledItem = new UIMenuCheckboxItem(
+                "Show Status Overlay",
+                Main.Settings.StatusOverlayEnabled,
+                "Display the MDT connection status on screen at all times.");
+            statusEnabledItem.CheckboxEvent += (sender, isChecked) =>
+            {
+                Main.Settings.StatusOverlayEnabled = isChecked;
+            };
+
+            var statusLabelItem = new UIMenuItem("Status Label", "The text shown before the connection status (e.g. 'MDT Status').");
+            statusLabelItem.WithTextEditing(() => Main.Settings.StatusOverlayLabel, newVal => Main.Settings.StatusOverlayLabel = newVal);
+
+            var safeStatusX = MathHelper.Clamp(Main.Settings.StatusOverlayX, 0, 100);
+            var statusXItem = new UIMenuNumericScrollerItem<int>("Position X", "Horizontal screen position (0 = left, 100 = right).", 0, 100, 1)
+            {
+                Value = safeStatusX
+            };
+            statusXItem.WithTextEditing();
+            statusXItem.IndexChanged += (sender, oldIndex, newIndex) => { Main.Settings.StatusOverlayX = statusXItem.Value; };
+
+            var safeStatusY = MathHelper.Clamp(Main.Settings.StatusOverlayY, 0, 100);
+            var statusYItem = new UIMenuNumericScrollerItem<int>("Position Y", "Vertical screen position (0 = top, 100 = bottom).", 0, 100, 1)
+            {
+                Value = safeStatusY
+            };
+            statusYItem.WithTextEditing();
+            statusYItem.IndexChanged += (sender, oldIndex, newIndex) => { Main.Settings.StatusOverlayY = statusYItem.Value; };
+
+            var safeStatusSize = MathHelper.Clamp(Main.Settings.StatusOverlaySize, 10, 100);
+            var statusSizeItem = new UIMenuNumericScrollerItem<int>("Text Size", "Size of the overlay text (10 = smallest, 100 = largest).", 10, 100, 5)
+            {
+                Value = safeStatusSize
+            };
+            statusSizeItem.WithTextEditing();
+            statusSizeItem.IndexChanged += (sender, oldIndex, newIndex) => { Main.Settings.StatusOverlaySize = statusSizeItem.Value; };
+
+            statusDisplayMenu.AddItems(statusEnabledItem, statusLabelItem, statusXItem, statusYItem, statusSizeItem);
+            Main.Pool.Add(statusDisplayMenu);
+            settingsMenu.BindMenuToItem(statusDisplayMenu, statusDisplayBtn);
+            statusDisplayMenu.RemoveBanner();
+
+            settingsMenu.AddItems(addressItem, portScroller, _intervalItem, _autoConnectItem, _autoConnectIntervalItem, keybindsBtn, statusDisplayBtn, _saveSettingsItem);
 
             Main.Pool.Add(this);
             Main.Pool.Add(settingsMenu);

@@ -42,6 +42,22 @@ namespace ReportsPlus.Utils.Config
         [ConfigOption("Keybindings", "DiscardCitationKey", "Key to discard a citation (e.g. Delete). Must be capitalized. Always used for parking citations. Not used for printed when you are using PR.")]
         public KeyBinding DiscardCitationKey { get; set; } = new KeyBinding(Keys.Delete, Keys.None);
 
+        // Status Overlay settings
+        [ConfigOption("StatusOverlay", "StatusOverlayEnabled", "Show the MDT status overlay on screen.")]
+        public bool StatusOverlayEnabled { get; set; } = false;
+
+        [ConfigOption("StatusOverlay", "StatusOverlayLabel", "The text label displayed before the connection status.")]
+        public string StatusOverlayLabel { get; set; } = "MDT Status";
+
+        [ConfigOption("StatusOverlay", "StatusOverlayX", "Horizontal screen position of the overlay (0-100).", Min = 0, Max = 100)]
+        public int StatusOverlayX { get; set; } = 3;
+
+        [ConfigOption("StatusOverlay", "StatusOverlayY", "Vertical screen position of the overlay (0-100).", Min = 0, Max = 100)]
+        public int StatusOverlayY { get; set; } = 3;
+
+        [ConfigOption("StatusOverlay", "StatusOverlaySize", "Text size of the overlay (10-100).", Min = 10, Max = 100)]
+        public int StatusOverlaySize { get; set; } = 35;
+
         public override string ToString()
         {
             var sb = new StringBuilder();
