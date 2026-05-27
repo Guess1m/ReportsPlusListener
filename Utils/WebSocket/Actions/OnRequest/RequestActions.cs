@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using PolicingRedefined.API;
 using PolicingRedefined.Interaction.Assets.PedAttributes;
 using Rage;
+using Rage.Native;
 using ReportsPlus.Utils.Cleanup;
 using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Messages;
@@ -246,6 +247,83 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
                 var timeString = World.DateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
                 var timeData = new JObject { ["time"] = timeString };
                 client.Send(Name, timeData);
+            }
+        }
+
+        public class WeatherAction : IRequestAction
+        {
+            public string Name => "weather";
+
+            /// <summary>
+            ///     Retrieves the current in-game weather type, simplifies it, 
+            ///     and sends it to the client.
+            /// </summary>
+            // GTA weather type names, ordered to match GET_PREV_WEATHER_TYPE_HASH_NAME's hash.
+            private static readonly string[] WeatherNames =
+            {
+                "EXTRASUNNY", "CLEAR", "CLOUDS", "SMOG", "FOGGY", "OVERCAST",
+                "RAIN", "THUNDER", "CLEARING", "NEUTRAL", "SNOW", "BLIZZARD",
+                "SNOWLIGHT", "XMAS", "HALLOWEEN"
+            };
+
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                GameFiber.StartNew(() =>
+                {
+                    var rawWeather = GetCurrentWeather();
+                    var simplifiedWeather = ParseWeather(rawWeather);
+                    var weatherData = new JObject { ["weather"] = simplifiedWeather };
+                    client.Send(Name, weatherData);
+                }, "WeatherActionFiber");
+            }
+
+            /// <summary>
+            ///     Reads the current settled weather via native (World.Weather's getter is
+            ///     unimplemented in this RPH build) and resolves it to a weather type name.
+            /// </summary>
+            private string GetCurrentWeather()
+            {
+                // GET_PREV_WEATHER_TYPE_HASH_NAME
+                var currentHash = NativeFunction.CallByHash<uint>(0x564B884A05EC45A3);
+                foreach (var name in WeatherNames)
+                    if (Game.GetHashKey(name) == currentHash)
+                        return name;
+                return "Unknown";
+            }
+
+            /// <summary>
+            ///     Maps specific granular weather types to generalized categories (C# 8.0 Compatible).
+            /// </summary>
+            private string ParseWeather(string weather)
+            {
+                if (string.IsNullOrEmpty(weather)) return "Unknown";
+
+                switch (weather.ToLowerInvariant())
+                {
+                    case "foggy":
+                    case "smog":
+                        return "Foggy";
+                    case "clouds":
+                        return "Cloudy";
+                    case "extrasunny":
+                    case "neutral":
+                    case "clear":
+                        return "Sunny";
+                    case "snowlight":
+                        return "Light Snow";
+                    case "xmas":
+                    case "snow":
+                        return "Snow";
+                    case "blizzard":
+                        return "Heavy Snow";
+                    case "rain":
+                    case "clearing":
+                        return "Rain";
+                    case "thunder":
+                        return "Thunder Storm";
+                    default:
+                        return weather;
+                }
             }
         }
 
