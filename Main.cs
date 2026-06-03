@@ -101,6 +101,7 @@ namespace ReportsPlus
             CleanupRegistry.Register(() => Misc.CleanupFiber(_statusOverlayFiber));
             CleanupRegistry.Register(() => Pool = null);
             CleanupRegistry.Register(() => EventManager.SetClient(null));
+            CleanupRegistry.Register(MessageHandler.Shutdown);
         }
 
         /// <summary>

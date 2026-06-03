@@ -6,6 +6,7 @@ using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Continuous;
 using ReportsPlus.Utils.WebSocket.Actions.Keybindings;
 using ReportsPlus.Utils.WebSocket.Actions.OnRequest;
+using ReportsPlus.Utils.WebSocket.Bolo;
 
 namespace ReportsPlus.Utils.WebSocket.Messages
 {
@@ -20,14 +21,27 @@ namespace ReportsPlus.Utils.WebSocket.Messages
         /// </summary>
         public static void Initialize()
         {
-            ContinuousActions.Clear();
+            Shutdown();
             RequestActions.Clear();
             KeybindingActions.Clear();
+
+            BoloState.Reset();
 
             // Register Continuous Actions
             ContinuousActions.Add(new EntityTrackingAction());
             ContinuousActions.Add(new VehicleTrackingAction());
             ContinuousActions.Add(new TrafficStopTrackingAction());
+
+            // Ambient BOLO proximity harvesting (all modes).
+            ContinuousActions.Add(new BoloProximityAction());
+            // Static last-seen BOLO map blips (all modes; pure Rage blips, no CDF).
+            ContinuousActions.Add(new BoloBlipAction());
+            // In-world BOLO pinning requires the PR/CDF VehicleBOLO API.
+            if (Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined)
+            {
+                Logger.LogInfo("Registering PR BoloAttachAction");
+                ContinuousActions.Add(new BoloAttachAction());
+            }
 
             // Register On-Request Actions
             RegisterRequestAction(new RequestActions.PlayerLocationAction());
@@ -93,6 +107,22 @@ namespace ReportsPlus.Utils.WebSocket.Messages
         }
 
         /// <summary>
+        ///     Tears down continuous actions, letting each release any game resources it
+        ///     created (e.g. BOLO map blips) before the list is cleared. Safe to call
+        ///     repeatedly; invoked on (re)initialize, off-duty, and plugin unload.
+        /// </summary>
+        public static void Shutdown()
+        {
+            foreach (var action in ContinuousActions)
+            {
+                if (action is BoloBlipAction boloBlip) boloBlip.CleanupBlips();
+                else if (action is BoloAttachAction boloAttach) boloAttach.ReleaseAllPersistence();
+            }
+
+            ContinuousActions.Clear();
+        }
+
+        /// <summary>
         ///     Dispatches an incoming request to the appropriate registered action based on its type and data.
         /// </summary>
         /// <param name="client">The active game client socket.</param>
@@ -140,6 +170,14 @@ namespace ReportsPlus.Utils.WebSocket.Messages
                             ActionExecutor.Execute(actionConfig);
                         else
                             Logger.LogWarning($"Unknown action: {actionName}");
+                        break;
+
+                    case "bolo_config":
+                        BoloState.ApplyConfig(request.Data);
+                        break;
+
+                    case "sync_active_bolos":
+                        BoloState.ApplySync(request.Data);
                         break;
 
                     default:

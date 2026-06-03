@@ -150,7 +150,7 @@ namespace ReportsPlus.Utils.Menu
                 Main.Settings.StatusOverlayEnabled = isChecked;
             };
 
-            var statusLabelItem = new UIMenuItem("Status Label", "The text shown before the connection status (e.g. 'MDT Status').");
+            var statusLabelItem = new UIMenuItem("Status Label", "The text shown before the connection status (e.g. 'MDT Status:').");
             statusLabelItem.WithTextEditing(() => Main.Settings.StatusOverlayLabel, newVal => Main.Settings.StatusOverlayLabel = newVal);
 
             var safeStatusX = MathHelper.Clamp(Main.Settings.StatusOverlayX, 0, 100);

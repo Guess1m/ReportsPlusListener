@@ -47,7 +47,7 @@ namespace ReportsPlus.Utils.Config
         public bool StatusOverlayEnabled { get; set; } = false;
 
         [ConfigOption("StatusOverlay", "StatusOverlayLabel", "The text label displayed before the connection status.")]
-        public string StatusOverlayLabel { get; set; } = "MDT Status";
+        public string StatusOverlayLabel { get; set; } = "MDT Status:";
 
         [ConfigOption("StatusOverlay", "StatusOverlayX", "Horizontal screen position of the overlay (0-100).", Min = 0, Max = 100)]
         public int StatusOverlayX { get; set; } = 3;
