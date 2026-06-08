@@ -92,6 +92,13 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
         public static volatile bool ShowBlips;
 
         /// <summary>
+        ///     When true, <see cref="Actions.Continuous.BoloExternalObserveAction" />
+        ///     reports BOLOs other plugins placed on nearby vehicles' CDF data up to
+        ///     the MDT so they surface in the BOLO Service. PR/CDF-only.
+        /// </summary>
+        public static volatile bool IngestExternal = true;
+
+        /// <summary>
         ///     Resets all state to safe defaults. Called on (re)initialization so a
         ///     fresh session starts clean until the server re-syncs.
         /// </summary>
@@ -109,6 +116,7 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
             ExpiryMinMinutes = 20;
             ExpiryMaxMinutes = 40;
             ShowBlips = false;
+            IngestExternal = true;
         }
 
         /// <summary>
@@ -132,11 +140,13 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
                 ExpiryMaxMinutes = Clamp(o["expiryMaxMinutes"]?.Value<int?>() ?? ExpiryMaxMinutes, 1, 1440);
                 if (ExpiryMaxMinutes < ExpiryMinMinutes) ExpiryMaxMinutes = ExpiryMinMinutes;
                 ShowBlips = o["showBlips"]?.Value<bool?>() ?? ShowBlips;
+                IngestExternal = o["ingestExternalBolos"]?.Value<bool?>() ?? IngestExternal;
 
                 Logger.LogInfo(
                     $"[BOLO] Config updated. Enabled={Enabled}, Radius={RadiusMeters}m, " +
                     $"Move={MoveThresholdMeters}m, Idle={IdleSeconds}s, " +
-                    $"Lifetime={ExpiryMinMinutes}-{ExpiryMaxMinutes}m, ShowBlips={ShowBlips}");
+                    $"Lifetime={ExpiryMinMinutes}-{ExpiryMaxMinutes}m, ShowBlips={ShowBlips}, " +
+                    $"IngestExternal={IngestExternal}");
             }
             catch (Exception ex)
             {

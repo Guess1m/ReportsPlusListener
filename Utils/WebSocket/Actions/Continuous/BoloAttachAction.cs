@@ -20,12 +20,12 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
     ///     </para>
     ///
     ///     <para>
-    ///     To stop wanted suspects from vanishing, an <b>occupied</b> BOLO vehicle and
-    ///     its driver are marked persistent so the engine won't cull them. Persistence
-    ///     is released the moment the BOLO clears/expires, the vehicle drops out of
-    ///     tracking, or the plugin tears down - so the world never fills up with stuck
-    ///     entities. Only occupied vehicles are persisted (the ones that actually drive
-    ///     off and despawn); parked/unoccupied ones are left to the engine.
+    ///     So flagged vehicles don't vanish before a player can find them, <b>every</b>
+    ///     BOLO vehicle is marked persistent (and its driver too, if occupied, so the
+    ///     suspect doesn't despawn). Persistence is released the instant the BOLO
+    ///     clears/expires, the vehicle drops out of tracking, the player's own vehicle
+    ///     is involved, or the plugin tears down (off-duty / unload / re-init) - so the
+    ///     world never fills up with stuck entities.
     ///     </para>
     ///
     ///     <para>
@@ -45,10 +45,15 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
             {
                 var active = BoloState.Snapshot();
                 var present = new HashSet<int>();
+                var ownVehicle = Main.LPCV;
 
                 foreach (var vehicle in World.GetAllVehicles())
                 {
                     if (!vehicle || !vehicle.Exists()) continue;
+                    // Never flag/persist the player's own vehicle (e.g. a manual BOLO
+                    // that happens to target the player's plate) - persisting the
+                    // player or their car would be disruptive and immersion-breaking.
+                    if (ownVehicle && vehicle == ownVehicle) continue;
 
                     var handle = (int)vehicle.Handle.Value;
                     present.Add(handle);
@@ -133,6 +138,10 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
                     Vehicle = vehicle
                 };
 
+                // Track the record BEFORE touching engine persistence so a mid-teardown
+                // fiber abort can always find and release whatever we persist below.
+                _attached[handle] = record;
+
                 if (current != null && current.Persisted)
                 {
                     record.Persisted = true;
@@ -142,8 +151,6 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
                 {
                     EnsurePersistent(vehicle, record);
                 }
-
-                _attached[handle] = record;
             }
             catch (Exception ex)
             {
@@ -152,12 +159,23 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
         }
 
         /// <summary>
-        ///     If the vehicle is occupied, marks it and its driver persistent so the
-        ///     engine won't cull the wanted suspect, recording what was persisted on the
-        ///     <paramref name="record" /> for later release. No-op for unoccupied vehicles.
+        ///     Marks the vehicle persistent so the engine won't cull a flagged vehicle
+        ///     before a player can find it - occupied or not. If it is occupied, the
+        ///     driver is persisted too so the wanted suspect doesn't despawn. What was
+        ///     persisted is recorded on <paramref name="record" /> for later release.
+        ///
+        ///     <para>
+        ///     Bookkeeping (<c>record.Persisted</c> / <c>Vehicle</c> / <c>Driver</c>) is
+        ///     set <b>before</b> the engine calls, so even if the fiber is aborted
+        ///     mid-call during teardown, <see cref="ReleaseAllPersistence" /> still sees
+        ///     the entry and can release it. Releasing a not-actually-persistent entity
+        ///     is a harmless no-op.
+        ///     </para>
         /// </summary>
         private static void EnsurePersistent(Vehicle vehicle, Attached record)
         {
+            if (!(vehicle && vehicle.Exists())) return;
+
             Ped driver = null;
             try
             {
@@ -168,15 +186,16 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
                 // ignore - treat as unoccupied
             }
 
-            if (!(driver && driver.Exists())) return;
+            var hasDriver = driver && driver.Exists();
 
             try
             {
-                if (!vehicle.IsPersistent) vehicle.IsPersistent = true;
-                if (!driver.IsPersistent) driver.IsPersistent = true;
                 record.Vehicle = vehicle;
-                record.Driver = driver;
+                record.Driver = hasDriver ? driver : null;
                 record.Persisted = true;
+
+                if (!vehicle.IsPersistent) vehicle.IsPersistent = true;
+                if (hasDriver && !driver.IsPersistent) driver.IsPersistent = true;
             }
             catch (Exception ex)
             {
