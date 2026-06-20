@@ -36,8 +36,8 @@ namespace ReportsPlus.Utils.WebSocket.Messages
             ContinuousActions.Add(new BoloProximityAction());
             // Static last-seen BOLO map blips (all modes; pure Rage blips, no CDF).
             ContinuousActions.Add(new BoloBlipAction());
-            // In-world BOLO pinning + reading other plugins' CDF BOLOs requires the
-            // PR/CDF VehicleBOLO API.
+            // Distance-based BOLO auto-removal (all modes; pure Rage positions, no CDF).
+            ContinuousActions.Add(new BoloProximityRemoveAction());
             if (Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined)
             {
                 Logger.LogInfo("Registering PR BoloAttachAction");

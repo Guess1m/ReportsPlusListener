@@ -99,6 +99,17 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
         public static volatile bool IngestExternal = true;
 
         /// <summary>
+        ///     When true, <see cref="Actions.Continuous.BoloProximityRemoveAction" />
+        ///     periodically asks the MDT to drop any active BOLO once the player gets
+        ///     farther than <see cref="ProximityRemovalDistanceMeters" /> from the
+        ///     BOLO'd vehicle. Opt-in; independent of <see cref="Enabled" />.
+        /// </summary>
+        public static volatile bool ProximityRemovalEnabled;
+
+        /// <summary>Distance (meters) beyond which an active BOLO is auto-removed.</summary>
+        public static volatile int ProximityRemovalDistanceMeters = 500;
+
+        /// <summary>
         ///     Resets all state to safe defaults. Called on (re)initialization so a
         ///     fresh session starts clean until the server re-syncs.
         /// </summary>
@@ -117,6 +128,8 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
             ExpiryMaxMinutes = 40;
             ShowBlips = false;
             IngestExternal = true;
+            ProximityRemovalEnabled = false;
+            ProximityRemovalDistanceMeters = 500;
         }
 
         /// <summary>
@@ -141,12 +154,17 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
                 if (ExpiryMaxMinutes < ExpiryMinMinutes) ExpiryMaxMinutes = ExpiryMinMinutes;
                 ShowBlips = o["showBlips"]?.Value<bool?>() ?? ShowBlips;
                 IngestExternal = o["ingestExternalBolos"]?.Value<bool?>() ?? IngestExternal;
+                ProximityRemovalEnabled = o["proximityRemovalEnabled"]?.Value<bool?>() ?? ProximityRemovalEnabled;
+                ProximityRemovalDistanceMeters =
+                    Clamp(o["proximityRemovalDistanceMeters"]?.Value<int?>() ?? ProximityRemovalDistanceMeters, 1,
+                        20000);
 
                 Logger.LogInfo(
                     $"[BOLO] Config updated. Enabled={Enabled}, Radius={RadiusMeters}m, " +
                     $"Move={MoveThresholdMeters}m, Idle={IdleSeconds}s, " +
                     $"Lifetime={ExpiryMinMinutes}-{ExpiryMaxMinutes}m, ShowBlips={ShowBlips}, " +
-                    $"IngestExternal={IngestExternal}");
+                    $"IngestExternal={IngestExternal}, ProximityRemoval={ProximityRemovalEnabled}" +
+                    $"@{ProximityRemovalDistanceMeters}m");
             }
             catch (Exception ex)
             {
