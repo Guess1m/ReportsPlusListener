@@ -158,13 +158,6 @@ namespace ReportsPlus.Utils.WebSocket.Bolo
                 ProximityRemovalDistanceMeters =
                     Clamp(o["proximityRemovalDistanceMeters"]?.Value<int?>() ?? ProximityRemovalDistanceMeters, 1,
                         20000);
-
-                Logger.LogInfo(
-                    $"[BOLO] Config updated. Enabled={Enabled}, Radius={RadiusMeters}m, " +
-                    $"Move={MoveThresholdMeters}m, Idle={IdleSeconds}s, " +
-                    $"Lifetime={ExpiryMinMinutes}-{ExpiryMaxMinutes}m, ShowBlips={ShowBlips}, " +
-                    $"IngestExternal={IngestExternal}, ProximityRemoval={ProximityRemovalEnabled}" +
-                    $"@{ProximityRemovalDistanceMeters}m");
             }
             catch (Exception ex)
             {

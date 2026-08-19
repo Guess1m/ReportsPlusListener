@@ -2,7 +2,6 @@ using LSPD_First_Response.Engine.Scripting;
 using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using Rage;
-using ReportsPlus.Utils.Logging;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
 {

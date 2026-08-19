@@ -60,12 +60,12 @@ namespace ReportsPlus.Utils.Misc
                     }
                     else
                     {
-                        Game.LogTrivial($"KeyMapUtils Error: Could not map scan code for key {key}");
+                        Logger.LogError($"KeyMapUtils Error: Could not map scan code for key {key}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Game.LogTrivial($"KeyMapUtils Error: Failed to execute key {key}. Details: {ex.Message}");
+                    Logger.LogError($"KeyMapUtils Error: Failed to execute key {key}. Details: {ex.Message}");
                 }
             });
         }

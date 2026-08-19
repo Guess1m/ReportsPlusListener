@@ -23,7 +23,6 @@ namespace ReportsPlus.Utils.Cleanup
 
             lock (LockObject) // race cond for cleanups on WebSocket thread
             {
-                Logger.LogInfo($"Registering cleanup action: {cleanupAction.Method.Name}");
                 CleanupActions.Add(cleanupAction);
             }
         }
