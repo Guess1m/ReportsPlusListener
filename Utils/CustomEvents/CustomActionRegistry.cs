@@ -18,12 +18,16 @@ namespace ReportsPlus.Utils.CustomEvents
         /// <param name="newActions">The list of <see cref="CustomActionConfig" /> objects to register.</param>
         public static void RegisterActions(List<CustomActionConfig> newActions)
         {
-            if (newActions == null || newActions.Count == 0)
+            if (newActions == null)
             {
-                Logger.LogError("[Registry] Received null or empty action list.");
+                Logger.LogError("[Registry] Received null action list.");
                 return;
             }
 
+            // An empty list is a legitimate instruction, not a fault: it is what arrives
+            // when the department's last custom action is deleted or its GrammarPolice
+            // integration is switched off. Bailing out here used to leave the previous
+            // actions registered and still callable from the MDT.
             Actions.Clear();
             foreach (var action in newActions)
             {
