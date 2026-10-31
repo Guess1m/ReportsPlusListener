@@ -20,6 +20,19 @@ namespace ReportsPlus.Utils.Config
         [ConfigOption("Intervals", "ContinuousUpdateInterval", "Interval (ms) for sending continuous updates to server (e.g. PlayerLocation, PoliceVehiclesLocation).", Min = 1000, Max = 60000)]
         public int ContinuousUpdateInterval { get; set; } = 15000;
 
+        // GPS route mirroring (MDT live map navigation)
+        [ConfigOption("Gps", "GpsEnabled", "Mirror the in-game GPS route (waypoint / route blips) to the MDT live map.")]
+        public bool GpsEnabled { get; set; } = true;
+
+        [ConfigOption("Gps", "GpsUpdateInterval", "Interval (ms) between player position/heading updates sent to the MDT live map (and GPS progress while a route is active).", Min = 250, Max = 10000)]
+        public int GpsUpdateInterval { get; set; } = 1000;
+
+        [ConfigOption("Gps", "GpsRouteResampleInterval", "Interval (ms) between full re-reads of the GPS route, used to detect reroutes.", Min = 1000, Max = 30000)]
+        public int GpsRouteResampleInterval { get; set; } = 3000;
+
+        [ConfigOption("Gps", "GpsTrackBlipRoutes", "When no waypoint is set, also mirror GPS routes the game draws to blips (e.g. callout routes).")]
+        public bool GpsTrackBlipRoutes { get; set; } = true;
+
         [ConfigOption("AutoConnect", "AutoConnectEnabled", "Automatically attempt to reconnect when disconnected.")]
         public bool AutoConnectEnabled { get; set; } = true;
 

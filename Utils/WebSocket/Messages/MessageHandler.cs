@@ -57,6 +57,9 @@ namespace ReportsPlus.Utils.WebSocket.Messages
             RegisterRequestAction(new RequestActions.PlayerLocationTrackingAction());
             RegisterRequestAction(new RequestActions.GetLocationFromCoordsAction());
             RegisterRequestAction(new RequestActions.WeatherAction());
+            RegisterRequestAction(new RequestActions.GpsSetWaypointAction());
+            RegisterRequestAction(new RequestActions.GpsClearWaypointAction());
+            RegisterRequestAction(new RequestActions.GpsSyncAction());
 
             if (Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined)
             {

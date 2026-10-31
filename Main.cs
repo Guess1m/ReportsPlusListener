@@ -14,6 +14,7 @@ using ReportsPlus.Utils.Menu;
 using ReportsPlus.Utils.Misc;
 using ReportsPlus.Utils.WebSocket;
 using ReportsPlus.Utils.WebSocket.Actions.Events;
+using ReportsPlus.Utils.WebSocket.Gps;
 using ReportsPlus.Utils.WebSocket.Messages;
 
 namespace ReportsPlus
@@ -29,6 +30,7 @@ namespace ReportsPlus
         private static GameFiber _requestProcessingFiber;
         private static GameFiber _autoConnectFiber;
         private static GameFiber _statusOverlayFiber;
+        private static GameFiber _gpsFiber;
 
         // WebSocket
         private static GameClientSocket _client;
@@ -91,6 +93,8 @@ namespace ReportsPlus
             _menuPoolFiber = GameFiber.StartNew(ProcessMenuPool, "ReportsPlus-MenuPoolFiber");
             _requestProcessingFiber = GameFiber.StartNew(ProcessRequestQueueLoop, "ReportsPlus-RequestProcessingFiber");
             _statusOverlayFiber = GameFiber.StartNew(StatusOverlayLoop, "ReportsPlus-StatusOverlayFiber");
+            GpsRouteTracker.Reset();
+            _gpsFiber = GameFiber.StartNew(GpsUpdateLoop, "ReportsPlus-GpsFiber");
 
             // Register Cleanups
             CleanupRegistry.Register(() => Misc.CleanupFiber(_autoConnectFiber));
@@ -99,6 +103,8 @@ namespace ReportsPlus
             CleanupRegistry.Register(() => Misc.CleanupFiber(_menuPoolFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_requestProcessingFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_statusOverlayFiber));
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_gpsFiber));
+            CleanupRegistry.Register(GpsRouteTracker.Reset);
             CleanupRegistry.Register(() => Pool = null);
             CleanupRegistry.Register(() => EventManager.SetClient(null));
             CleanupRegistry.Register(MessageHandler.Shutdown);
@@ -126,6 +132,43 @@ namespace ReportsPlus
             {
                 Logger.LogError($"An exception occurred in the ContinuousUpdateLoop: {e.Message}");
                 Logger.LogError($"StackTrace: {e.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        ///     Dedicated GPS loop. Runs separately from <see cref="ContinuousUpdateLoop" /> because
+        ///     navigation needs ~1s updates while the other continuous actions default to 15s.
+        ///     Sleeps in short slices so an MDT command (set waypoint, resync) is reflected quickly.
+        ///     A failing tick is logged and skipped; it never ends the loop.
+        /// </summary>
+        private void GpsUpdateLoop()
+        {
+            Logger.LogInfo("Starting GPS Route Loop...");
+            var wasConnected = false;
+            var consecutiveErrors = 0;
+
+            while (true)
+            {
+                GameFiber.Yield();
+
+                var connected = Client is { IsConnected: true };
+                if (!connected && wasConnected) GpsRouteTracker.Reset();
+                wasConnected = connected;
+
+                if (connected)
+                    try
+                    {
+                        GpsRouteTracker.Tick(Client);
+                        consecutiveErrors = 0;
+                    }
+                    catch (Exception e)
+                    {
+                        if (++consecutiveErrors <= 3) Logger.LogError($"GPS tick failed: {e.Message}");
+                    }
+
+                var interval = MathHelper.Clamp(Settings?.GpsUpdateInterval ?? 1000, 250, 10000);
+                for (var slept = 0; slept < interval && !GpsRouteTracker.WakeRequested; slept += 100)
+                    GameFiber.Sleep(100);
             }
         }
 

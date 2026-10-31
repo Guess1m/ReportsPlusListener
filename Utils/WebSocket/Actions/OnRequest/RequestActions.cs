@@ -40,15 +40,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
                 var character = player.Character;
                 if (character == null || !character.Exists()) return;
 
-                var position = character.Position;
-
-                var locationData = new JObject
-                {
-                    ["x"] = position.X,
-                    ["y"] = position.Y
-                };
-
-                client.Send("playerLocation", locationData);
+                client.Send("playerLocation", Gps.GpsRouteTracker.BuildPlayerLocation(character));
             }
         }
 
@@ -223,13 +215,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
             /// <param name="request">The incoming request object.</param>
             public void Execute(GameClientSocket client, IncomingRequest request)
             {
-                var playerPosition = Main.LPC.Position;
-                var locationData = new JObject
-                {
-                    ["x"] = playerPosition.X,
-                    ["y"] = playerPosition.Y
-                };
-                client.Send("playerLocation", locationData);
+                var player = Main.LPC;
+                if (player == null || !player.Exists()) return;
+                client.Send("playerLocation", Gps.GpsRouteTracker.BuildPlayerLocation(player));
             }
         }
 
@@ -390,7 +378,7 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
 
                     if (xToken == null || yToken == null) return;
 
-                    if (!float.TryParse(xToken.ToString(), out var x) || !float.TryParse(yToken.ToString(), out var y)) return;
+                    if (!GpsCommandUtil.TryReadCoordinate(xToken, out var x) || !GpsCommandUtil.TryReadCoordinate(yToken, out var y)) return;
 
                     var position = new Rage.Vector3(x, y, 0f);
 
@@ -415,6 +403,134 @@ namespace ReportsPlus.Utils.WebSocket.Actions.OnRequest
                 {
                     Logger.LogError($"GetLocationFromCoordsAction: {ex.Message}");
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Shared helpers for GPS commands coming from the MDT.
+        /// </summary>
+        public static class GpsCommandUtil
+        {
+            /// <summary>
+            ///     Reads a coordinate from a JSON token, accepting numbers and culture-invariant
+            ///     numeric strings. Rejects NaN/infinite values.
+            /// </summary>
+            public static bool TryReadCoordinate(JToken token, out float value)
+            {
+                value = 0f;
+                if (token == null || token.Type == JTokenType.Null) return false;
+
+                double parsed;
+                if (token.Type == JTokenType.Float || token.Type == JTokenType.Integer)
+                    parsed = token.Value<double>();
+                else if (!double.TryParse(token.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                    return false;
+
+                if (double.IsNaN(parsed) || double.IsInfinity(parsed)) return false;
+                value = (float)parsed;
+                return true;
+            }
+
+            /// <summary>Reports the outcome of a GPS command so the MDT can show feedback.</summary>
+            public static void SendResult(GameClientSocket client, string command, bool success, string error = null)
+            {
+                client?.Send("gpsCommandResult", new JObject
+                {
+                    ["command"] = command,
+                    ["success"] = success,
+                    ["error"] = error ?? string.Empty
+                });
+            }
+        }
+
+        public class GpsSetWaypointAction : IRequestAction
+        {
+            public string Name => "gpsSetWaypoint";
+
+            /// <summary>
+            ///     Places the in-game map waypoint at the requested coordinates. The game then
+            ///     computes the GPS route, which <see cref="Gps.GpsRouteTracker" /> mirrors back.
+            /// </summary>
+            /// <param name="client">The socket client to report the result to.</param>
+            /// <param name="request">Args: JSON <c>{"x": float, "y": float}</c>.</param>
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                if (string.IsNullOrEmpty(request?.Args))
+                {
+                    GpsCommandUtil.SendResult(client, Name, false, "No coordinates supplied.");
+                    return;
+                }
+
+                try
+                {
+                    var payload = JObject.Parse(request.Args);
+                    if (!GpsCommandUtil.TryReadCoordinate(payload["x"], out var x) || !GpsCommandUtil.TryReadCoordinate(payload["y"], out var y))
+                    {
+                        GpsCommandUtil.SendResult(client, Name, false, "Invalid coordinates.");
+                        return;
+                    }
+
+                    if (!Gps.GpsRouteTracker.IsWithinWorld(x, y))
+                    {
+                        GpsCommandUtil.SendResult(client, Name, false, "Coordinates are outside the game world.");
+                        return;
+                    }
+
+                    if (Main.Settings != null && !Main.Settings.GpsEnabled)
+                    {
+                        GpsCommandUtil.SendResult(client, Name, false, "GPS mirroring is disabled in ReportsPlus.ini (GpsEnabled).");
+                        return;
+                    }
+
+                    if (!Gps.GpsNatives.SetWaypoint(x, y))
+                    {
+                        GpsCommandUtil.SendResult(client, Name, false, "The game rejected the waypoint.");
+                        return;
+                    }
+
+                    Gps.GpsRouteTracker.RequestImmediateUpdate();
+                    GpsCommandUtil.SendResult(client, Name, true);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"GpsSetWaypointAction: {ex.Message}");
+                    GpsCommandUtil.SendResult(client, Name, false, "Malformed waypoint request.");
+                }
+            }
+        }
+
+        public class GpsClearWaypointAction : IRequestAction
+        {
+            public string Name => "gpsClearWaypoint";
+
+            /// <summary>Removes the in-game map waypoint (and with it the waypoint GPS route).</summary>
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                if (!Gps.GpsNatives.IsWaypointActive())
+                {
+                    // Nothing to clear; still resync so the MDT drops any stale route it holds.
+                    Gps.GpsRouteTracker.RequestResync();
+                    GpsCommandUtil.SendResult(client, Name, true);
+                    return;
+                }
+
+                var ok = Gps.GpsNatives.ClearWaypoint();
+                Gps.GpsRouteTracker.RequestImmediateUpdate();
+                GpsCommandUtil.SendResult(client, Name, ok, ok ? null : "The game did not clear the waypoint.");
+            }
+        }
+
+        public class GpsSyncAction : IRequestAction
+        {
+            public string Name => "gpsSync";
+
+            /// <summary>
+            ///     Asks the GPS tracker to resend its full state. Sent by the MDT when it (re)connects
+            ///     or restarts, so the map is correct without waiting for the route to change.
+            /// </summary>
+            public void Execute(GameClientSocket client, IncomingRequest request)
+            {
+                Gps.GpsRouteTracker.RequestResync();
             }
         }
 
