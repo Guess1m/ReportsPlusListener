@@ -79,6 +79,9 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             public Vehicle Vehicle;
             public uint ReadAt;
             public AlprCamera Camera;
+
+            /// <summary>Normalized plate as read, cached so the overlay needn't query it every frame.</summary>
+            public string Plate;
         }
 
         public static void Reset()
@@ -198,7 +201,7 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
 
                 PlateCooldowns[plate] = now;
                 CameraLastRead[camera.Id] = now;
-                Recent[handle] = new RecentTarget { Vehicle = target, ReadAt = now, Camera = camera };
+                Recent[handle] = new RecentTarget { Vehicle = target, ReadAt = now, Camera = camera, Plate = plate };
             }
 
             if (reads.Count == 0) return;
@@ -298,6 +301,8 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
         {
             try
             {
+                // Passive sensor read: a just-appeared vehicle may be cleaned before its data is built.
+                PluginRecordCleaner.Observe(vehicle, true);
                 return Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined
                     ? VehicleDataHelper.GenerateVehicleDataPR(vehicle)
                     : VehicleDataHelper.GenerateVehicleData(vehicle);

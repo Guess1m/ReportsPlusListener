@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Rage;
+using ReportsPlus.Utils.WebSocket.Alpr;
 using ReportsPlus.Utils.WorldData;
 
 namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
@@ -58,6 +59,9 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
                 if (!vehicle || !vehicle.Exists()) continue;
                 // Skip if already tracked
                 if (TrackedVehicles.ContainsKey((int)vehicle.Handle.Value)) continue;
+                // Background tracking: a vehicle that appeared since the last cleaner sweep may
+                // be cleaned before its data is read below, so the MDT gets the final values.
+                PluginRecordCleaner.Observe(vehicle, true);
                 var vehicleData = Misc.Misc.CurrentMode == Misc.Misc.IntegrationMode.PolicingRedefined ? VehicleDataHelper.GenerateVehicleDataPR(vehicle) : VehicleDataHelper.GenerateVehicleData(vehicle);
                 if (vehicleData == null) continue;
                 client.Send("vehicleCreated", vehicleData);

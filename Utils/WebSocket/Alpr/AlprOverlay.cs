@@ -15,8 +15,10 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
     ///         <item>Debug scan zones: each camera's cone outline, so players can see exactly where it reads.</item>
     ///         <item>Read rays: a short-lived line from the camera to each vehicle it just read.</item>
     ///         <item>Hit highlights and blips for vehicles the MDT flagged (<c>alpr_alert</c>).</item>
-    ///
+    ///         <item>In-world plate tags (<see cref="AlprPlateTags" />).</item>
     ///     </list>
+    ///     Every debug <i>line</i> (zones, read rays, hit guide lines) is part of the scan-zone view
+    ///     and only drawn while it is on. Hit vehicles still get a plate tag and blip without it.
     ///     When nothing is enabled the frame cost is a couple of field reads.
     /// </summary>
     public static class AlprOverlay
@@ -29,11 +31,15 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
         private static readonly List<HitBlip> Blips = new List<HitBlip>();
         private static uint _lastHousekeeping;
 
-        private sealed class Highlight
+        /// <summary>A vehicle the MDT flagged, shown with a plate tag (and guide lines in scan-zone view).</summary>
+        internal sealed class Highlight
         {
-            public Vehicle Vehicle;
-            public uint Until;
             public Color Color;
+            public string Label;
+            public string Plate;
+            public bool Pulse;
+            public uint Until;
+            public Vehicle Vehicle;
         }
 
         private sealed class HitBlip
@@ -61,8 +67,10 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             }
 
             var cfg = AlprState.Config;
-            if (AlprState.DebugDraw) DrawScanZones(cfg, now);
-            if (Highlights.Count > 0) DrawHighlights(now);
+            var debug = AlprState.DebugDraw;
+            if (debug) DrawScanZones(cfg, now);
+            if (Highlights.Count > 0) UpdateHighlights(now, debug);
+            AlprPlateTags.Draw(cfg, debug, now, Highlights);
         }
 
         private static void DrawScanZones(AlprConfig cfg, uint now)
@@ -109,10 +117,11 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             }
         }
 
-        private static void DrawHighlights(uint now)
+        /// <summary>Expires highlights; draws their guide lines only in scan-zone view.</summary>
+        private static void UpdateHighlights(uint now, bool drawLines)
         {
             var player = Main.LPC;
-            var from = player && player.Exists() ? player.Position + new Vector3(0f, 0f, 1.2f) : Vector3.Zero;
+            var from = drawLines && player && player.Exists() ? player.Position + new Vector3(0f, 0f, 1.2f) : Vector3.Zero;
 
             for (var i = Highlights.Count - 1; i >= 0; i--)
             {
@@ -123,6 +132,7 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                     continue;
                 }
 
+                if (!drawLines) continue;
                 var top = h.Vehicle.Position + new Vector3(0f, 0f, 2.2f);
                 Debug.DrawLine(top + new Vector3(-0.6f, 0f, 0f), top + new Vector3(0.6f, 0f, 0f), h.Color);
                 Debug.DrawLine(top + new Vector3(0f, -0.6f, 0f), top + new Vector3(0f, 0.6f, 0f), h.Color);
@@ -158,7 +168,27 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                 var now = Game.GameTime;
 
                 if (cfg.HighlightHits && (o["highlight"]?.Value<bool?>() ?? true))
-                    Highlights.Add(new Highlight { Vehicle = target.Vehicle, Until = now + 15000u, Color = color });
+                {
+                    var label = o["label"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(label)) label = "ALPR HIT";
+                    var plate = o["plate"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(plate)) plate = target.Plate;
+                    var pulse = string.Equals(o["priority"]?.ToString(), "CRITICAL", StringComparison.OrdinalIgnoreCase);
+
+                    // One highlight per vehicle: a repeat or escalated alert refreshes it.
+                    var existing = Highlights.Find(x => x.Vehicle == target.Vehicle);
+                    if (existing == null)
+                    {
+                        existing = new Highlight { Vehicle = target.Vehicle };
+                        Highlights.Add(existing);
+                    }
+
+                    existing.Until = now + 15000u;
+                    existing.Color = color;
+                    existing.Label = label;
+                    existing.Plate = plate;
+                    existing.Pulse = pulse;
+                }
 
                 if (cfg.BlipHits && (o["blip"]?.Value<bool?>() ?? true)) AddBlip(target.Vehicle, color, now + (uint)cfg.BlipSeconds * 1000u);
             }

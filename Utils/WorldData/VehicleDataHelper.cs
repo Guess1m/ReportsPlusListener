@@ -4,6 +4,7 @@ using LSPD_First_Response.Mod.API;
 using Newtonsoft.Json.Linq;
 using Rage;
 using Rage.Native;
+using ReportsPlus.Utils.WebSocket.Alpr;
 
 namespace ReportsPlus.Utils.WorldData
 {
@@ -17,6 +18,10 @@ namespace ReportsPlus.Utils.WorldData
         public static JObject GenerateVehicleDataPR(Vehicle vehicle)
         {
             if (!vehicle || !vehicle.Exists()) return null;
+
+            // Any caller reaching here may show this data to the player, so the vehicle is
+            // permanently excluded from plugin record cleaning (passive callers clean first).
+            PluginRecordCleaner.Observe(vehicle, false);
 
             // Retrieve custom vehicle data from cdf
             var vehData = vehicle.GetVehicleData();
@@ -106,6 +111,9 @@ namespace ReportsPlus.Utils.WorldData
         public static JObject GenerateVehicleData(Vehicle vehicle)
         {
             if (!vehicle || !vehicle.Exists()) return null;
+
+            // See GenerateVehicleDataPR.
+            PluginRecordCleaner.Observe(vehicle, false);
 
             // Determine driver name safely
             var driverName = string.Empty;

@@ -34,6 +34,7 @@ namespace ReportsPlus
         private static GameFiber _gpsFiber;
         private static GameFiber _alprScanFiber;
         private static GameFiber _alprFrameFiber;
+        private static GameFiber _recordCleanFiber;
 
         // WebSocket
         private static GameClientSocket _client;
@@ -100,6 +101,8 @@ namespace ReportsPlus
             _gpsFiber = GameFiber.StartNew(GpsUpdateLoop, "ReportsPlus-GpsFiber");
             _alprScanFiber = GameFiber.StartNew(AlprScanLoop, "ReportsPlus-AlprScanFiber");
             _alprFrameFiber = GameFiber.StartNew(AlprFrameLoop, "ReportsPlus-AlprFrameFiber");
+            PluginRecordCleaner.Reset();
+            _recordCleanFiber = GameFiber.StartNew(RecordCleanLoop, "ReportsPlus-RecordCleanFiber");
 
             // Register Cleanups
             CleanupRegistry.Register(() => Misc.CleanupFiber(_autoConnectFiber));
@@ -114,6 +117,8 @@ namespace ReportsPlus
             CleanupRegistry.Register(() => Misc.CleanupFiber(_alprFrameFiber));
             CleanupRegistry.Register(AlprOverlay.Cleanup);
             CleanupRegistry.Register(AlprScanner.Reset);
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_recordCleanFiber));
+            CleanupRegistry.Register(PluginRecordCleaner.Reset);
             CleanupRegistry.Register(() => Pool = null);
             CleanupRegistry.Register(() => EventManager.SetClient(null));
             CleanupRegistry.Register(MessageHandler.Shutdown);
@@ -219,6 +224,34 @@ namespace ReportsPlus
                 var interval = cfg.Enabled ? cfg.ScanIntervalMs : 1000;
                 for (var slept = 0; slept < interval && !AlprState.ConfigChanged && !AlprState.ToggleRequested; slept += 50)
                     GameFiber.Sleep(50);
+            }
+        }
+
+        /// <summary>
+        ///     Optional StopThePed / Policing Redefined record cleaning (ALPR setting, off by default).
+        ///     Its own fiber because its cadence must stay fixed and short - the cleaner's
+        ///     consistency guarantee depends on noticing every vehicle within one sweep of it
+        ///     appearing - independent of the ALPR scan interval (up to 5 s). Sweeps only while the
+        ///     MDT is connected; a skipped stretch is detected as a gap and never cleans anything.
+        /// </summary>
+        private static void RecordCleanLoop()
+        {
+            var consecutiveErrors = 0;
+            while (true)
+            {
+                GameFiber.Yield();
+                if (Client is { IsConnected: true })
+                    try
+                    {
+                        PluginRecordCleaner.Tick();
+                        consecutiveErrors = 0;
+                    }
+                    catch (Exception e)
+                    {
+                        if (++consecutiveErrors <= 3) Logger.LogError($"[ALPR] Record clean sweep failed: {e.Message}");
+                    }
+
+                GameFiber.Sleep(PluginRecordCleaner.IsActive ? PluginRecordCleaner.SweepIntervalMs : PluginRecordCleaner.IdleIntervalMs);
             }
         }
 

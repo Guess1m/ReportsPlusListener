@@ -105,6 +105,19 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
         public bool HighlightHits { get; private set; } = true;
         public bool BlipHits { get; private set; } = true;
         public int BlipSeconds { get; private set; } = 45;
+
+        /// <summary>In-world plate tags on every read while scan zones are shown.</summary>
+        public bool PlateTags { get; private set; } = true;
+
+        /// <summary>
+        ///     Optional cleaning of StopThePed / Policing Redefined documents for vehicles as they
+        ///     appear (see <see cref="PluginRecordCleaner" />). Off unless the MDT turns it on.
+        /// </summary>
+        public bool CleanPluginRecords { get; private set; }
+
+        /// <summary>Share (0-100) of newly appeared vehicles whose invalid documents are cleaned.</summary>
+        public int CleanRecordChance { get; private set; } = 85;
+
         public IReadOnlyList<AlprCamera> Cameras { get; private set; } = new AlprCamera[0];
 
         /// <summary>Cosine of the max plate read angle, precomputed for the facing test.</summary>
@@ -139,7 +152,10 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                 DebugDraw = o["debugDraw"]?.Value<bool?>() ?? p.DebugDraw,
                 HighlightHits = o["highlightHits"]?.Value<bool?>() ?? p.HighlightHits,
                 BlipHits = o["blipHits"]?.Value<bool?>() ?? p.BlipHits,
-                BlipSeconds = Clamp(o["blipSeconds"]?.Value<int?>() ?? p.BlipSeconds, 5, 600)
+                BlipSeconds = Clamp(o["blipSeconds"]?.Value<int?>() ?? p.BlipSeconds, 5, 600),
+                PlateTags = o["plateTags"]?.Value<bool?>() ?? p.PlateTags,
+                CleanPluginRecords = o["cleanPluginRecords"]?.Value<bool?>() ?? p.CleanPluginRecords,
+                CleanRecordChance = Clamp(o["cleanRecordChance"]?.Value<int?>() ?? p.CleanRecordChance, 0, 100)
             };
 
             c.CosPlateAngle = (float)Math.Cos(MathHelper.ConvertDegreesToRadians(c.PlateAngleDegrees));
@@ -227,7 +243,8 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                 _config = next;
                 ConfigChanged = true;
                 Logger.LogInfo($"[ALPR] Config applied. Enabled={next.Enabled}, Paused={next.Paused}, Debug={next.DebugDraw}, Cameras={next.Cameras.Count}, " +
-                               $"Interval={next.ScanIntervalMs}ms, Cooldown={next.PlateCooldownSeconds}s, LOS={next.LineOfSight}");
+                               $"Interval={next.ScanIntervalMs}ms, Cooldown={next.PlateCooldownSeconds}s, LOS={next.LineOfSight}, " +
+                               $"CleanPluginRecords={next.CleanPluginRecords} ({next.CleanRecordChance}%)");
             }
             catch (Exception ex)
             {
