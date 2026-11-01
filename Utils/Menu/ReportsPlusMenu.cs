@@ -102,6 +102,10 @@ namespace ReportsPlus.Utils.Menu
                 () => Main.Settings.DiscardCitationKey,
                 v => Main.Settings.DiscardCitationKey = v);
 
+            AddKeybindSetting(keybindsMenu, "ALPR Scanning Toggle", "Key to pause or resume ALPR scanning. Everything else ALPR is configured in the MDT.",
+                () => Main.Settings.AlprToggleKey,
+                v => Main.Settings.AlprToggleKey = v);
+
             _saveSettingsItem = new UIMenuItem("~g~Save Configuration", "Save current settings to INI file. ~r~Requires Reconnect for Server IPv4/Port Changes.");
             _saveSettingsItem.Activated += (sender, item) =>
             {

@@ -55,6 +55,10 @@ namespace ReportsPlus.Utils.Config
         [ConfigOption("Keybindings", "DiscardCitationKey", "Key to discard a citation (e.g. Delete). Must be capitalized. Always used for parking citations. Not used for printed when you are using PR.")]
         public KeyBinding DiscardCitationKey { get; set; } = new KeyBinding(Keys.Delete, Keys.None);
 
+        // ALPR: asks the MDT to pause/resume scanning (the MDT owns all other ALPR settings)
+        [ConfigOption("Keybindings", "AlprToggleKey", "Key to pause/resume ALPR scanning (e.g. F7). Must be capitalized. None to disable.")]
+        public KeyBinding AlprToggleKey { get; set; } = new KeyBinding(Keys.None, Keys.None);
+
         // Status Overlay settings
         [ConfigOption("StatusOverlay", "StatusOverlayEnabled", "Show the MDT status overlay on screen.")]
         public bool StatusOverlayEnabled { get; set; } = false;

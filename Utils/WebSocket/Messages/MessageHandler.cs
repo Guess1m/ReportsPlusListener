@@ -6,6 +6,7 @@ using ReportsPlus.Utils.Logging;
 using ReportsPlus.Utils.WebSocket.Actions.Continuous;
 using ReportsPlus.Utils.WebSocket.Actions.Keybindings;
 using ReportsPlus.Utils.WebSocket.Actions.OnRequest;
+using ReportsPlus.Utils.WebSocket.Alpr;
 using ReportsPlus.Utils.WebSocket.Bolo;
 
 namespace ReportsPlus.Utils.WebSocket.Messages
@@ -26,6 +27,8 @@ namespace ReportsPlus.Utils.WebSocket.Messages
             KeybindingActions.Clear();
 
             BoloState.Reset();
+            AlprState.Reset();
+            AlprScanner.Reset();
 
             // Register Continuous Actions
             ContinuousActions.Add(new EntityTrackingAction());
@@ -184,6 +187,14 @@ namespace ReportsPlus.Utils.WebSocket.Messages
 
                     case "sync_active_bolos":
                         BoloState.ApplySync(request.Data);
+                        break;
+
+                    case "alpr_config":
+                        AlprState.ApplyConfig(request.Data);
+                        break;
+
+                    case "alpr_alert":
+                        AlprOverlay.HandleAlert(request.Data);
                         break;
 
                     default:

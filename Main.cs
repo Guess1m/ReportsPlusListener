@@ -14,6 +14,7 @@ using ReportsPlus.Utils.Menu;
 using ReportsPlus.Utils.Misc;
 using ReportsPlus.Utils.WebSocket;
 using ReportsPlus.Utils.WebSocket.Actions.Events;
+using ReportsPlus.Utils.WebSocket.Alpr;
 using ReportsPlus.Utils.WebSocket.Gps;
 using ReportsPlus.Utils.WebSocket.Messages;
 
@@ -31,6 +32,8 @@ namespace ReportsPlus
         private static GameFiber _autoConnectFiber;
         private static GameFiber _statusOverlayFiber;
         private static GameFiber _gpsFiber;
+        private static GameFiber _alprScanFiber;
+        private static GameFiber _alprFrameFiber;
 
         // WebSocket
         private static GameClientSocket _client;
@@ -95,6 +98,8 @@ namespace ReportsPlus
             _statusOverlayFiber = GameFiber.StartNew(StatusOverlayLoop, "ReportsPlus-StatusOverlayFiber");
             GpsRouteTracker.Reset();
             _gpsFiber = GameFiber.StartNew(GpsUpdateLoop, "ReportsPlus-GpsFiber");
+            _alprScanFiber = GameFiber.StartNew(AlprScanLoop, "ReportsPlus-AlprScanFiber");
+            _alprFrameFiber = GameFiber.StartNew(AlprFrameLoop, "ReportsPlus-AlprFrameFiber");
 
             // Register Cleanups
             CleanupRegistry.Register(() => Misc.CleanupFiber(_autoConnectFiber));
@@ -105,6 +110,10 @@ namespace ReportsPlus
             CleanupRegistry.Register(() => Misc.CleanupFiber(_statusOverlayFiber));
             CleanupRegistry.Register(() => Misc.CleanupFiber(_gpsFiber));
             CleanupRegistry.Register(GpsRouteTracker.Reset);
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_alprScanFiber));
+            CleanupRegistry.Register(() => Misc.CleanupFiber(_alprFrameFiber));
+            CleanupRegistry.Register(AlprOverlay.Cleanup);
+            CleanupRegistry.Register(AlprScanner.Reset);
             CleanupRegistry.Register(() => Pool = null);
             CleanupRegistry.Register(() => EventManager.SetClient(null));
             CleanupRegistry.Register(MessageHandler.Shutdown);
@@ -169,6 +178,69 @@ namespace ReportsPlus
                 var interval = MathHelper.Clamp(Settings?.GpsUpdateInterval ?? 1000, 250, 10000);
                 for (var slept = 0; slept < interval && !GpsRouteTracker.WakeRequested; slept += 100)
                     GameFiber.Sleep(100);
+            }
+        }
+
+        /// <summary>
+        ///     ALPR sensor loop. Runs on its own fiber because its cadence (default 400ms) is
+        ///     set by the MDT independently of the other loops. Sleeps in short slices so a
+        ///     new interval from an <c>alpr_config</c> push takes effect promptly. A failing
+        ///     tick is logged (rate-limited) and skipped; it never ends the loop.
+        /// </summary>
+        private static void AlprScanLoop()
+        {
+            Logger.LogInfo("Starting ALPR Scan Loop...");
+            var consecutiveErrors = 0;
+
+            while (true)
+            {
+                GameFiber.Yield();
+
+                if (!(Client is { IsConnected: true }))
+                {
+                    // ConfigChanged can only be consumed by a connected tick, so never let it
+                    // shorten the sleep while offline or this would spin every frame.
+                    GameFiber.Sleep(1000);
+                    continue;
+                }
+
+                try
+                {
+                    AlprScanner.Tick(Client);
+                    consecutiveErrors = 0;
+                }
+                catch (Exception e)
+                {
+                    if (++consecutiveErrors <= 3) Logger.LogError($"[ALPR] Scan tick failed: {e.Message}");
+                    AlprState.ConfigChanged = false;
+                }
+
+                var cfg = AlprState.Config;
+                var interval = cfg.Enabled ? cfg.ScanIntervalMs : 1000;
+                for (var slept = 0; slept < interval && !AlprState.ConfigChanged && !AlprState.ToggleRequested; slept += 50)
+                    GameFiber.Sleep(50);
+            }
+        }
+
+        /// <summary>
+        ///     Per-frame ALPR fiber: debug scan zones, hit highlights, blip expiry and the ALPR
+        ///     keybinds. Debug lines only last one frame, so this must yield every frame.
+        /// </summary>
+        private static void AlprFrameLoop()
+        {
+            var consecutiveErrors = 0;
+            while (true)
+            {
+                GameFiber.Yield();
+                try
+                {
+                    AlprOverlay.Frame();
+                    consecutiveErrors = 0;
+                }
+                catch (Exception e)
+                {
+                    if (++consecutiveErrors <= 3) Logger.LogError($"[ALPR] Overlay frame failed: {e.Message}");
+                }
             }
         }
 

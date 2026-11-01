@@ -11,6 +11,22 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
         // Dict to track sent vehicles to the client without dups
         private static readonly Dictionary<int, Vehicle> TrackedVehicles = new Dictionary<int, Vehicle>();
 
+        /// <summary>True when the MDT has already been sent this vehicle's full record.</summary>
+        public static bool IsTracked(int handle)
+        {
+            return TrackedVehicles.ContainsKey(handle);
+        }
+
+        /// <summary>
+        ///     Records that another producer (ALPR) already sent this vehicle's full record, so
+        ///     it isn't re-sent here, and so its <c>vehicleRemoved</c> still fires once it despawns.
+        /// </summary>
+        public static void MarkTracked(Vehicle vehicle)
+        {
+            if (!vehicle || !vehicle.Exists()) return;
+            TrackedVehicles[(int)vehicle.Handle.Value] = vehicle;
+        }
+
         /// <summary>
         ///     Scans the world for vehicles to synchronize state with the client.
         ///     Identifies newly discovered vehicles to send creation data and detects vehicles that are no longer in scope to
