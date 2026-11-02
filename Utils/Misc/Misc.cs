@@ -22,8 +22,6 @@ namespace ReportsPlus.Utils.Misc
             BaseGame
         }
 
-        private static bool _usingCi;
-
         public static IntegrationMode CurrentMode { get; private set; } = IntegrationMode.BaseGame;
 
         /// <summary>
@@ -48,18 +46,14 @@ namespace ReportsPlus.Utils.Misc
             Logger.LogInfo("Running Plugin Checks...");
             var statusMessage = new StringBuilder();
 
-            // Check CI
-            _usingCi = IsPluginInstalled("CalloutInterface");
-            if (_usingCi)
-            {
-                Logger.LogInfo("CalloutInterface found. Establishing Events...");
-                EventUtils.EstablishCiEvent();
-            }
-            else
-            {
-                Logger.LogWarning("CalloutInterface not found. Required for Callout Functions.");
-                statusMessage.Append("~r~CalloutInterface Not Found\n~o~- Required for Callout Functions.\n");
-            }
+            // Callouts: always tracked through LSPDFR's own event. CalloutInterface is optional and only
+            // used as a fallback resolver and for postals (CommonDataFramework postals are the second choice).
+            var hasCi = IsPluginInstalled("CalloutInterface");
+            var hasCdf = IsPluginInstalled("CommonDataFramework");
+            Logger.LogInfo(hasCi
+                ? "CalloutInterface found. Used as a fallback callout resolver and for postals."
+                : "CalloutInterface not found. Callouts are tracked natively through LSPDFR.");
+            CalloutTracker.Establish(hasCi, hasCdf);
 
             // Check functions to use PR > STP > Base
             var hasPolicingRedefined = IsPluginInstalled("PolicingRedefined") && IsPluginInstalled("CommonDataFramework");
@@ -96,11 +90,8 @@ namespace ReportsPlus.Utils.Misc
         {
             Logger.LogInfo($"Cleaning up plugin event subscriptions (Mode: {CurrentMode})...");
 
-            if (_usingCi)
-            {
-                EventUtils.CleanupCiEvent();
-                Logger.LogInfo("CI Events Cleaned up.");
-            }
+            CalloutTracker.Cleanup();
+            Logger.LogInfo("Callout Events Cleaned up.");
 
             switch (CurrentMode)
             {

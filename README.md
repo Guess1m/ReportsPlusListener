@@ -31,7 +31,7 @@ It is not a finished product. You **will** encounter bugs and incomplete feature
 - **Real-Time Synchronization:** Sends player status, location, and game state changes to the Web Application instantly.
 - **Integration Hooks:**
   - **Policing Redefined/CDF:** Pulls definitions and data via the Common Data Framework API.
-  - **Callout Interface:** Detects active callouts and pushes details (location, code, description) to the MDT.
+  - **Callouts:** Detects every LSPDFR callout and pushes its details (name, message, location, postal) to the MDT. Callout Interface is **optional**: without it, callouts are read straight from LSPDFR. Priority and description come from callout packs that use the Callout Interface API attribute. Postals come from Callout Interface or, if it isn't installed, from CommonDataFramework.
   - **StopThePed (STP):** Listens for search results and ID checks to populate the MDT automatically.
 - **Remote Execution:** Receives commands from the Web Application to trigger in-game actions (e.g., requesting backup, modifying vehicle blips, or triggering plugin functions).
 - **Resilient Networking:** Features auto-reconnection logic to maintain communication with the local Java server even if the game pauses or lags.

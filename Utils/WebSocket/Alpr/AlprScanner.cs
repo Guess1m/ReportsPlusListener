@@ -180,6 +180,7 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                 var local = own.ToLocal(targetPos);
                 var camera = MatchCamera(cfg, local, out var distance);
                 if (camera == null) continue;
+                if (HasNoPlate(target)) continue;
 
                 var cameraWorld = own.ToWorld(camera.Offset);
                 if (!PlateFacesCamera(cfg, target, targetPos, cameraWorld, out var plateSide)) continue;
@@ -266,7 +267,37 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             if (len < 0.01f) return false;
 
             plateSide = ly >= 0f ? "FRONT" : "REAR";
-            return Math.Abs(ly) / len >= cfg.CosPlateAngle;
+            if (Math.Abs(ly) / len < cfg.CosPlateAngle) return false;
+
+            // Motorcycles only carry a rear plate, so "reading" a bike's front would
+            // report a plate that doesn't exist.
+            return plateSide != "FRONT" || !IsRearPlateOnly(target);
+        }
+
+        /// <summary>Two-wheelers: rear plate only. Bicycles never reach here (see <see cref="HasNoPlate" />).</summary>
+        private static bool IsRearPlateOnly(Vehicle target)
+        {
+            try
+            {
+                return target.Model.IsBike;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Bicycles have a plate string in game data but no physical plate to photograph.</summary>
+        private static bool HasNoPlate(Vehicle target)
+        {
+            try
+            {
+                return target.Model.IsBicycle;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>World-geometry-only trace, so buildings and terrain block reads but traffic doesn't.</summary>

@@ -65,6 +65,9 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             public float FrontY;
             public float RearY;
             public float Z;
+
+            /// <summary>Motorcycles: only a rear plate, so the tag never jumps to the front.</summary>
+            public bool RearOnly;
         }
 
         public static void Draw(AlprConfig cfg, bool scanZones, uint now, List<AlprOverlay.Highlight> highlights)
@@ -191,11 +194,21 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             if (!Geometry.TryGetValue(model.Hash, out var g))
             {
                 model.GetDimensions(out var min, out var max);
-                g = new PlateGeometry { FrontY = max.Y, RearY = min.Y, Z = min.Z + 0.45f };
+                bool rearOnly;
+                try
+                {
+                    rearOnly = model.IsBike;
+                }
+                catch
+                {
+                    rearOnly = false;
+                }
+
+                g = new PlateGeometry { FrontY = max.Y, RearY = min.Y, Z = min.Z + 0.45f, RearOnly = rearOnly };
                 Geometry[model.Hash] = g;
             }
 
-            var facingFront = Vector3.Dot(eye - vehicle.Position, vehicle.ForwardVector) >= 0f;
+            var facingFront = !g.RearOnly && Vector3.Dot(eye - vehicle.Position, vehicle.ForwardVector) >= 0f;
             return vehicle.GetOffsetPosition(new Vector3(0f, facingFront ? g.FrontY : g.RearY, g.Z));
         }
 
