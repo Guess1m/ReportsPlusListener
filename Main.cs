@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Windows.Forms;
@@ -319,6 +319,7 @@ namespace ReportsPlus
                 _client.OnConnected += () =>
                 {
                     _autoConnectAttempts = 0;
+                    ReportsPlus.Utils.WebSocket.Actions.Continuous.TrafficStopTrackingAction.ResetState();
                     var socketConnectedFiber = GameFiber.StartNew(() =>
                     {
                         Logger.LogInfo($"Socket Connection Established -> {Settings.ClientAddress}:{Settings.ClientPort}");

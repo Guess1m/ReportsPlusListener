@@ -13,6 +13,20 @@ namespace ReportsPlus.Utils.WebSocket.Actions.Continuous
         private static uint _lastSuspectHandle;
 
         /// <summary>
+        /// Forgets the tracked pullover so the next tick announces any stop still in
+        /// progress as a new one. Called when the socket (re)connects: the MDT on the
+        /// other end may have restarted and no longer knows about the stop, and a
+        /// stationary suspect would otherwise never produce another update.
+        /// </summary>
+        public static void ResetState()
+        {
+            _isActive = false;
+            _currentPullover = null;
+            _lastPosition = Vector3.Zero;
+            _lastSuspectHandle = 0;
+        }
+
+        /// <summary>
         /// Continuously monitors the state of LSPD First Response traffic stops.
         /// Dispatches location updates when a pullover is initiated or the suspect changes position,
         /// and dispatches a termination event when the pullover concludes.
