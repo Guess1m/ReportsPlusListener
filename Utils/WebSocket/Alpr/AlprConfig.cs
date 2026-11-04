@@ -101,10 +101,19 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
         public bool LineOfSight { get; private set; } = true;
         public bool ReadEmptyVehicles { get; private set; } = true;
         public bool ReadEmergencyVehicles { get; private set; }
+
+        /// <summary>Suspends scanning while an LSPDFR traffic stop is in progress.</summary>
+        public bool PauseDuringTrafficStop { get; private set; }
         public bool DebugDraw { get; private set; }
         public bool HighlightHits { get; private set; } = true;
         public bool BlipHits { get; private set; } = true;
         public int BlipSeconds { get; private set; } = 45;
+
+        /// <summary>Hit blip scale on the map (MDT "Blip Size": Small / Normal / Large).</summary>
+        public float BlipScale { get; private set; } = 0.9f;
+
+        /// <summary>Names hit blips "ALPR: plate" in the pause-map legend.</summary>
+        public bool BlipShowPlate { get; private set; } = true;
 
         /// <summary>In-world plate tags on every read while scan zones are shown.</summary>
         public bool PlateTags { get; private set; } = true;
@@ -149,10 +158,13 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                 LineOfSight = o["lineOfSight"]?.Value<bool?>() ?? p.LineOfSight,
                 ReadEmptyVehicles = o["readEmptyVehicles"]?.Value<bool?>() ?? p.ReadEmptyVehicles,
                 ReadEmergencyVehicles = o["readEmergencyVehicles"]?.Value<bool?>() ?? p.ReadEmergencyVehicles,
+                PauseDuringTrafficStop = o["pauseDuringTrafficStop"]?.Value<bool?>() ?? p.PauseDuringTrafficStop,
                 DebugDraw = o["debugDraw"]?.Value<bool?>() ?? p.DebugDraw,
                 HighlightHits = o["highlightHits"]?.Value<bool?>() ?? p.HighlightHits,
                 BlipHits = o["blipHits"]?.Value<bool?>() ?? p.BlipHits,
                 BlipSeconds = Clamp(o["blipSeconds"]?.Value<int?>() ?? p.BlipSeconds, 5, 600),
+                BlipScale = o["blipSize"] != null ? ParseBlipScale(o["blipSize"].ToString()) : p.BlipScale,
+                BlipShowPlate = o["blipShowPlate"]?.Value<bool?>() ?? p.BlipShowPlate,
                 PlateTags = o["plateTags"]?.Value<bool?>() ?? p.PlateTags,
                 CleanPluginRecords = o["cleanPluginRecords"]?.Value<bool?>() ?? p.CleanPluginRecords,
                 CleanRecordChance = Clamp(o["cleanRecordChance"]?.Value<int?>() ?? p.CleanRecordChance, 0, 100)
@@ -182,6 +194,16 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                     max = cam.RangeMeters;
             c.MaxRange = max;
             return c;
+        }
+
+        private static float ParseBlipScale(string size)
+        {
+            switch ((size ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "SMALL": return 0.7f;
+                case "LARGE": return 1.2f;
+                default: return 0.9f;
+            }
         }
 
         private static int Clamp(int value, int min, int max)

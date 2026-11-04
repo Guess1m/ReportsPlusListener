@@ -125,7 +125,24 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
 
             if (cfg.RequireEmergencyVehicle && !v.IsPoliceVehicle) return "NOT_EMERGENCY_VEHICLE";
             if (cfg.RequireDriverSeat && v.Driver != player) return "NOT_DRIVER";
+            if (cfg.PauseDuringTrafficStop && IsOnTrafficStop()) return "TRAFFIC_STOP";
             return StatusActive;
+        }
+
+        /// <summary>
+        ///     Whether the player has an LSPDFR pullover in progress. Fails open (keeps
+        ///     scanning) if LSPDFR throws, e.g. while it is still loading.
+        /// </summary>
+        private static bool IsOnTrafficStop()
+        {
+            try
+            {
+                return LSPD_First_Response.Mod.API.Functions.GetCurrentPullover() != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static void Tick(GameClientSocket client)

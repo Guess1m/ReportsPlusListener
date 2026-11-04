@@ -45,6 +45,7 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
         private sealed class HitBlip
         {
             public Blip Blip;
+            public bool Routed;
             public uint Until;
         }
 
@@ -152,10 +153,14 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             {
                 if (!(data is JObject o)) return;
 
-                var title = o["title"]?.ToString() ?? "ALPR HIT";
-                var subtitle = o["subtitle"]?.ToString() ?? string.Empty;
-                var text = o["text"]?.ToString() ?? string.Empty;
-                Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", title, subtitle, text);
+                // "notify" is absent from older MDT builds, which only sent alerts they wanted shown.
+                if (o["notify"]?.Value<bool?>() ?? true)
+                {
+                    var title = o["title"]?.ToString() ?? "ALPR HIT";
+                    var subtitle = o["subtitle"]?.ToString() ?? string.Empty;
+                    var text = o["text"]?.ToString() ?? string.Empty;
+                    Game.DisplayNotification("web_lossantospolicedept", "web_lossantospolicedept", title, subtitle, text);
+                }
 
                 if (o["sound"]?.Value<bool?>() ?? false)
                     NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, "Beep_Red", "DLC_HEIST_HACKING_SNAKE_SOUNDS", true);
@@ -190,7 +195,15 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
                     existing.Pulse = pulse;
                 }
 
-                if (cfg.BlipHits && (o["blip"]?.Value<bool?>() ?? true)) AddBlip(target.Vehicle, color, now + (uint)cfg.BlipSeconds * 1000u);
+                if (cfg.BlipHits && (o["blip"]?.Value<bool?>() ?? true))
+                {
+                    var plateText = o["plate"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(plateText)) plateText = target.Plate;
+                    AddBlip(cfg, target.Vehicle, color, plateText,
+                        o["blipRoute"]?.Value<bool?>() ?? false,
+                        o["blipFlash"]?.Value<bool?>() ?? false,
+                        now + (uint)cfg.BlipSeconds * 1000u);
+                }
             }
             catch (Exception ex)
             {
@@ -198,17 +211,37 @@ namespace ReportsPlus.Utils.WebSocket.Alpr
             }
         }
 
-        private static void AddBlip(Vehicle vehicle, Color color, uint until)
+        private static void AddBlip(AlprConfig cfg, Vehicle vehicle, Color color, string plate, bool route, bool flash, uint until)
         {
+            HitBlip entry = null;
             foreach (var existing in Blips)
                 if (existing.Blip && existing.Blip.Exists() && existing.Blip.Entity == vehicle)
                 {
+                    // A repeat or escalated hit refreshes the blip and upgrades its styling.
                     existing.Until = until;
-                    return;
+                    entry = existing;
+                    break;
                 }
 
-            var blip = new Blip(vehicle) { Color = color, Scale = 0.9f };
-            Blips.Add(new HitBlip { Blip = blip, Until = until });
+            if (entry == null)
+            {
+                entry = new HitBlip { Blip = new Blip(vehicle), Until = until };
+                Blips.Add(entry);
+            }
+
+            var blip = entry.Blip;
+
+            blip.Color = color;
+            blip.Scale = cfg.BlipScale;
+            if (cfg.BlipShowPlate && !string.IsNullOrWhiteSpace(plate)) blip.Name = "ALPR: " + plate;
+            if (route && !entry.Routed)
+            {
+                blip.RouteColor = color;
+                blip.IsRouteEnabled = true;
+                entry.Routed = true;
+            }
+
+            if (flash) NativeFunction.Natives.SET_BLIP_FLASHES((uint)blip.Handle, true);
         }
 
         private static void ExpireBlips(uint now)
