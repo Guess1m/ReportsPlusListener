@@ -130,6 +130,15 @@ namespace ReportsPlus.Utils.WorldData
 
             var ownerNameStr = Functions.GetVehicleOwnerName(vehicle) ?? string.Empty;
 
+            var ownerJson = BuildOccupantOwnerData(vehicle, ownerNameStr) ?? new JObject
+            {
+                ["entityId"] = -1,
+                ["identification"] = new JObject
+                {
+                    ["name"] = ownerNameStr
+                }
+            };
+
             var vehicleJson = new JObject
             {
                 ["entityId"] = (int)vehicle.Handle.Value,
@@ -149,14 +158,7 @@ namespace ReportsPlus.Utils.WorldData
                 ["ownership"] = new JObject
                 {
                     ["ownerName"] = ownerNameStr,
-                    ["ownerData"] = new JObject
-                    {
-                        ["entityId"] = -1,
-                        ["identification"] = new JObject
-                        {
-                            ["name"] = ownerNameStr
-                        }
-                    }
+                    ["ownerData"] = ownerJson
                 },
                 ["registration"] = new JObject
                 {
@@ -192,6 +194,32 @@ namespace ReportsPlus.Utils.WorldData
                 }
             };
             return vehicleJson;
+        }
+
+        /// <summary>
+        ///     Full ped data for the vehicle's registered owner if they are one of its occupants
+        ///     (matched by persona name), otherwise null.
+        /// </summary>
+        private static JObject BuildOccupantOwnerData(Vehicle vehicle, string ownerName)
+        {
+            if (string.IsNullOrWhiteSpace(ownerName)) return null;
+            try
+            {
+                var target = ownerName.Trim();
+                foreach (var occupant in vehicle.Occupants)
+                {
+                    if (!occupant || !occupant.Exists()) continue;
+                    var persona = Functions.GetPersonaForPed(occupant);
+                    if (persona == null || !string.Equals(persona.FullName?.Trim(), target, System.StringComparison.OrdinalIgnoreCase)) continue;
+                    return PedDataHelper.GeneratePedData(occupant);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Logging.Logger.LogWarning($"[VehicleData] Could not resolve owner among occupants: {ex.Message}");
+            }
+
+            return null;
         }
     }
 }
